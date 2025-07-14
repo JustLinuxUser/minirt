@@ -9,7 +9,7 @@ HEADERS :=
 
 OBJS := ${SOURCES:${SRCS_DIR}/%.c=${OUT_DIR}/%.o}
 
-CFLAGS := -I raylib-5.5_linux_amd64/include -Lraylib-5.5_linux_amd64/include/ -lraylib -lm -MMD -Wall -Wextra -O3 -flto ${FLAGS}
+CFLAGS := -lm -MMD -Wall -Wextra -O3 -flto ${FLAGS}
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
