@@ -13,7 +13,7 @@ CFLAGS := -lm -MMD -Wall -Wextra -O3 -flto ${FLAGS}
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-	CFLAGS += -I raylib-5.5_linux_amd64/include -Lraylib-5.5_linux_amd64/lib
+	CFLAGS += -I raylib-5.5_linux_amd64/include -Lraylib-5.5_linux_amd64/lib -lraylib
 endif
 ifeq ($(UNAME_S),Darwin)
 	CFLAGS += -I raylib-5.5_macos/include -Lraylib-5.5_macos/lib/ raylib-5.5_macos/lib/libraylib.a -framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT -framework OpenGL

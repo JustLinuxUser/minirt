@@ -1,5 +1,7 @@
 #include "mymath.h"
 #include <math.h>
+#include <raylib.h>
+#include <raymath.h>
 
 t_fvec3 fvec3_sub(t_fvec3 a, t_fvec3 b) {
     return (t_fvec3){
@@ -68,4 +70,12 @@ t_fvec3 fvec3_lerp(t_fvec3 v1, t_fvec3 v2, float prop) {
         .y = v1.y * prop + v2.y * (1 - prop),
         .z = v1.z * prop + v2.z * (1 - prop),
     };
+}
+
+// TODO: Delete this
+t_fvec3 vec3_rotate_pitch_yaw(t_fvec3 v, float pitch, float yaw)
+{
+    Vector3 ret = Vector3RotateByQuaternion(*(Vector3*)(void*)&v,
+                                            QuaternionFromEuler(pitch, yaw, 0));
+    return (*(t_fvec3*)(void*)&ret);
 }
