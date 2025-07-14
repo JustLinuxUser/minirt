@@ -215,7 +215,7 @@ float cast_ray(t_state* state, t_ray curr_ray, float t_cutoff) {
         }
         if (o.type == OBJ_PLANE && intersect_plane(o.obj.plane, curr_ray, &t)) {
             if (t < curr_t) {
-                curr_t = t * 0.99;
+                curr_t = t * 0.999;
                 curr_collided_idx = obj_idx;
             }
         }
@@ -496,7 +496,7 @@ int main(void) {
                 int done = x * state.screen_height + y;
                 t_ray curr_ray;
                 t_color res_color = {};
-                t_sampler_state sstate = {.stratified_x = 4, .stratified_y = 4};
+                t_sampler_state sstate = {.stratified_x = 2, .stratified_y = 2};
 
                 t_fvec2 sample;
                 while (sample_stratified(&sstate, &sample)) {
