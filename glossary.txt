@@ -1,0 +1,9 @@
+LTE: Light Transport Equation
+BSDF: Bidirectional Scattering Distribution Function
+Flux: work/time (energy)
+Irradiance/Radiant Exitance: flux/area
+Intensity: flux/solid angle
+Radiance: flux/solid angle * area
+BTDF: Bidirectional Transmittance Distribution Function
+BSSRDF: Bidirectional Scattering Surface Reflectance Distribution
+PDF: Probability Density Function
