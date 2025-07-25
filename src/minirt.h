@@ -1,6 +1,7 @@
 #ifndef MINIRT_H
 # define MINIRT_H
 #include "mymath.h"
+#include "spectrum.h"
 #include <raylib.h>
 #include <stdbool.h>
 
@@ -41,6 +42,8 @@ typedef struct t_state {
     obj objs[1024];
     int obj_count;
 
+    /*NEW*/
+    t_SampledSpectrum* s_colors;
     t_color* colors;
     int screen_width;
     int screen_height;
@@ -70,9 +73,13 @@ int intersect_plane(t_ray plane, t_ray r, float* t);
 // colors.c
 t_color RGBToColor(Color c);
 float linear_to_gamma(float c);
+/*NEW*/
 Color ColortoRGB(t_color c);
+Color SpectrumToRGB(t_SampledSpectrum t);
 t_fvec3 perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c
 t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left);
+/*TO BE CHANGE ONCE LOGIC CHANGED*/
+t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_left);
 #endif

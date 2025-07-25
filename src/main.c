@@ -39,10 +39,13 @@ t_state init(int screen_width, int screen_height, float fov_deg) {
         .screen_height = screen_height,
         .light_pos = {.y = 40, .z = 150, .x = -100},
         .screen_dist = 1,
+        //.debug = 1,
         // .preview = true,
     };
 
     ret.colors = calloc(ret.screen_width * ret.screen_height, sizeof(t_color));
+    /*NEW*/
+    ret.s_colors = calloc(ret.screen_width * ret.screen_height, sizeof(t_SampledSpectrum));
 
     const float screen_dist = 1;
 
@@ -60,6 +63,7 @@ void add_obj(t_state* state, obj o) {
 
 int main(void) {
     t_state state = init(800, 600, 70);
+    int i;
 
     add_obj(&state, (obj){.type = OBJ_SPHERE,
                           .obj = {.sphere = {.r = 10,
@@ -206,8 +210,9 @@ int main(void) {
             for (int y = 0; y < state.screen_height; y++) {
                 int done = x * state.screen_height + y;
                 t_ray curr_ray;
-                t_color res_color = {};
-                t_sampler_state sstate = {.stratified_x = 2, .stratified_y = 2};
+                /*t_color res_color = {};*/
+                t_SampledSpectrum res_color = {};
+                t_sampler_state sstate = {.stratified_x = 4, .stratified_y = 4};
 
                 t_fvec2 sample;
                 while (sample_stratified(&sstate, &sample)) {
@@ -220,30 +225,51 @@ int main(void) {
                         l2, l1,  (x + sample.x)/ state.screen_width));
 					curr_ray.dir = pt;
 
-                    if (!state.preview)
-                        res_color =
-                            fvec3_add(cast_reflectable_ray(&state, curr_ray, 6),
-                                      res_color);
-                    else
-                        res_color =
-                            fvec3_add(cast_reflectable_ray(&state, curr_ray, 0),
-                                      res_color);
+                    // if (!state.preview)
+                    //     res_color =
+                    //         fvec3_add(cast_reflectable_ray(&state, curr_ray, 6),
+                    //                   res_color);
+                    // else
+                    // res_color = 
+                    //     fvec3_add(cast_reflectable_ray(&state, curr_ray, 6),
+                    //                 res_color);
+                    /*CHANGE NAME OF FUNCTION ONCE IT IS DONE*/
+                    // state.debug = 0;
+                    res_color = sampled_spectrum_add(cast_reflectable_ray_new(&state, curr_ray, 6),
+                                    res_color);
+                    // if (state.debug)
+                    // {
+                    //     res_color.values[0] = 1.f;
+                    //     res_color.values[1] = 0.f;
+                    //     res_color.values[2] = 0.f;
+                    // }
                 }
 
-                res_color = fvec3_scale(res_color, 1. / (sstate.stratified_x *
-                                                         sstate.stratified_y));
-                if (state.debug)
-                    res_color = RGBToColor(RED);
-                state.colors[y * state.screen_width + x] = fvec3_add(
-                    state.colors[y * state.screen_width + x], res_color);
+                // res_color = fvec3_scale(res_color, 1. / (sstate.stratified_x *
+                //                                          sstate.stratified_y));
+                res_color = sampled_spectrum_scale(res_color, 1. / (sstate.stratified_x *
+                                                        sstate.stratified_y));
+                /*DO WE NEED TO SCALE??????*/
+                
+                // state.colors[y * state.screen_width + x] = fvec3_add(
+                //     state.colors[y * state.screen_width + x], res_color);
+                state.s_colors[y * state.screen_width + x] = sampled_spectrum_add(state.s_colors[y * state.screen_width + x], res_color);
+                // state.s_colors[y * state.screen_width + x] = res_color;
+                // i = -1;
+                // while (++i < NUM_SPECTRUM_SAMPLES)
+                //     state.s_colors[y * state.screen_width + x].values[i] += res_color.values[i]; 
+                //printf("state.s_colors: %f\n", state.s_colors[y * state.screen_width + x].values[0]);
             }
         }
         for (int x = 0; x < state.screen_width; x++) {
             for (int y = 0; y < state.screen_height; y++) {
                 DrawPixel(x, y,
-                          ColortoRGB(fvec3_scale(
-                              state.colors[y * state.screen_width + x],
-                              1. / total_runs)));
+                        //   ColortoRGB(fvec3_scale(
+                        //       state.colors[y * state.screen_width + x],
+                        //       1. / total_runs)));
+                        SpectrumToRGB(sampled_spectrum_scale(state.s_colors[y * state.screen_width + x],
+                            1. / total_runs))
+                );
             }
         }
         EndDrawing();

@@ -37,7 +37,7 @@ bool sample_stratified(t_sampler_state* state, t_fvec2* sample) {
         state->last_x = 0;
         state->last_y++;
     }
-    if (state->last_y == state->stratified_y) {
+    if (state->last_y > state->stratified_y) {
         return false;
     }
     return true;

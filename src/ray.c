@@ -3,6 +3,9 @@
 #include <math.h>
 #include <stdlib.h>
 
+//DELETE
+#include <stdio.h>
+
 float cast_ray(t_state* state, t_ray curr_ray, float t_cutoff) {
     float t;
 
@@ -43,6 +46,8 @@ float cast_ray(t_state* state, t_ray curr_ray, float t_cutoff) {
     }
     return (0);
 }
+
+/*NEW CAST REFLECTABLE RAY!!!*/
 
 t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left) {
     float t;
@@ -104,4 +109,160 @@ t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left) {
     } else {
         return (t_color){};
     }
+}
+
+/*NEW CAST REFLECTABLE RAY!!!*/
+
+//EASY GET SURFACE COLOR AS BSDF
+t_SampledSpectrum get_surface_color(t_state* state, t_fvec3 p)
+{
+    t_SampledSpectrum color;
+    int i = -1;
+    while (++i < NUM_SPECTRUM_SAMPLES)
+       color.values[i] = 1.0f; 
+    return color;
+}
+
+t_SampledWavelengths get_values_pdf(t_state* state, t_fvec3 p)
+{
+    t_SampledWavelengths l;
+    int i = -1;
+    while(++i < NUM_SPECTRUM_SAMPLES)
+    {
+        l.lambda[i] = 0.8f;
+        l.pdf[i] = 1.0f;
+    }
+    return l; 
+}
+
+t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_left) {
+    t_SampledSpectrum L = {0};
+    t_SampledSpectrum beta = {1.f};
+    float t;
+    int i;
+    t_fvec3 p;
+    t_fvec3 norm = {0};
+
+    //INIT BETA
+    i = -1;
+    while (++i < NUM_SPECTRUM_SAMPLES)
+        beta.values[i] = 1.f;
+     
+
+    iters_left = 6;
+    while (iters_left-- > 0)
+    {
+        t = cast_ray(state, ray, 0);
+        if (!t)
+            break;
+        //TO BE USED WHEN BSDF IMPLEMENTED:
+        obj o = state->objs[state->last_collided_idx];
+
+        //HIT POS AND NORMAL TO HIT
+        p = fvec3_add(fvec3_scale(ray.dir, t), ray.pos);
+        if (o.type == OBJ_SPHERE)
+            norm = fvec3_norm(fvec3_sub(p, o.obj.sphere.p));
+        else if (o.type == OBJ_PLANE)
+            norm = o.obj.plane.dir;
+        
+        /*LIGHT THING*/
+
+        //LIGHT INFORMATION
+        t_fvec3 light = fvec3_sub(state->light_pos, p);
+        float light_t = sqrtf(fvec3_len_sq(light));
+        t_fvec3 norm_light = fvec3_norm(light);
+        
+        //SHADOW RAY
+        t_SampledSpectrum color = {0};
+        color = get_surface_color(state, p);
+        float dot = 0.f;
+        float distance_decrease = 0.f;
+        float got_t =
+            cast_ray(state, (t_ray){.pos = p, .dir = norm_light}, light_t);
+        if (got_t)
+        {
+            //GET COSINE (AS BEFORE)
+            dot = fmax(fvec3_dot(norm, norm_light), 0);
+            //HOW MUCH LIGHT INTENSITY (cos AND distance)
+            distance_decrease = 1.0f / (light_t * light_t);
+            //APPLY BSDF
+            i = -1;
+            while (++i < NUM_SPECTRUM_SAMPLES)
+            {
+                //printf("Update L[%d]: %f, %f, %f, %f\n", i, beta.values[i], color.values[i],  dot, distance_decrease);
+                L.values[i] += beta.values[i] * color.values[i] * dot * (5000.f * distance_decrease);
+            }
+        }
+        
+        /*LAMBERTIAN SURFACE (BASE CASE)*/
+        t_ray new_ray = (t_ray){.pos = p, .dir = rand_halfsphere(norm)};
+        ray = new_ray;
+        // ray.pos = p;
+        // ray.dir = rand_halfsphere(norm);
+
+        dot = fmax(fvec3_dot(norm, new_ray.dir), 0);
+
+        //UPDATE BETA NOT CORRECT AT THE MOMENT
+        i = -1;
+        t_SampledWavelengths wv = get_values_pdf(state, p);
+        while (++i < NUM_SPECTRUM_SAMPLES)
+        {
+            if (wv.pdf[i] == 0.f)
+                beta.values[i] = 0.f;
+            else
+                beta.values[i] *= color.values[i] * dot / wv.pdf[i];
+        }
+    }
+    //printf("Final L: %f, %f, %f\n", L.values[0], L.values[1], L.values[2]);
+    return L;
+    // float t;
+    // t_fvec3 p;
+    // t_SampledSpectrum ret;
+
+    // t = cast_ray(state, ray, 0);
+    // if (!t)
+    // {
+    //     //check collision in infinity
+    //     // return smthin else
+    //     return (t_SampledSpectrum){};
+    // }
+    // else
+    // {
+    //     obj o = state->objs[state->last_collided_idx];
+        
+    //     //emissive surfaces
+        
+    //     /*WHAT IS ITERS FOR?*/
+    //     iters_left--;
+    //     if (iters_left <= 0)
+    //         return ;
+        
+    //     ///BSDF and skip over medium boundaries
+
+    //     /// sample illumination
+
+    //     /// outgoing dir at intersection to continue path
+    //     int sampleBSDF = 1;
+    //     if (sampleBSDF)
+    //     {
+    //         /// sample BSDF for new dir
+    //     }
+    //     else
+    //     {
+    //         /// Uniformly sample
+    //         float pdf;
+    //         t_fvec3 p;
+    //         /// var for bsdf flags
+    //         if (!pdf) //Wrong. Need some flags
+    //         {
+    //             //Reflexive and transmissive
+    //         }
+    //         else 
+    //         {
+    //             //Else
+    //         }
+
+    //     }
+    // }
+    // return ret;
 }
