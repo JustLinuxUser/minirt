@@ -1,6 +1,7 @@
 #ifndef MINIRT_H
 # define MINIRT_H
 #include "mymath.h"
+#include "cie.h"
 #include "spectrum.h"
 #include <raylib.h>
 #include <stdbool.h>
@@ -76,6 +77,9 @@ float linear_to_gamma(float c);
 /*NEW*/
 Color ColortoRGB(t_color c);
 Color SpectrumToRGB(t_SampledSpectrum t);
+t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda);
+t_ColorRGB clamp_rgb(t_ColorRGB c);
+/*END NEW*/
 t_fvec3 perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c

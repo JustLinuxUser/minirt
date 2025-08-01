@@ -6,11 +6,12 @@
 /*   By: mhornero <mhornero@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 20:20:37 by mhornero          #+#    #+#             */
-/*   Updated: 2025/07/25 14:17:33 by mhornero         ###   ########.fr       */
+/*   Updated: 2025/08/01 16:04:06 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minirt.h"
+#include <stdio.h>
 
 /*SAMPLED SPECTRUM*/
 
@@ -52,20 +53,26 @@ float lerp(float x, float a, float b)
 t_SampledWavelengths SampleUniform(float u, float lambda_min, float lambda_max)
 {
     t_SampledWavelengths ret;
+    float delta = (lambda_max - lambda_min) / NUM_SPECTRUM_SAMPLES;
 
     ret.lambda[0] = lerp(u, lambda_min, lambda_max);
 
-    float delta = (lambda_max - lambda_min) / NUM_SPECTRUM_SAMPLES;
-    int i = 0;
-    while (++i < NUM_SPECTRUM_SAMPLES)
-    {
+    for (int i = 1; i < NUM_SPECTRUM_SAMPLES; i++) {
+        //ret.lambda[i] = lambda_min + (i + u) * delta;
         ret.lambda[i] = ret.lambda[i - 1] + delta;
         if (ret.lambda[i] > lambda_max)
-            ret.lambda[i] = lambda_min + (ret.lambda[i] - lambda_min);
+            ret.lambda[i] = lambda_min + (ret.lambda[i] - lambda_max);
     }
-    i = -1;
-    while (++i < NUM_SPECTRUM_SAMPLES)
-        ret.pdf[i] = 1 / (lambda_max - lambda_min);
+
+    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++) {
+        ret.pdf[i] = 1.f / (lambda_max - lambda_min); 
+    }
+    //FOR NOW, A KIND OF SOLUTION
+    // ret.lambda[0] = 430.f;
+    // ret.lambda[1] = 530.f;
+    // ret.lambda[2] = 630.f;
+    // ret.lambda[3] = 830.f;
+    //printf("lambdas: %f, %f, %f, %f\n", ret.lambda[0], ret.lambda[1], ret.lambda[2], ret.lambda[3]);
     return ret;
 }
 
@@ -99,14 +106,26 @@ t_ColorRGB xyz_to_rgb(float x, float y, float z)
 /*WAVELENGTHS TO XYZ (invented converision values based on graphic)*/
 void cie_xyz(float lambda, float *x, float *y, float *z)
 {
-    //Should be a LookUp table
-    if (lambda < 450) {
-        *x = 0.1f; *y = 0.0f; *z = 0.6f;
-    } else if (lambda < 600) {
-        *x = 0.0f; *y = 0.6f; *z = 0.2f;
-    } else {
-        *x = 0.6f; *y = 0.2f; *z = 0.0f;
+    if (lambda <= CIE_MIN_LAMBDA) {
+        *x = CIE_X[0];
+        *y = CIE_Y[0];
+        *z = CIE_Z[0];
+        return;
     }
+    if (lambda >= CIE_MAX_LAMBDA) {
+        *x = CIE_X[CIE_SAMPLES-1];
+        *y = CIE_Y[CIE_SAMPLES-1];
+        *z = CIE_Z[CIE_SAMPLES-1];
+        return;
+    }
+    // float pos = (lambda - CIE_MIN_LAMBDA) / CIE_STEP;
+    float pos = lambda - CIE_MIN_LAMBDA;
+    int idx = (int)pos;
+    float t = pos - idx;
+    // float t = lambda - (CIE_MIN_LAMBDA + idx);
+    *x = CIE_X[idx] * (1.0f - t) + CIE_X[idx+1] * t;
+    *y = CIE_Y[idx] * (1.0f - t) + CIE_Y[idx+1] * t;
+    *z = CIE_Z[idx] * (1.0f - t) + CIE_Z[idx+1] * t;
 }
 
 t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda) {
@@ -125,7 +144,7 @@ t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda) {
         //Need to understand chromacity
         float x_bar, y_bar, z_bar;
         cie_xyz(l, &x_bar, &y_bar, &z_bar);
-
+        
         X += value * x_bar / pdf;
         Y += value * y_bar / pdf;
         Z += value * z_bar / pdf;
@@ -135,26 +154,34 @@ t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda) {
     X /= NUM_SPECTRUM_SAMPLES;
     Y /= NUM_SPECTRUM_SAMPLES;
     Z /= NUM_SPECTRUM_SAMPLES;
-
+    
+    //Correction by the CIE_Y integral
+    X /= CIE_Y_integral;
+    Y /= CIE_Y_integral;
+    Z /= CIE_Y_integral;
+    
     return xyz_to_rgb(X, Y, Z);
 }
 
 t_ColorRGB clamp_rgb(t_ColorRGB c) {
     t_ColorRGB out;
-    out.r = clamp(c.r, 0.0f, 255.0f);
-    out.g = clamp(c.g, 0.0f, 255.0f);
-    out.b = clamp(c.b, 0.0f, 255.0f);
+    out.r = clamp(c.r, 0.0f, 1.0f);
+    out.g = clamp(c.g, 0.0f, 1.0f);
+    out.b = clamp(c.b, 0.0f, 1.0f);
     return out;
 }
 
 // int main()
 // {
-//     float span[NUM_SPECTRUM_SAMPLES] = { 0.2f, 0.5f, 0.9f };
+//     float span[NUM_SPECTRUM_SAMPLES] = { 0.1f, 0.1f, 0.1f, 0.1f };
 //     t_SampledSpectrum spec = create_sample_spectrum(span);
-//     t_SampledWavelengths lambda = SampleUniform(0.5f, 400.0f, 700.0f);
+//     printf("spec: %.3f %.3f %.3f %.3f\n", spec.values[0], spec.values[1], spec.values[2], spec.values[3]); 
+//     t_SampledWavelengths lambda = SampleUniform(0.f, 360.0f, 830.0f);
+//     printf("lamda: %.3f %.3f %.3f %.3f\n", lambda.lambda[0], lambda.lambda[1], lambda.lambda[2], lambda.lambda[3]); 
+//     printf("lamda: %.3f %.3f %.3f %.3f\n", lambda.pdf[0], lambda.pdf[1], lambda.pdf[2], lambda.pdf[3]); 
 //     t_ColorRGB rgb = spectrum_to_rgb(spec, lambda);
 //     //t_ColorRGB rgb_clamped = clamp_rgb(rgb);
-//     printf("RGB: %.3f %.3f %.3f\n", rgb.r, rgb.g, rgb.b);
+//     printf("RGB: %f %f %f\n", rgb.r, rgb.g, rgb.b);
 
 //     return (0);
 // }

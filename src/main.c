@@ -212,7 +212,7 @@ int main(void) {
                 t_ray curr_ray;
                 /*t_color res_color = {};*/
                 t_SampledSpectrum res_color = {};
-                t_sampler_state sstate = {.stratified_x = 4, .stratified_y = 4};
+                t_sampler_state sstate = {.stratified_x = 2, .stratified_y = 2};
 
                 t_fvec2 sample;
                 while (sample_stratified(&sstate, &sample)) {

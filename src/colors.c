@@ -22,11 +22,37 @@ Color ColortoRGB(t_color c) {
                    .b = fmin(linear_to_gamma(c.z) * 255, 255)};
 }
 
+//THIS
+// float linear_to_srgb(float x) {
+//     if (x <= 0.0031308f)
+//         return 12.92f * x;
+//     else
+//         return 1.055f * powf(x, 1.0f/2.4f) - 0.055f;
+// }
+
 Color SpectrumToRGB(t_SampledSpectrum t)
 {
     //printf("%f, %f, %f", t.values[0], t.values[1], t.values[2]);
-    return (Color){.a = 255,
-                   .r = fmin(linear_to_gamma(t.values[0]) * 255, 255),
-                   .g = fmin(linear_to_gamma(t.values[1]) * 255, 255),
-                   .b = fmin(linear_to_gamma(t.values[2]) * 255, 255)};
+    // return (Color){.a = 255,
+    //                .r = fmin(linear_to_gamma(t.values[0]) * 255, 255),
+    //                .g = fmin(linear_to_gamma(t.values[1]) * 255, 255),
+    //                .b = fmin(linear_to_gamma(t.values[2]) * 255, 255)};
+    // t_SampledWavelengths fixed_lambda = {
+    //     .lambda = { 430.f, 500.f, 680.f, 700.f },
+    //     .pdf    = { 0.3f, .1f, .25f, .4f }
+    // };
+    t_SampledWavelengths lambda = SampleUniform(0.5, 360.f, 830.f);
+    //RANGE
+    //t_SampledWavelengths lambda = SampleUniform(0.5, 380, 780);
+    t_ColorRGB rgb = spectrum_to_rgb(t, lambda);
+
+    rgb = clamp_rgb(rgb);
+
+    Color out;
+    out.a = 255;
+    out.r = fmin(linear_to_gamma(rgb.r) * 255.0f, 255.0f);
+    out.g = fmin(linear_to_gamma(rgb.g) * 255.0f, 255.0f);
+    out.b = fmin(linear_to_gamma(rgb.b) * 255.0f, 255.0f);
+
+    return out;
 }

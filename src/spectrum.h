@@ -6,14 +6,14 @@
 /*   By: mhornero <mhornero@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 20:20:46 by mhornero          #+#    #+#             */
-/*   Updated: 2025/07/22 14:41:14 by mhornero         ###   ########.fr       */
+/*   Updated: 2025/07/29 11:01:57 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SPECTRUM_H
 # define SPECTRUM_H
 
-#define NUM_SPECTRUM_SAMPLES 3
+#define NUM_SPECTRUM_SAMPLES 4
 
 /*SAMPLED SPECTRUM*/
 
