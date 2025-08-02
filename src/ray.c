@@ -112,14 +112,25 @@ t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left) {
 }
 
 /*NEW CAST REFLECTABLE RAY!!!*/
+//#TODO
+typedef struct t_RGBSigmoidalPolyn {
+    float c0, c1, c2;
+} t_RGBSigmoidalPolyn;
 
 //EASY GET SURFACE COLOR AS BSDF
 t_SampledSpectrum get_surface_color(t_state* state, t_fvec3 p)
 {
+    /*REVERSE PROCESS -> MATRIX*/
+    p.x = 95.f;
+    p.y = 100.f;
+    p.z = 100.f;
+
     t_SampledSpectrum color;
     int i = -1;
     while (++i < NUM_SPECTRUM_SAMPLES)
-       color.values[i] = 1.0f; 
+       //color.values[i] = 0.5f * p.x + 0.5 * p.y; 
+       color.values[i] = 0.9f;
+
     return color;
 }
 
@@ -190,7 +201,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_
             while (++i < NUM_SPECTRUM_SAMPLES)
             {
                 //printf("Update L[%d]: %f, %f, %f, %f\n", i, beta.values[i], color.values[i],  dot, distance_decrease);
-                L.values[i] += beta.values[i] * color.values[i] * dot * (5000.f * distance_decrease);
+                L.values[i] += beta.values[i] * color.values[i] * color.values[i] * dot * (5000.f * distance_decrease);
             }
         }
         

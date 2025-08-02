@@ -8,3 +8,4 @@ BTDF: Bidirectional Transmittance Distribution Function
 BSSRDF: Bidirectional Scattering Surface Reflectance Distribution
 PDF: Probability Density Function
 PMF: Probability Mass Function
+CIE: Comision International de L'Eclairage 
