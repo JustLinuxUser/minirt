@@ -71,6 +71,9 @@ int main(int argc, char** argv) {
     if (!process_file(argv[1], &state))
         return 1;
 
+    if (!process_file(argv[1], &state))
+        return 1;
+
     add_obj(&state, (obj){.type = OBJ_SPHERE,
                           .obj = {.sphere = {.r = 10,
                                              .p = {.x = 0, .y = 0, .z = 100},

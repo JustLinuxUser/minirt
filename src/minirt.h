@@ -3,6 +3,8 @@
 #include "mymath.h"
 #include "cie.h"
 #include "spectrum.h"
+#include "vecs/vec_mesh.h"
+#include "vecs/vec_triangle.h"
 #include <raylib.h>
 #include <stdbool.h>
 
@@ -26,6 +28,7 @@ typedef struct sphere {
 enum obj_type {
     OBJ_SPHERE,
     OBJ_PLANE,
+    OBJ_TRIANGLE,
 };
 
 typedef union obj_u {
@@ -59,6 +62,9 @@ typedef struct t_state {
     float proj_coef;
     float screen_dist;
     bool preview;
+
+	t_vec_mesh meshes;
+	t_vec_triangle triangles;
 } t_state;
 
 
@@ -70,6 +76,7 @@ typedef struct output_config {
 // shapes.c
 bool intersect_sphere(sphere s, t_ray r, float* t);
 int intersect_plane(t_ray plane, t_ray r, float* t);
+bool intersect_triangle(t_ray ray, t_fvec3 a, t_fvec3 b, t_fvec3 c, float *t);
 
 // colors.c
 t_color RGBToColor(Color c);
@@ -84,6 +91,10 @@ t_fvec3 perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c
 t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left);
+<<<<<<< HEAD
 /*TO BE CHANGE ONCE LOGIC CHANGED*/
 t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_left);
+=======
+void load_triangles(t_state *state);
+>>>>>>> 56cb9c0 (bak)
 #endif

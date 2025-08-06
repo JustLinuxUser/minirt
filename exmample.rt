@@ -1,0 +1,57 @@
+A 0.2 255,255,255
+
+C -50,0,20 0,0,1 70
+
+C: {
+fafadsfasdfasfd: 1
+	position: 0,0,20
+	direction: 0,0,1
+	fov: 70
+}
+
+L -40,0,30 0.7 255,255,255
+
+pl 0,0,0 0,1.0,0 255,0,225
+
+sp 0,0,20 20 255,0,0
+
+cy 50.0,0.0,20.6 0,0,1.0 14.2 21.42 10,0,255
+
+
+
+A: {
+    # Second mode
+    lighting_ratio: 1.2
+    color: 255,255,255
+}
+
+A 23 0,0,1
+
+
+L -40.0,50.0,0.0 0.6 10,0,255
+
+sp 0.0,0.0,20.6 12.6 10,0,255
+
+pl 0.0,0.0,-10.0 0.0,1.0,0.0 0,0,225
+
+A # Ambiant light
+	0.2 # Intencity
+	255,255,255 # Color
+
+A: {
+	lighting_ratio: 0.2,
+	color: 255,255,255 # Native support for tuples of the same type
+					   # Mb the keys might have type?
+					   # Or we can define a flag for each number wether it's an int or not
+}
+
+cy 50.0,0.0,20.6 0.0,0.0,1.0 14.2 21.42 10,0,255
+
+# First mode
+A
+    # some random ratio
+    0.2
+
+    # some other random property
+    255,255,255
+

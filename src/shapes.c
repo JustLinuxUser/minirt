@@ -1,4 +1,5 @@
 #include "minirt.h"
+#include <float.h>
 #include <math.h>
 #include <stdbool.h>
 
@@ -42,4 +43,35 @@ int intersect_plane(t_ray plane, t_ray r, float* t) {
     if (*t < 1e-6)
         return false;
     return (true);
+}
+
+bool intersect_triangle(t_ray ray, t_fvec3 a, t_fvec3 b, t_fvec3 c, float *t) {
+    float epsilon = FLT_EPSILON
+	;//std::numeric_limits<float>::epsilon();
+
+    t_fvec3 edge1 = fvec3_sub(b, a);
+    t_fvec3 edge2 = fvec3_sub(c, a);
+    t_fvec3 ray_cross_e2 = fvec3_cross(ray.dir, edge2);
+    float det = fvec3_dot(edge1, ray_cross_e2);
+
+    if (det > -epsilon && det < epsilon)
+        return false;    // This ray is parallel to this triangle.
+
+    float inv_det = 1.0 / det;
+    t_fvec3 s = fvec3_sub(ray.pos, a);
+    float u = inv_det * fvec3_dot(s, ray_cross_e2);
+
+    if ((u < 0 && fabs(u) > epsilon) || (u > 1 && fabs(u-1) > epsilon))
+        return false;
+
+    t_fvec3 s_cross_e1 = fvec3_cross(s, edge1);
+    float v = inv_det * fvec3_dot(ray.dir, s_cross_e1);
+
+    if ((v < 0 && fabs(v) > epsilon) || (u + v > 1 && fabs(u + v - 1) > epsilon))
+        return false;
+
+    // At this stage we can compute t to find out where the intersection point is on the line.
+    *t = inv_det * fvec3_dot(edge2, s_cross_e1);
+
+    return (*t > epsilon); // ray intersection
 }

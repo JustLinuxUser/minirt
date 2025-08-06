@@ -34,6 +34,26 @@ float cast_ray(t_state* state, t_ray curr_ray, float t_cutoff) {
         if (t_cutoff != 0 && curr_t < t_cutoff)
             break;
     }
+
+    for (size_t obj_idx = 0; obj_idx < state->triangles.len; obj_idx++) {
+		t_triangle triangle = state->triangles.buff[obj_idx];
+		t_mesh *mesh = &state->meshes.buff[triangle.mesh_idx];
+		int *vertex_idxs = &mesh->vertex_idxs.buff[triangle.triangle_idx * 3];
+
+		t_fvec3 a, b, c;
+		a = mesh->vertices.buff[vertex_idxs[0]];
+		b = mesh->vertices.buff[vertex_idxs[1]];
+		c = mesh->vertices.buff[vertex_idxs[2]];
+
+        if (intersect_triangle(curr_ray, a, b, c, &t)) {
+            if (t < curr_t) {
+                curr_t = t * 0.999;
+                curr_collided_idx = obj_idx + 999;
+            }
+		}
+        if (t_cutoff != 0 && curr_t < t_cutoff)
+            break;
+	}
     if (t_cutoff != 0) {
         if (curr_t < t_cutoff) {
             return (0);
@@ -58,27 +78,31 @@ t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left) {
     t = cast_ray(state, ray, 0);
 
     if (t != 0) {
-        obj o = state->objs[state->last_collided_idx];
-        t_fvec3 norm;
+		t_fvec3 norm;
+		if (state->last_collided_idx < 999) {
+			obj o = state->objs[state->last_collided_idx];
 
-        if (o.type == OBJ_SPHERE) {
-            p = fvec3_add(fvec3_scale(ray.dir, t), ray.pos);
-            if ((abs((int)p.x / 4) % 2 == 0) ^ (p.x > 0) ^ (p.z > 0) ^
-                (abs((int)p.z / 4) % 2 == 0))
-                obj_color = o.obj.sphere.color;
-            else
-                obj_color = DARKDARKGRAY;
-            norm = fvec3_norm(fvec3_sub(p, o.obj.sphere.p));
-        }
-        if (o.type == OBJ_PLANE) {
-            p = fvec3_add(fvec3_scale(ray.dir, t), ray.pos);
-            if ((abs((int)p.x / 10) % 2 == 0) ^ (p.x > 0) ^ (p.z > 0) ^
-                (abs((int)p.z / 10) % 2 == 0))
-                obj_color = DARKDARKGRAY;
-            else
-                obj_color = RGBToColor(WHITE);
-            norm = o.obj.plane.dir;
-        }
+			if (o.type == OBJ_SPHERE) {
+				p = fvec3_add(fvec3_scale(ray.dir, t), ray.pos);
+				if ((abs((int)p.x / 4) % 2 == 0) ^ (p.x > 0) ^ (p.z > 0) ^
+					(abs((int)p.z / 4) % 2 == 0))
+					obj_color = o.obj.sphere.color;
+				else
+					obj_color = DARKDARKGRAY;
+				norm = fvec3_norm(fvec3_sub(p, o.obj.sphere.p));
+			}
+			if (o.type == OBJ_PLANE) {
+				p = fvec3_add(fvec3_scale(ray.dir, t), ray.pos);
+				if ((abs((int)p.x / 10) % 2 == 0) ^ (p.x > 0) ^ (p.z > 0) ^
+					(abs((int)p.z / 10) % 2 == 0))
+					obj_color = DARKDARKGRAY;
+				else
+					obj_color = RGBToColor(WHITE);
+				norm = o.obj.plane.dir;
+			}
+		} else {
+			obj_color = RGBToColor(WHITE);
+		}
         t_fvec3 light = fvec3_sub(state->light_pos, p);
         float light_t = sqrtf(fvec3_len_sq(light));
         t_fvec3 norm_light = fvec3_norm(light);
@@ -96,7 +120,6 @@ t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left) {
             t_ray new_ray = (t_ray){.pos = p, .dir = rand_halfsphere(norm)};
             if (state->last_collided_idx == 1) {
                 new_ray.dir = fvec3_norm(fvec3_reflect(ray.dir, norm));
-                // return (t_color){.x=1};
             }
             t_color ray_color =
                 cast_reflectable_ray(state, new_ray, iters_left - 1);
@@ -107,7 +130,7 @@ t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left) {
         }
         return (ret);
     } else {
-        return (t_color){};
+        return (t_color){0};
     }
 }
 
