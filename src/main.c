@@ -6,6 +6,7 @@
 #include <string.h>
 #include "minirt.h"
 #include "mymath.h"
+#include "rt_file/rt_consumer.h"
 #include "samplers.h"
 
 // TODOS:
@@ -61,9 +62,14 @@ void add_obj(t_state* state, obj o) {
 }
 
 
-int main(void) {
+int main(int argc, char** argv) {
+    if (argc != 2)
+        return (1);
     t_state state = init(800, 600, 70);
     int i;
+
+    if (!process_file(argv[1], &state))
+        return 1;
 
     add_obj(&state, (obj){.type = OBJ_SPHERE,
                           .obj = {.sphere = {.r = 10,

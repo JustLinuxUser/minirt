@@ -72,6 +72,12 @@ t_fvec3 fvec3_lerp(t_fvec3 v1, t_fvec3 v2, float prop) {
     };
 }
 
+t_fvec3 fvec3_cross(t_fvec3 v1, t_fvec3 v2) {
+    t_fvec3 result = { v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x };
+
+    return result;
+}
+
 // TODO: Delete this
 t_fvec3 vec3_rotate_pitch_yaw(t_fvec3 v, float pitch, float yaw)
 {
