@@ -6,7 +6,7 @@
 /*   By: mhornero <mhornero@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 20:20:46 by mhornero          #+#    #+#             */
-/*   Updated: 2025/07/29 11:01:57 by mhornero         ###   ########.fr       */
+/*   Updated: 2025/08/18 21:03:31 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,8 @@
 # define SPECTRUM_H
 
 #define NUM_SPECTRUM_SAMPLES 4
+
+#include "math.h"
 
 /*SAMPLED SPECTRUM*/
 
@@ -35,6 +37,7 @@ typedef struct t_SampledWavelengths {
 
 float lerp(float x, float a, float b);
 t_SampledWavelengths SampleUniform(float u, float lambda_min, float lambda_max);
+void cie_xyz(float lambda, float *x, float *y, float *z);
 
 
 /*SPECTRUM????*/
@@ -51,5 +54,9 @@ typedef struct t_ColorRGB {
     float g;
     float b;
 } t_ColorRGB;
+
+
+//#TODO: BLACKBODYEMITTERS
+float blackbody(float lambda, float T);
 
 #endif

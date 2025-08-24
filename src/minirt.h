@@ -3,6 +3,7 @@
 #include "mymath.h"
 #include "cie.h"
 #include "spectrum.h"
+#include "light.h"
 #include <raylib.h>
 #include <stdbool.h>
 
@@ -44,7 +45,8 @@ typedef struct t_state {
     int obj_count;
 
     /*NEW*/
-    t_SampledSpectrum* s_colors;
+    // t_SampledSpectrum* s_colors;
+    t_fvec3* s_colors;
     t_color* colors;
     int screen_width;
     int screen_height;
@@ -56,6 +58,8 @@ typedef struct t_state {
     int debug;
 
     t_fvec3 light_pos;
+    t_light light;
+    t_lights lights;
     float proj_coef;
     float screen_dist;
     bool preview;
@@ -71,19 +75,27 @@ typedef struct output_config {
 bool intersect_sphere(sphere s, t_ray r, float* t);
 int intersect_plane(t_ray plane, t_ray r, float* t);
 
+// probability.c
+void createAliasTable(t_lights *lights);
+int SampleAliasTable(t_lights *lights, float lu);
+
+
 // colors.c
 t_color RGBToColor(Color c);
 float linear_to_gamma(float c);
 /*NEW*/
 Color ColortoRGB(t_color c);
-Color SpectrumToRGB(t_SampledSpectrum t);
+t_fvec3 SpectrumToXYZ(t_SampledSpectrum s, t_SampledWavelengths lambda);
+Color XYZToRGB(t_fvec3 t);
 t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda);
 t_ColorRGB clamp_rgb(t_ColorRGB c);
+float random_generator();
 /*END NEW*/
 t_fvec3 perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c
 t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left);
 /*TO BE CHANGE ONCE LOGIC CHANGED*/
-t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_left);
+t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, 
+        t_SampledWavelengths lambdas, int iters_left);
 #endif

@@ -112,6 +112,7 @@ t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left) {
 }
 
 /*NEW CAST REFLECTABLE RAY!!!*/
+//#TODO
 
 //EASY GET SURFACE COLOR AS BSDF
 t_SampledSpectrum get_surface_color(t_state* state, t_fvec3 p)
@@ -135,7 +136,8 @@ t_SampledWavelengths get_values_pdf(t_state* state, t_fvec3 p)
     return l; 
 }
 
-t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_left) {
+t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, 
+        t_SampledWavelengths lambdas, int iters_left) {
     t_SampledSpectrum L = {0};
     t_SampledSpectrum beta = {1.f};
     float t;
@@ -168,7 +170,11 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_
         /*LIGHT THING*/
 
         //LIGHT INFORMATION
-        t_fvec3 light = fvec3_sub(state->light_pos, p);
+        float lu = random_generator();
+        t_light s_light;
+        int index = SampleAliasTable(&state->lights, lu);
+        s_light = state->lights.lights[index]; 
+        t_fvec3 light = fvec3_sub(s_light.position, p);
         float light_t = sqrtf(fvec3_len_sq(light));
         t_fvec3 norm_light = fvec3_norm(light);
         
@@ -190,7 +196,8 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_
             while (++i < NUM_SPECTRUM_SAMPLES)
             {
                 //printf("Update L[%d]: %f, %f, %f, %f\n", i, beta.values[i], color.values[i],  dot, distance_decrease);
-                L.values[i] += beta.values[i] * color.values[i] * dot * (5000.f * distance_decrease);
+                //#TODO: CHANGE FOR LIGHT.VALUES[i]
+                L.values[i] += beta.values[i] * color.values[i] * dot * (s_light.intensity * s_light.spec.samples[(int)(lambdas.lambda[i] - CIE_MIN_LAMBDA)] * distance_decrease);
             }
         }
         
@@ -204,13 +211,13 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_
 
         //UPDATE BETA NOT CORRECT AT THE MOMENT
         i = -1;
-        t_SampledWavelengths wv = get_values_pdf(state, p);
+        //t_SampledWavelengths wv = get_values_pdf(state, p);
         while (++i < NUM_SPECTRUM_SAMPLES)
         {
-            if (wv.pdf[i] == 0.f)
+            if (lambdas.pdf[i] == 0.f)
                 beta.values[i] = 0.f;
             else
-                beta.values[i] *= color.values[i] * dot / wv.pdf[i];
+                beta.values[i] *= color.values[i] * dot;// / lambdas.pdf[i];
         }
     }
     //printf("Final L: %f, %f, %f\n", L.values[0], L.values[1], L.values[2]);

@@ -12,7 +12,7 @@ OBJS := ${SOURCES:${SRCS_DIR}/%.c=${OUT_DIR}/%.o}
 ifdef OPT
 	CFLAGS := -MMD -fPIE -Wall -Wextra  -O3 -flto ${FLAGS}
 else
-	CFLAGS := -MMD -Wall -Wextra  -fPIE --std=c99 -pedantic -g3 -fsanitize=address,leak,undefined ${FLAGS}
+	CFLAGS := -MMD -Wall -Wextra  -fPIE --std=c99 -pedantic -g3 ${FLAGS}
 endif
 
 LIBFT_DIR := src/libft
@@ -62,4 +62,4 @@ run: all
 
 .PHONY: clean fclean re
 
--include ${SOURCES:%.c=${OUT_DIR}/%.d}
+-include ${SOURCES:${SRCS_DIR}/%.c=${OUT_DIR}/%.d}

@@ -101,7 +101,7 @@ BUILD_DIR := build
 ifdef OPT
 	CFLAGS := -fPIE -Wall -Wextra -Werror -O3 -flto ${FLAGS}
 else
-	CFLAGS := -Wall -Wextra -Werror -fPIE --std=c99 -pedantic -g3 -fsanitize=address,leak,undefined ${FLAGS}
+	CFLAGS := -Wall -Wextra -Werror -fPIE --std=c99 -pedantic -g3 ${FLAGS}
 endif
 
 CC := cc

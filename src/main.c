@@ -44,9 +44,7 @@ t_state init(int screen_width, int screen_height, float fov_deg) {
         // .preview = true,
     };
 
-    ret.colors = calloc(ret.screen_width * ret.screen_height, sizeof(t_color));
-    /*NEW*/
-    ret.s_colors = calloc(ret.screen_width * ret.screen_height, sizeof(t_SampledSpectrum));
+    ret.s_colors = calloc(ret.screen_width * ret.screen_height, sizeof(t_fvec3));
 
     const float screen_dist = 1;
 
@@ -114,12 +112,27 @@ int main(int argc, char** argv) {
                           .obj = {.plane = {.pos = {.x = -150, .y = 0, .z = 0},
                                             .dir = fvec3_norm((t_fvec3){
                                                 .x = 1, .y = 0, .z = 0})}}});
+    /*LIGHTS*/
+    t_lights lights = {0};
 
-    add_obj(&state, (obj){.type = OBJ_SPHERE,
-                          .skip = true,
-                          .obj = {.sphere = {.r = 5,
-                                             .p = state.light_pos,
-                                             .color = RGBToColor(YELLOW)}}});
+    t_light light1 = {.t = POINT_LIGHT, .intensity = 5000.f, .position = state.light_pos};
+    light1.spec = calculateDenselySampledSpectrum(9000);
+    
+    t_light light2 = {.t = POINT_LIGHT, .intensity = 3000.f, .position = {.y = 70, .z = 150, .x = 100}};
+    light2.spec = calculateDenselySampledSpectrum(6200);
+
+    t_light light3 = {.t = POINT_LIGHT, .intensity = 5000.f, .position = {.y = 70, .z = 50, .x = 50}};
+    light2.spec = calculateDenselySampledSpectrum(3000);
+
+    add_light(&lights, light1);
+    add_light(&lights, light2);
+    add_light(&lights, light3);
+    calculatePDFs(&lights);
+    createAliasTable(&lights);
+
+    state.lights = lights;
+
+    //state.light = light1;
 
     InitWindow(state.screen_width, state.screen_height,
                "raylib [core] example - basic window");
@@ -216,11 +229,13 @@ int main(int argc, char** argv) {
             for (int y = 0; y < state.screen_height; y++) {
                 int done = x * state.screen_height + y;
                 t_ray curr_ray;
-                /*t_color res_color = {};*/
                 t_SampledSpectrum res_color = {};
-                t_sampler_state sstate = {.stratified_x = 2, .stratified_y = 2};
+                float lu = random_generator();
+                t_SampledWavelengths lambdas = SampleUniform(lu, 360, 830);
+                t_sampler_state sstate = {.stratified_x = 1, .stratified_y = 1};
 
                 t_fvec2 sample;
+                t_fvec3 xyz_color = {0};
                 while (sample_stratified(&sstate, &sample)) {
                     curr_ray.pos = state.cam.pos;
                     t_fvec3 l1 = fvec3_lerp(
@@ -231,49 +246,22 @@ int main(int argc, char** argv) {
                         l2, l1,  (x + sample.x)/ state.screen_width));
 					curr_ray.dir = pt;
 
-                    // if (!state.preview)
-                    //     res_color =
-                    //         fvec3_add(cast_reflectable_ray(&state, curr_ray, 6),
-                    //                   res_color);
-                    // else
-                    // res_color = 
-                    //     fvec3_add(cast_reflectable_ray(&state, curr_ray, 6),
-                    //                 res_color);
-                    /*CHANGE NAME OF FUNCTION ONCE IT IS DONE*/
-                    // state.debug = 0;
-                    res_color = sampled_spectrum_add(cast_reflectable_ray_new(&state, curr_ray, 6),
-                                    res_color);
-                    // if (state.debug)
-                    // {
-                    //     res_color.values[0] = 1.f;
-                    //     res_color.values[1] = 0.f;
-                    //     res_color.values[2] = 0.f;
-                    // }
-                }
+                    res_color = cast_reflectable_ray_new(&state, curr_ray, lambdas, 6);
+                    xyz_color = fvec3_add(SpectrumToXYZ(res_color, lambdas), xyz_color);
 
-                // res_color = fvec3_scale(res_color, 1. / (sstate.stratified_x *
-                //                                          sstate.stratified_y));
-                res_color = sampled_spectrum_scale(res_color, 1. / (sstate.stratified_x *
-                                                        sstate.stratified_y));
-                /*DO WE NEED TO SCALE??????*/
+                }
                 
-                // state.colors[y * state.screen_width + x] = fvec3_add(
-                //     state.colors[y * state.screen_width + x], res_color);
-                state.s_colors[y * state.screen_width + x] = sampled_spectrum_add(state.s_colors[y * state.screen_width + x], res_color);
-                // state.s_colors[y * state.screen_width + x] = res_color;
-                // i = -1;
-                // while (++i < NUM_SPECTRUM_SAMPLES)
-                //     state.s_colors[y * state.screen_width + x].values[i] += res_color.values[i]; 
-                //printf("state.s_colors: %f\n", state.s_colors[y * state.screen_width + x].values[0]);
+                xyz_color = fvec3_scale(xyz_color, 1. / (sstate.stratified_x *
+                                                        sstate.stratified_y));
+
+                //RES COLOR TO XYZ (T_FVEC3)
+                state.s_colors[y * state.screen_width + x] = fvec3_add(state.s_colors[y * state.screen_width + x], xyz_color);
             }
         }
         for (int x = 0; x < state.screen_width; x++) {
             for (int y = 0; y < state.screen_height; y++) {
                 DrawPixel(x, y,
-                        //   ColortoRGB(fvec3_scale(
-                        //       state.colors[y * state.screen_width + x],
-                        //       1. / total_runs)));
-                        SpectrumToRGB(sampled_spectrum_scale(state.s_colors[y * state.screen_width + x],
+                        XYZToRGB(fvec3_scale(state.s_colors[y * state.screen_width + x],
                             1. / total_runs))
                 );
             }
