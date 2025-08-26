@@ -49,7 +49,7 @@ int	vec_gen_push(t_vec_gen *v, void *el)
 	if (v->len == v->cap)
 		if (vec_gen_double(v))
 			return (1);
-	ft_memcpy(v->buff + v->len++, el, v->el_size);
+	ft_memcpy(v->buff + (v->len++) * v->el_size, el, v->el_size);
 	return (0);
 }
 
@@ -57,12 +57,12 @@ int	vec_gen_pop(t_vec_gen *v, void *ret)
 {
 	if (v->len == 0)
 		return (1);
-	ft_memcpy(ret, v->buff + --v->len, v->el_size);
+	ft_memcpy(ret, v->buff + (--v->len) * v->el_size, v->el_size);
 	return (0);
 }
 
 void	*vec_gen_idx(t_vec_gen *v, size_t idx)
 {
 	ft_assert(idx < v->len);
-	return (v->buff + idx);
+	return (v->buff + idx * v->el_size);
 }

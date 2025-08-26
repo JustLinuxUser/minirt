@@ -74,7 +74,7 @@ SOURCES +=	utils/string_utils.c\
 
 SOURCES +=	dsa/dyn_str.c\
 			dsa/vec_int.c\
-			dsa/vec_int.c\
+			dsa/vec_gen.c\
 			dsa/dyn_str.c\
 			dsa/dyn_str2.c\
 			dsa/deque_int2.c\
@@ -138,7 +138,7 @@ ${TAG_FILE}:
 	rm -rf $(BUILD_DIR)/profile_*
 	touch ${TAG_FILE}
 
-build/${PROFILE}/%.o: %.c Makefile
+$(BUILD_DIR)/$(PROFILE)/%.o: %.c Makefile
 	@mkdir -p $$(dirname $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
