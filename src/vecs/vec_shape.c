@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   vec_plane.c                                     :+:      :+:    :+:   */
+/*   vec_shape.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -11,22 +11,24 @@
 /* ************************************************************************** */
 
 #include <stdlib.h>
-#include "vec_plane.h"
+#include "vec_shape.h"
 #include "../libft/utils/utils.h"
 
-int	vec_plane_init(t_vec_plane *ret)
+int	vec_shape_init(t_vec_shape *ret, size_t size)
 {
-	*ret = (t_vec_plane){0};
+	*ret = (t_vec_shape){.cap = size, .buff = malloc(size * sizeof(t_shape))};
 	return (0);
 }
 
-int	vec_plane_double(t_vec_plane *v)
+int	vec_shape_double(t_vec_shape *v)
 {
-	plane	*temp;
+	t_shape	*temp;
 	size_t	i;
 
-	v->cap = v->cap * 2 + 1;
-	temp = malloc(sizeof(plane) * v->cap);
+	v->cap = v->cap * 2;
+	if (!v->cap)
+		v->cap = 64;
+	temp = malloc(sizeof(t_shape) * v->cap);
 	if (temp == 0)
 		return (1);
 	i = -1;
@@ -37,22 +39,22 @@ int	vec_plane_double(t_vec_plane *v)
 	return (0);
 }
 
-int	vec_plane_push(t_vec_plane *v, plane el)
+int	vec_shape_push(t_vec_shape *v, t_shape el)
 {
 	if (v->len == v->cap)
-		if (vec_plane_double(v))
+		if (vec_shape_double(v))
 			return (1);
 	v->buff[v->len++] = el;
 	return (0);
 }
 
-plane	vec_plane_pop(t_vec_plane *v)
+t_shape	vec_shape_pop(t_vec_shape *v)
 {
 	ft_assert(v->len > 0);
 	return (v->buff[--v->len]);
 }
 
-plane	vec_plane_idx(t_vec_plane *v, size_t idx)
+t_shape	vec_shape_idx(t_vec_shape *v, size_t idx)
 {
 	ft_assert(idx < v->len);
 	return (v->buff[idx]);

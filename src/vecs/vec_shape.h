@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   vec_sphere.h                                     :+:      :+:    :+:   */
+/*   vec_shape.h                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,25 +10,20 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef VEC_SPHERE_H
-# define VEC_SPHERE_H
+#ifndef VEC_SHAPE_H
+# define VEC_SHAPE_H
 # include <stdlib.h>
-# include "../mymath.h"
+# include "../shapes.h"
 
-typedef struct t_sphere {
-    t_fvec3 p;
-    float r;
-} t_sphere;
-
-typedef struct s_vec_sphere
+typedef struct s_vec_shape
 {
 	size_t	cap;
 	size_t	len;
-	t_sphere		*buff;
-}	t_vec_sphere;
-int	vec_sphere_init(t_vec_sphere *ret);
-int	vec_sphere_double(t_vec_sphere *v);
-int	vec_sphere_push(t_vec_sphere *v, t_sphere el);
-t_sphere	vec_sphere_pop(t_vec_sphere *v);
-t_sphere	vec_sphere_idx(t_vec_sphere *v, size_t idx);
+	t_shape		*buff;
+}	t_vec_shape;
+int	vec_shape_init(t_vec_shape *ret, size_t size);
+int	vec_shape_double(t_vec_shape *v);
+int	vec_shape_push(t_vec_shape *v, t_shape el);
+t_shape	vec_shape_pop(t_vec_shape *v);
+t_shape	vec_shape_idx(t_vec_shape *v, size_t idx);
 #endif

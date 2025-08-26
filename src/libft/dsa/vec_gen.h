@@ -1,34 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   vec_sphere.h                                     :+:      :+:    :+:   */
+/*   vec_int.h                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/10/13 22:52:15 by anddokhn          #+#    #+#             */
-/*   Updated: 2025/01/14 00:34:37 by anddokhn         ###   ########.fr       */
+/*   Updated: 2024/10/14 23:24:09 by anddokhn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef VEC_SPHERE_H
-# define VEC_SPHERE_H
+#ifndef VEC_GEN_H
+# define VEC_GEN_H
+# include <stdint.h>
 # include <stdlib.h>
-# include "../mymath.h"
 
-typedef struct t_sphere {
-    t_fvec3 p;
-    float r;
-} t_sphere;
-
-typedef struct s_vec_sphere
+typedef struct s_vec_gen
 {
-	size_t	cap;
-	size_t	len;
-	t_sphere		*buff;
-}	t_vec_sphere;
-int	vec_sphere_init(t_vec_sphere *ret);
-int	vec_sphere_double(t_vec_sphere *v);
-int	vec_sphere_push(t_vec_sphere *v, t_sphere el);
-t_sphere	vec_sphere_pop(t_vec_sphere *v);
-t_sphere	vec_sphere_idx(t_vec_sphere *v, size_t idx);
+	size_t		el_size;
+	size_t		cap;
+	size_t		len;
+	uint8_t		*buff;
+}	t_vec_gen;
+
+int		vec_gen_init(t_vec_gen *ret, size_t el_size, size_t init_alloc);
+int		vec_int_double(t_vec_gen *v);
+int		vec_int_push(t_vec_gen *v, void *el);
+int		vec_int_pop(t_vec_gen *v, void *ret);
+void	*vec_int_idx(t_vec_gen *v, size_t idx);
 #endif

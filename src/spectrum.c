@@ -12,6 +12,7 @@
 
 #include "minirt.h"
 #include <stdio.h>
+#include "cie.h"
 
 /*SAMPLED SPECTRUM*/
 
@@ -149,7 +150,6 @@ t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda) {
         Y += value * y_bar / pdf;
         Z += value * z_bar / pdf;
     }
-
     //The average part
     X /= NUM_SPECTRUM_SAMPLES;
     Y /= NUM_SPECTRUM_SAMPLES;

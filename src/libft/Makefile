@@ -1,4 +1,5 @@
 NAME := libft.a
+CC := cc
 
 SOURCES := src/ft_atoi.c\
 		   src/ft_checked_atoi.c\
@@ -83,45 +84,72 @@ SOURCES +=	dsa/dyn_str.c\
 			dsa/prng.c\
 			dsa/vec_dyn_str.c
 
+SOURCES +=	alloc/mmalloc.c\
+			alloc/alloc.c
 
-
-HEADERS := libft.h\
-		   gnl/get_next_line.h\
-		   ft_printf/ft_printf.h\
-		   utils/utils.h\
-		   dsa/vec_int.h\
-		   dsa/dyn_str.h\
-		   dsa/deque_int.h\
-		   dsa/deque_char.h\
-		   dsa/vec_dyn_str.h
-
-OBJS := ${SOURCES:%.c=build/%.o}
 BUILD_DIR := build
 
-ifdef OPT
-	CFLAGS := -fPIE -Wall -Wextra -Werror -O3 -flto ${FLAGS}
-else
-	CFLAGS := -Wall -Wextra -Werror -fPIE --std=c99 -pedantic -g3 -fsanitize=address,leak,undefined ${FLAGS}
+ifndef PROFILE
+	PROFILE=debug
 endif
 
-CC := cc
+TAG_FILE := $(BUILD_DIR)/profile_$(PROFILE)
+NAME_PROFILE := $(BUILD_DIR)/$(PROFILE)_$(NAME)
+PROFILES := opt debug debug_mem debug_mem_sanitize
 
-all: ${NAME} 
+CFLAGS := -MMD -fPIE -Wall -Wextra -Werror --std=c99 -pedantic -g3 $(FLAGS)
 
-$(NAME): Makefile ${OBJS}
-	ar -rsc ${NAME} ${OBJS}
+ifeq ($(PROFILE),opt)
+	CFLAGS += -O3 -flto
+endif
 
-build/%.o: %.c ${HEADERES} Makefile
-	@mkdir -p build/$$(dirname $<)
-	${CC} ${CFLAGS} -c $< -o $@
+ifeq ($(PROFILE),debug)
+	CFLAGS += -Og
+endif
+
+ifeq ($(PROFILE),debug_mem)
+	CFLAGS += -DDEBUG_ALLOC
+endif
+
+ifeq ($(PROFILE),debug_mem_sanitize)
+	CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak
+endif
+
+PROFILE_FOUND := $(filter $(PROFILE), $(PROFILES))
+
+OBJS := $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.o)
+
+ifeq ($(PROFILE_FOUND),)
+all::
+	@echo "Unknown profile" ${PROFILE};
+	@echo "Choose one of: $(PROFILES)";
+	@exit 1;
+endif
+
+all:: $(NAME)
+
+$(NAME): $(NAME_PROFILE) ${TAG_FILE}
+	cp $(NAME_PROFILE) $(NAME)
+
+$(NAME_PROFILE): $(OBJS)
+	ar -rsc $(NAME_PROFILE) $(OBJS)
+
+${TAG_FILE}:
+	rm -rf $(BUILD_DIR)/profile_*
+	touch ${TAG_FILE}
+
+build/${PROFILE}/%.o: %.c Makefile
+	@mkdir -p $$(dirname $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf ${BUILD_DIR}
+	rm -rf $(BUILD_DIR)
 
 fclean: clean
-	rm -rf ${NAME}
+	rm -rf $(NAME)
 
 re::fclean
 re::all
 
 .PHONY: clean fclean re
+-include $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.d)

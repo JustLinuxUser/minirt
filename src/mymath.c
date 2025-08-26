@@ -85,3 +85,14 @@ t_fvec3 vec3_rotate_pitch_yaw(t_fvec3 v, float pitch, float yaw)
                                             QuaternionFromEuler(pitch, yaw, 0));
     return (*(t_fvec3*)(void*)&ret);
 }
+
+float fvec3_idx(t_fvec3 v, int idx)
+{
+	if (idx == 0)
+		return v.x;
+	if (idx == 1)
+		return v.y;
+	if (idx == 2)
+		return v.z;
+	return 0;
+}

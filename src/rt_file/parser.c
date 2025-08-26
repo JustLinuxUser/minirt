@@ -97,7 +97,7 @@ bool parse_dict(t_rt_parser* parser, t_rt_node* ret) {
 
     *ret = (t_rt_node){.t = RT_ND_DICT};
 	ft_assert(peek_token_type(&parser->tokenizer) == RT_LBRACE);
-	consume_token_panic(&parser->tokenizer);
+	ret->token = consume_token_panic(&parser->tokenizer);
 
 	while (peek_token_type(&parser->tokenizer) == RT_IDENT) {
 		kv.k = consume_token_panic(&parser->tokenizer);
@@ -130,8 +130,7 @@ bool parse_list(t_rt_parser* parser, t_rt_node* ret) {
 
     *ret = (t_rt_node){.t = RT_ND_LIST};
 	ft_assert(peek_token_type(&parser->tokenizer) == RT_LBRACKET);
-	consume_token_panic(&parser->tokenizer);
-
+	ret->token = consume_token_panic(&parser->tokenizer);
 	while (is_rvalue(peek_token_type(&parser->tokenizer))) {
 		if (!parse_node(parser, &nd))
 		{

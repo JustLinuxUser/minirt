@@ -1,0 +1,122 @@
+# MTL file - created by a modified js OBJExporter
+
+newmtl mat17
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 1
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 0.06 0.1 0.13
+Ke 0 0 0
+
+newmtl mat21
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 1
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 1 1
+Ke 0 0 0
+
+newmtl mat23
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 1
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 0.01 0.01 0.01
+Ke 0 0 0
+
+newmtl mat22
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 1
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 0.35 0.35 0.35
+Ke 0 0 0
+
+newmtl mat14
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 1
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 0.09 0.01
+Ke 0 0 0
+
+newmtl mat25
+Tr 0.6
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.7
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 0.83 0.89 0.87
+Ke 0 0 0
+
+newmtl mat13
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 1
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 0.33 0
+Ke 0 0 0
+
+newmtl mat24
+Tr 0.6
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 0.7
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 0.83 0.89 0.87
+Ke 0 0 0
+
+newmtl mat8
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 1
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 0.91 0.05 0.03
+Ke 0 0 0
+
+newmtl mat12
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 1
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 1 0.83 0.04
+Ke 0 0 0
+
+newmtl mat10
+Tr 0.0000
+Tf 1.0000 1.0000 1.0000
+illum 1
+Pr 1
+Pds 1
+Pl 1
+Ka 1 1 1
+Kd 0.07 0.44 0.08
+Ke 0 0 0

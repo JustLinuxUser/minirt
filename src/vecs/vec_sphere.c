@@ -25,9 +25,7 @@ int	vec_sphere_double(t_vec_sphere *v)
 	t_sphere	*temp;
 	size_t	i;
 
-	v->cap = v->cap * 2;
-	if (!v->cap)
-		v->cap = 64;
+	v->cap = v->cap * 2 + 1;
 	temp = malloc(sizeof(t_sphere) * v->cap);
 	if (temp == 0)
 		return (1);

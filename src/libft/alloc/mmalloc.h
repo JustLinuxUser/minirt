@@ -1,29 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   vec_plane.h                                     :+:      :+:    :+:   */
+/*   mmalloc.h                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/13 22:52:15 by anddokhn          #+#    #+#             */
-/*   Updated: 2025/01/14 00:34:37 by anddokhn         ###   ########.fr       */
+/*   Created: 2025/08/26 16:51:02 by anddokhn          #+#    #+#             */
+/*   Updated: 2025/08/26 16:51:02 by anddokhn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef VEC_PLANE_H
-# define VEC_PLANE_H
-# include <stdlib.h>
-typedef int plane;
+#ifndef MMALLOC_H
+# define MMALLOC_H
 
-typedef struct s_vec_plane
-{
-	size_t	cap;
-	size_t	len;
-	plane		*buff;
-}	t_vec_plane;
-int	vec_plane_init(t_vec_plane *ret);
-int	vec_plane_double(t_vec_plane *v);
-int	vec_plane_push(t_vec_plane *v, plane el);
-plane	vec_plane_pop(t_vec_plane *v);
-plane	vec_plane_idx(t_vec_plane *v, size_t idx);
-#endif
+# include <stdlib.h>
+
+void	*mmalloc(size_t amount, char *msg);
+#endif 

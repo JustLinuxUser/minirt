@@ -1,24 +1,30 @@
-TARGET := miniRT
+NAME := miniRT
+CC := cc
 
 SRCS_DIR := src
 OUT_DIR := build
 
 SOURCES := ${wildcard ${SRCS_DIR}/*.c} ${wildcard ${SRCS_DIR}/**/*.c}
 
-HEADERS := 
+BUILD_DIR := build
 
-OBJS := ${SOURCES:${SRCS_DIR}/%.c=${OUT_DIR}/%.o}
-
-ifdef OPT
-	CFLAGS := -MMD -fPIE -Wall -Wextra  -O3 -flto ${FLAGS}
-else
-	CFLAGS := -MMD -Wall -Wextra  -fPIE --std=c99 -pedantic -g3 -fsanitize=address,leak,undefined ${FLAGS}
+ifndef PROFILE
+	PROFILE=debug
 endif
 
-LIBFT_DIR := src/libft
+TAG_FILE := $(BUILD_DIR)/profile_$(PROFILE)
+NAME_PROFILE := $(BUILD_DIR)/$(PROFILE)_$(NAME)
+PROFILES := opt debug debug_mem debug_mem_sanitize
+
+CFLAGS := -MMD -fPIE -Wall -Wextra --std=c99 -pedantic -g3 $(FLAGS)
+
+# TODO: Add this before entering the project
+# CFLAGS += -Werror
+
+LIBFT_DIR := ./src/libft
 LIBFT := ${LIBFT_DIR}/libft.a
 
-LIBS := -lm -L${LIBFT_DIR} -lft 
+LIBS := -lm -L ${LIBFT_DIR} -lft 
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
@@ -30,36 +36,61 @@ ifeq ($(UNAME_S),Darwin)
 	CFLAGS += -I raylib-5.5_macos/include
 endif
 
-CC := cc
+ifeq ($(PROFILE),opt)
+	CFLAGS += -O3 -flto
+endif
 
-all: ${TARGET}
+ifeq ($(PROFILE),debug)
+	CFLAGS += -Og
+endif
 
-${TARGET}: Makefile build ${LIBFT} ${OBJS} ${LIBFT_A}
-	${CC} ${CFLAGS} -o ${TARGET} ${OBJS} ${LIBS}
+ifeq ($(PROFILE),debug_mem)
+	CFLAGS += -DDEBUG_ALLOC
+endif
 
-${OUT_DIR}/%.o: ${SRCS_DIR}/%.c ${HEADERS}
-	mkdir -p $$(dirname $@)
-	${CC} ${CFLAGS} -c $< -o $@
+ifeq ($(PROFILE),debug_mem_sanitize)
+	CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak
+endif
 
-${LIBFT}: ${LIBFT_DIR}
-	make -C ${LIBFT_DIR}
+PROFILE_FOUND := $(filter $(PROFILE), $(PROFILES))
 
-${OUT_DIR}:
-	mkdir -p build
+OBJS := $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.o)
+
+ifeq ($(PROFILE_FOUND),)
+all::
+	@echo "Unknown profile" ${PROFILE};
+	@echo "Choose one of: $(PROFILES)";
+	@exit 1;
+endif
+
+all:: $(NAME)
+
+$(NAME): $(NAME_PROFILE) ${TAG_FILE}
+	cp $(NAME_PROFILE) $(NAME)
+
+$(NAME_PROFILE): $(OBJS) $(LIBFT)
+	${CC} ${CFLAGS} -o $(NAME_PROFILE) $(OBJS) $(LIBS) 
+
+${TAG_FILE}:
+	rm -rf $(BUILD_DIR)/profile_*
+	touch ${TAG_FILE}
+
+$(LIBFT): ${TAG_FILE}
+	$(MAKE) -j -C ${LIBFT_DIR}
+
+build/${PROFILE}/%.o: %.c Makefile
+	@mkdir -p $$(dirname $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf ${OUT_DIR}
-	make -C ${LIBFT_DIR} fclean
+	rm -rf $(BUILD_DIR)
+	$(MAKE) -C $(LIBFT_DIR) fclean
 
 fclean: clean
-	rm -rf ${TARGET}
+	rm -rf $(NAME)
 
-re:: fclean
-re:: all
-
-run: all
-	./${TARGET}
+re::fclean
+re::all
 
 .PHONY: clean fclean re
-
--include ${SOURCES:%.c=${OUT_DIR}/%.d}
+-include $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.d)

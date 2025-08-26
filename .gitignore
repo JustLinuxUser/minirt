@@ -1,0 +1,6 @@
+.cache
+build/
+src/libft/build
+objs/
+**compile_commands.json
+**/*.a

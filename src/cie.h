@@ -13,8 +13,6 @@
 #ifndef CIE_H
 # define CIE_H
 
-#include "minirt.h"
-
 #define CIE_MIN_LAMBDA 360.0
 #define CIE_MAX_LAMBDA 830.0
 #define CIE_SAMPLES 471 

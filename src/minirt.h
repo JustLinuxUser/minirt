@@ -1,9 +1,12 @@
 #ifndef MINIRT_H
 # define MINIRT_H
 #include "mymath.h"
-#include "cie.h"
 #include "spectrum.h"
 #include "vecs/vec_mesh.h"
+#include "shapes.h"
+#include "vecs/vec_shape.h"
+#include "vecs/vec_sphere.h"
+#include "vecs/vec_plane.h"
 #include "vecs/vec_triangle.h"
 #include <raylib.h>
 #include <stdbool.h>
@@ -19,36 +22,19 @@ typedef struct perspective_cam {
     float cam_dist;
 } perspective_cam;
 
-typedef struct sphere {
-    t_fvec3 p;
-    float r;
-    t_color color;
-} sphere;
+// TODO: Set allignment to 32
+typedef struct s_linear_bvh_nd {
+    t_bounds3f bounds;
+    union {
+        int primitives_offset;    // leaf
+        int second_child_offset;  // interior
+    } _union;
+    uint16_t n_primitives;  // 0 -> interior node
+    uint8_t axis;           // interior node: xyz
+} t_linear_bvh_nd;
 
-enum obj_type {
-    OBJ_SPHERE,
-    OBJ_PLANE,
-    OBJ_TRIANGLE,
-};
-
-typedef union obj_u {
-    sphere sphere;
-    t_ray plane;
-} obj_u;
-
-typedef struct obj {
-    enum obj_type type;
-    obj_u obj;
-    bool skip;
-} obj;
-
-typedef struct t_state {
-    obj objs[1024];
-    int obj_count;
-
-    /*NEW*/
+typedef struct s_state {
     t_SampledSpectrum* s_colors;
-    t_color* colors;
     int screen_width;
     int screen_height;
 
@@ -65,18 +51,26 @@ typedef struct t_state {
 
 	t_vec_mesh meshes;
 	t_vec_triangle triangles;
+
+	t_vec_sphere spheres;
+	t_vec_plane planes;
+
+	t_vec_shape shapes;
+
+	t_linear_bvh_nd *bvh;
+
+	int last_x;
+	int last_y;
+	int total_runs;
 } t_state;
+
+t_collision collide_bvh(t_state* state, t_ray ray, float t_max, int *steps);
 
 
 typedef struct output_config {
     int width;
     int height;
 } output_config;
-
-// shapes.c
-bool intersect_sphere(sphere s, t_ray r, float* t);
-int intersect_plane(t_ray plane, t_ray r, float* t);
-bool intersect_triangle(t_ray ray, t_fvec3 a, t_fvec3 b, t_fvec3 c, float *t);
 
 // colors.c
 t_color RGBToColor(Color c);
@@ -91,10 +85,7 @@ t_fvec3 perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c
 t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left);
-<<<<<<< HEAD
 /*TO BE CHANGE ONCE LOGIC CHANGED*/
 t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_left);
-=======
 void load_triangles(t_state *state);
->>>>>>> 56cb9c0 (bak)
 #endif

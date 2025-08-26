@@ -18,6 +18,7 @@
 # include "ft_printf/ft_printf.h"
 # include "utils/utils.h"
 # include "dsa/vec_dyn_str.h"
+# include "alloc/alloc.h"
 
 size_t		ft_strlen(const char *str);
 size_t		ft_strlcat(char *dest, const char *src, size_t size);

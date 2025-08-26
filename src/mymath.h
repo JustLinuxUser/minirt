@@ -30,4 +30,5 @@ t_fvec3 fvec3_reflect(t_fvec3 v, t_fvec3 norm);
 t_fvec3 fvec3_lerp(t_fvec3 v1, t_fvec3 v2, float prop);
 t_fvec3 vec3_rotate_pitch_yaw(t_fvec3 v, float pitch, float yaw);
 t_fvec3 fvec3_cross(t_fvec3 v1, t_fvec3 v2);
+float fvec3_idx(t_fvec3 v, int idx);
 #endif
