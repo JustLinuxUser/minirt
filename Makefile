@@ -63,6 +63,7 @@ all::
 	@exit 1;
 endif
 
+all:: $(LIBFT)
 all:: $(NAME)
 
 $(NAME): $(NAME_PROFILE) ${TAG_FILE}
@@ -75,8 +76,10 @@ ${TAG_FILE}:
 	rm -rf $(BUILD_DIR)/profile_*
 	touch ${TAG_FILE}
 
-$(LIBFT): ${TAG_FILE}
+$(LIBFT): FORCE
 	$(MAKE) -j -C ${LIBFT_DIR}
+
+FORCE: ;
 
 build/${PROFILE}/%.o: %.c Makefile
 	@mkdir -p $$(dirname $@)
