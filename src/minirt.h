@@ -2,12 +2,15 @@
 # define MINIRT_H
 #include "mymath.h"
 #include "spectrum.h"
+
 #include "vecs/vec_mesh.h"
 #include "shapes.h"
 #include "vecs/vec_shape.h"
 #include "vecs/vec_sphere.h"
 #include "vecs/vec_plane.h"
 #include "vecs/vec_triangle.h"
+#include "light.h"
+
 #include <raylib.h>
 #include <stdbool.h>
 
@@ -34,7 +37,8 @@ typedef struct s_linear_bvh_nd {
 } t_linear_bvh_nd;
 
 typedef struct s_state {
-    t_SampledSpectrum* s_colors;
+    t_fvec3* s_colors;
+
     int screen_width;
     int screen_height;
 
@@ -45,6 +49,8 @@ typedef struct s_state {
     int debug;
 
     t_fvec3 light_pos;
+    t_light light;
+    t_lights lights;
     float proj_coef;
     float screen_dist;
     bool preview;
@@ -72,20 +78,29 @@ typedef struct output_config {
     int height;
 } output_config;
 
+// probability.c
+void createAliasTable(t_lights *lights);
+int SampleAliasTable(t_lights *lights, float lu);
+
 // colors.c
 t_color RGBToColor(Color c);
 float linear_to_gamma(float c);
 /*NEW*/
 Color ColortoRGB(t_color c);
-Color SpectrumToRGB(t_SampledSpectrum t);
+t_fvec3 SpectrumToXYZ(t_SampledSpectrum s, t_SampledWavelengths lambda);
+Color XYZToRGB(t_fvec3 t);
 t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda);
 t_ColorRGB clamp_rgb(t_ColorRGB c);
+float random_generator();
 /*END NEW*/
 t_fvec3 perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c
 t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left);
 /*TO BE CHANGE ONCE LOGIC CHANGED*/
-t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_left);
-void load_triangles(t_state *state);
+t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, 
+        t_SampledWavelengths lambdas, int iters_left);
+
+// tinyobj.c
+void load_triangles(t_state* state);
 #endif

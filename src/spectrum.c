@@ -6,7 +6,7 @@
 /*   By: mhornero <mhornero@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 20:20:37 by mhornero          #+#    #+#             */
-/*   Updated: 2025/08/01 16:04:06 by mhornero         ###   ########.fr       */
+/*   Updated: 2025/08/18 21:20:26 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,12 +95,12 @@ float clamp(float x, float minVal, float maxVal)
 
 
 /*FROM sRGB conversion matrix XYZ to RGB*/
-t_ColorRGB xyz_to_rgb(float x, float y, float z)
+t_ColorRGB xyz_to_rgb(t_fvec3 t)
 {
     t_ColorRGB rgb;
-    rgb.r =  3.2406f * x - 1.5372f * y - 0.4986f * z;
-    rgb.g = -0.9689f * x + 1.8758f * y + 0.0415f * z;
-    rgb.b =  0.0557f * x - 0.2040f * y + 1.0570f * z;
+    rgb.r =  3.2406f * t.x - 1.5372f * t.y - 0.4986f * t.z;
+    rgb.g = -0.9689f * t.x + 1.8758f * t.y + 0.0415f * t.z;
+    rgb.b =  0.0557f * t.x - 0.2040f * t.y + 1.0570f * t.z;
     return rgb;
 }
 
@@ -129,39 +129,38 @@ void cie_xyz(float lambda, float *x, float *y, float *z)
     *z = CIE_Z[idx] * (1.0f - t) + CIE_Z[idx+1] * t;
 }
 
-t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda) {
-    float X = 0.0f, Y = 0.0f, Z = 0.0f;
+// t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda) {
+//     float X = 0.0f, Y = 0.0f, Z = 0.0f;
 
-    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; ++i) {
-        float l = lambda.lambda[i];
-        float pdf = lambda.pdf[i];
-        float value = s.values[i];
+//     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; ++i) {
+//         float l = lambda.lambda[i];
+//         float pdf = lambda.pdf[i];
+//         float value = s.values[i];
         
-        //They use saveDiv, but was easier for now
-        if (pdf == 0.0f)
-            continue;
+//         //They use saveDiv, but was easier for now
+//         if (pdf == 0.0f)
+//             continue;
 
-        //Need the color evaluation (static for now)
-        //Need to understand chromacity
-        float x_bar, y_bar, z_bar;
-        cie_xyz(l, &x_bar, &y_bar, &z_bar);
-        
-        X += value * x_bar / pdf;
-        Y += value * y_bar / pdf;
-        Z += value * z_bar / pdf;
-    }
-    //The average part
-    X /= NUM_SPECTRUM_SAMPLES;
-    Y /= NUM_SPECTRUM_SAMPLES;
-    Z /= NUM_SPECTRUM_SAMPLES;
+//         //Need the color evaluation (static for now)
+//         //Need to understand chromacity
+//         float x_bar, y_bar, z_bar;
+//         cie_xyz(l, &x_bar, &y_bar, &z_bar);
+//         X += value * x_bar / pdf;
+//         Y += value * y_bar / pdf;
+//         Z += value * z_bar / pdf;
+//     }
+
+//     //The average part
+//     X /= NUM_SPECTRUM_SAMPLES;
+//     Y /= NUM_SPECTRUM_SAMPLES;
+//     Z /= NUM_SPECTRUM_SAMPLES;
+//     //Correction by the CIE_Y integral
+//     X /= CIE_Y_integral;
+//     Y /= CIE_Y_integral;
+//     Z /= CIE_Y_integral;
     
-    //Correction by the CIE_Y integral
-    X /= CIE_Y_integral;
-    Y /= CIE_Y_integral;
-    Z /= CIE_Y_integral;
-    
-    return xyz_to_rgb(X, Y, Z);
-}
+//     return xyz_to_rgb(X, Y, Z);
+// }
 
 t_ColorRGB clamp_rgb(t_ColorRGB c) {
     t_ColorRGB out;
@@ -185,3 +184,19 @@ t_ColorRGB clamp_rgb(t_ColorRGB c) {
 
 //     return (0);
 // }
+
+float blackbody(float lambda, float T)
+{
+    if (T <= 0)
+    {
+        return 0;
+    }
+    float c = 299792458.f;
+    float h =  6.62606957e-34f;
+    float kb = 1.3806488e-23f;
+    
+    float l = lambda * 1e-9f;
+    float Le = (2 * h * c * c) / (powf(l, 5) * (expf((h * c) / (l * kb * T)) - 1));
+    //printf("LE: %f\n", Le);
+    return Le;
+}

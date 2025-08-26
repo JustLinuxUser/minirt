@@ -1,15 +1,9 @@
 #include "cie.h"
 #include "minirt.h"
-#include "mymath.h"
 #include "samplers.h"
-#include <math.h>
-#include <stdint.h>
-#include <stdlib.h>
 #include "shapes.h"
-
-//DELETE
-#include <stdio.h>
-#include <string.h>
+#include <math.h>
+#include <stdlib.h>
 
 t_collision ray_collision(t_state* state, t_ray curr_ray, float t_max) {
 	t_collision curr_coll = {.collided = false};
@@ -28,6 +22,9 @@ t_collision ray_collision(t_state* state, t_ray curr_ray, float t_max) {
 	}
 	return curr_coll;
 }
+
+/*NEW CAST REFLECTABLE RAY!!!*/
+//#TODO
 
 //EASY GET SURFACE COLOR AS BSDF
 t_SampledSpectrum get_surface_color(t_state* state, t_fvec3 p)
@@ -51,14 +48,15 @@ t_SampledWavelengths get_values_pdf(t_state* state, t_fvec3 p)
     return l; 
 }
 
-t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_left) {
+t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, 
+        t_SampledWavelengths lambdas, int iters_left) {
     t_SampledSpectrum L = {0};
     t_SampledSpectrum beta = {1.f};
 	t_collision coll;
-	t_collision light_coll;
     int i;
     t_fvec3 p;
     t_fvec3 norm = {0};
+	int steps = 0;
 
     //INIT BETA
     i = -1;
@@ -68,77 +66,49 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_
 
     while (iters_left-- > 0)
     {
-        // coll = ray_collision(state, ray, INFINITY);
-		int steps = 0;
-		coll = collide_bvh(state, ray, INFINITY, &steps);
-		// coll = ray_collision(state, ray, INFINITY);
-		// if (rand() % 50 == 0) {
-		// 	t_collision coll2 = ray_collision(state, ray, INFINITY);
-		// 	if (coll.shape.ptr != coll2.shape.ptr) {
-		// 		L.values[0] = 1000;
-		// 		L.values[1] = 1000;
-		// 		L.values[2] = 1000;
-		// 		L.values[3] = 1000;
-		// 	}
-		// }
-		i = -1;
-		while (++i < NUM_SPECTRUM_SAMPLES)
-		{
-			// L.values[i] += steps * 0.001;
-		}
+        coll = collide_bvh(state, ray, INFINITY, &steps);
         if (!coll.collided)
-		{
             break;
-		}
-		// if (coll.shape.ptr != coll2.shape.ptr)
-		// 	printf("Different shapes!!!!!!!");
-		// if (coll2.collided)
-		// 	printf("Something\n");
         //TO BE USED WHEN BSDF IMPLEMENTED:
-        // obj o = state->objs[state->last_collided_idx];
 
         //HIT POS AND NORMAL TO HIT
         p = fvec3_add(fvec3_scale(ray.dir, coll.t), ray.pos);
-
 		norm = collision_norm(state, coll, p);
-		if (fvec3_dot(norm, ray.dir) > 0)
-			norm = fvec3_invert(norm);
+        
         /*LIGHT THING*/
 
         //LIGHT INFORMATION
-        t_fvec3 light = fvec3_sub(state->light_pos, p);
+        float lu = random_generator();
+        t_light s_light;
+        int index = SampleAliasTable(&state->lights, lu);
+        s_light = state->lights.lights[index]; 
+        t_fvec3 light = fvec3_sub(s_light.position, p);
         float light_t = sqrtf(fvec3_len_sq(light));
         t_fvec3 norm_light = fvec3_norm(light);
         
         //SHADOW RAY
         t_SampledSpectrum color = {0};
         color = get_surface_color(state, p);
-		if (coll.shape.type == OBJ_SPHERE)
-			color.values[0] = 0.5;
         float dot = 0.f;
         float distance_decrease = 0.f;
 
-		// light_coll = ray_collision(state, (t_ray){.pos = p, .dir = norm_light}, light_t);
-		light_coll = collide_bvh(state, (t_ray){.pos = p, .dir = norm_light}, light_t, &steps);
-        if (!light_coll.collided)
+        coll = collide_bvh(state, (t_ray){.pos = p, .dir = norm_light}, light_t, &steps);
+        if (!coll.collided)
         {
-			t_SampledSpectrum light = {.values = {
-				0.87, 0.69, 0.52, 0.99
-			}};
             //GET COSINE (AS BEFORE)
             dot = fmax(fvec3_dot(norm, norm_light), 0);
             //HOW MUCH LIGHT INTENSITY (cos AND distance)
             distance_decrease = 1.0f / (light_t * light_t);
             //APPLY BSDF
-			i = -1;
-			while (++i < NUM_SPECTRUM_SAMPLES)
-			{
-				//printf("Update L[%d]: %f, %f, %f, %f\n", i, beta.values[i], color.values[i],  dot, distance_decrease);
-				L.values[i] += beta.values[i] * color.values[i] * dot * (5000.f * light.values[i] * distance_decrease);
-			}
-		}
-        // }        
-
+            i = -1;
+            while (++i < NUM_SPECTRUM_SAMPLES)
+            {
+                //printf("Update L[%d]: %f, %f, %f, %f\n", i, beta.values[i], color.values[i],  dot, distance_decrease);
+                //#TODO: CHANGE FOR LIGHT.VALUES[i]
+                L.values[i] += beta.values[i] * color.values[i] * dot * (s_light.intensity * s_light.spec.samples[(int)(lambdas.lambda[i] - CIE_MIN_LAMBDA)] * distance_decrease);
+            }
+        }
+        
         /*LAMBERTIAN SURFACE (BASE CASE)*/
         t_ray new_ray = (t_ray){.pos = p, .dir = rand_halfsphere(norm)};
         ray = new_ray;
@@ -149,17 +119,13 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, int iters_
 
         //UPDATE BETA NOT CORRECT AT THE MOMENT
         i = -1;
-        t_SampledWavelengths wv = SampleUniform(0.5, CIE_MIN_LAMBDA, CIE_MAX_LAMBDA);
+        //t_SampledWavelengths wv = get_values_pdf(state, p);
         while (++i < NUM_SPECTRUM_SAMPLES)
         {
-            if (wv.pdf[i] == 0.f)
+            if (lambdas.pdf[i] == 0.f)
                 beta.values[i] = 0.f;
             else
-                beta.values[i] *= color.values[i] * dot ;/// wv.pdf[i];
-			if (beta.values[i] > 1.1) {
-				sampled_spectrum_scale(L, 0);
-				L.values[0] = 1.;
-			}
+                beta.values[i] *= color.values[i] * dot;// / lambdas.pdf[i];
         }
     }
     //printf("Final L: %f, %f, %f\n", L.values[0], L.values[1], L.values[2]);

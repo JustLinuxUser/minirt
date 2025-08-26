@@ -50,8 +50,7 @@ t_state init(int screen_width, int screen_height, float fov_deg) {
         // .preview = true,
     };
 
-    ret.s_colors =
-        calloc(ret.screen_width * ret.screen_height, sizeof(t_SampledSpectrum));
+    ret.s_colors = calloc(ret.screen_width * ret.screen_height, sizeof(t_fvec3));
 
     const float screen_dist = 1;
 
@@ -88,10 +87,13 @@ void render_step(t_state* state, int render_px) {
                 return;
             t_ray curr_ray;
             t_SampledSpectrum res_color = {0};
-            t_sampler_state sstate = {.stratified_x = 1, .stratified_y = 1};
+            t_sampler_state sstate = {.stratified_x = 3, .stratified_y = 3};
 
             t_fvec2 sample;
+			t_fvec3 xyz_color = {0};
             while (sample_stratified(&sstate, &sample)) {
+				float lu = random_generator();
+				t_SampledWavelengths lambdas = SampleUniform(lu, 360, 830);
                 curr_ray.pos = state->cam.pos;
                 t_fvec3 l1 = fvec3_lerp(
                     x0y0, x0y1,
@@ -103,20 +105,25 @@ void render_step(t_state* state, int render_px) {
                     l2, l1, (state->last_x + sample.x) / state->screen_width));
                 curr_ray.dir = pt;
 
-                res_color = sampled_spectrum_add(
-                    cast_reflectable_ray_new(state, curr_ray, 1), res_color);
+				res_color = cast_reflectable_ray_new(state, curr_ray, lambdas, 1);
+				xyz_color = fvec3_add(SpectrumToXYZ(res_color, lambdas), xyz_color);
             }
+			xyz_color = fvec3_scale(xyz_color, 1. / (sstate.stratified_x *
+						   sstate.stratified_y));
 
-            res_color = sampled_spectrum_scale(
-                res_color, 1. / (sstate.stratified_x * sstate.stratified_y));
+			//RES COLOR TO XYZ (T_FVEC3)
+			state->s_colors[state->last_y * state->screen_width + state->last_x] = fvec3_add(state->s_colors[state->last_y * state->screen_width + state->last_x], xyz_color);
+
+            // res_color = sampled_spectrum_scale(
+            //     res_color, 1. / (sstate.stratified_x * sstate.stratified_y));
             /*DO WE NEED TO SCALE??????*/
 
-            state->s_colors[state->last_y * state->screen_width +
-                            state->last_x] =
-                sampled_spectrum_add(
-                    state->s_colors[state->last_y * state->screen_width +
-                                    state->last_x],
-                    res_color);
+            // state->s_colors[state->last_y * state->screen_width +
+            //                 state->last_x] =
+            //     sampled_spectrum_add(
+            //         state->s_colors[state->last_y * state->screen_width +
+            //                         state->last_x],
+            //         res_color);
             state->last_x++;
         }
         state->last_y++;
@@ -189,67 +196,28 @@ int main(int argc, char** argv) {
 
     printf("triangles: %zu\n", state.triangles.len);
 
-    // add_obj(&state, (obj_t){.type = OBJ_SPHERE,
-    //                       .obj = {.sphere = {.r = 30,
-    //                                          .p = {.x = 20, .y = 20, .z =
-    //                                          150}, .color =
-    //                                          RGBToColor(BLUE)}}});
-    // add_obj(&state, (obj_t){.type = OBJ_SPHERE,
-    //                       .obj = {.sphere = {.r = 5,
-    //                                          .p = {.x = 40, .y = 30, .z =
-    //                                          100}, .color =
-    //                                          RGBToColor(PURPLE)}}});
-    // add_obj(&state, (obj_t){.type = OBJ_SPHERE,
-    //                       .obj = {.sphere = {.r = 20,
-    //                                          .p = {.x = 30, .y = -25, .z
-    //                                          = 120}, .color =
-    //                                          RGBToColor(GREEN)}}});
-    // add_obj(&state, (obj_t){.type = OBJ_PLANE,
-    //                       .obj = {.plane = {.pos = {.x = 0, .y = -50, .z
-    //                       = 0},
-    //                                         .dir = fvec3_norm((t_fvec3){
-    //                                             .x = 0, .y = 1, .z =
-    //                                             0})}}});
-    // add_obj(&state, (obj_t){.type = OBJ_PLANE,
-    //                       .obj = {.plane = {.pos = {.x = 0, .y = 0, .z =
-    //                       400},
-    //                                         .dir = fvec3_norm((t_fvec3){
-    //                                             .x = 0, .y = 0, .z =
-    //                                             -1})}}});
-    //
-    // add_obj(&state, (obj_t){.type = OBJ_PLANE,
-    //                       .obj = {.plane = {.pos = {.x = 0, .y = 150, .z
-    //                       = 0},
-    //                                         .dir = fvec3_norm((t_fvec3){
-    //                                             .x = 0, .y = -1, .z =
-    //                                             0})}}});
-    //
-    // add_obj(&state, (obj_t){.type = OBJ_PLANE,
-    //                       .obj = {.plane = {.pos = {.x = 150, .y = 0, .z
-    //                       = 0},
-    //                                         .dir = fvec3_norm((t_fvec3){
-    //                                             .x = -1, .y = 0, .z =
-    //                                             0})}}});
-    //
-    // add_obj(&state, (obj_t){.type = OBJ_PLANE,
-    //                       .obj = {.plane = {.pos = {.x = 0, .y = 0, .z =
-    //                       -10},
-    //                                         .dir = fvec3_norm((t_fvec3){
-    //                                             .x = 0, .y = 0, .z =
-    //                                             1})}}});
-    // add_obj(&state, (obj_t){.type = OBJ_PLANE,
-    //                       .obj = {.plane = {.pos = {.x = -150, .y = 0, .z
-    //                       = 0},
-    //                                         .dir = fvec3_norm((t_fvec3){
-    //                                             .x = 1, .y = 0, .z =
-    //                                             0})}}});
-    //
-    // add_obj(&state, (obj_t){.type = OBJ_SPHERE,
-    //                       .skip = true,
-    //                       .obj = {.sphere = {.r = 5,
-    //                                          .p = state.light_pos,
-    //                                          .color =
-    //                                          RGBToColor(YELLOW)}}});
+    /*LIGHTS*/
+    t_lights lights = {0};
+
+    t_light light1 = {.t = POINT_LIGHT, .intensity = 5000.f, .position = state.light_pos};
+    light1.spec = calculateDenselySampledSpectrum(9000);
+    
+    t_light light2 = {.t = POINT_LIGHT, .intensity = 3000.f, .position = {.y = 70, .z = 150, .x = 100}};
+    light2.spec = calculateDenselySampledSpectrum(6200);
+
+    t_light light3 = {.t = POINT_LIGHT, .intensity = 5000.f, .position = {.y = 70, .z = 50, .x = 50}};
+    light2.spec = calculateDenselySampledSpectrum(3000);
+
+    add_light(&lights, light1);
+    add_light(&lights, light2);
+    add_light(&lights, light3);
+    calculatePDFs(&lights);
+    createAliasTable(&lights);
+
+    state.lights = lights;
+
+    //state.light = light1;
+// >>>>>>> cc8e67f ("abstract logic for light and color")
 
     InitWindow(state.screen_width, state.screen_height,
                "raylib [core] example - basic window");
@@ -344,10 +312,10 @@ int main(int argc, char** argv) {
                         state.last_y * state.screen_width + state.last_x) {
                     DrawPixel(x, y, WHITE);
                 } else {
-                    DrawPixel(x, y,
-                              SpectrumToRGB(sampled_spectrum_scale(
-                                  state.s_colors[y * state.screen_width + x],
-                                  1. / state.total_runs)));
+					DrawPixel(x, y,
+							XYZToRGB(fvec3_scale(state.s_colors[y * state.screen_width + x],
+								1. / state.total_runs))
+					);
                 }
             }
         }
