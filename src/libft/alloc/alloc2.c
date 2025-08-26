@@ -47,7 +47,7 @@ void	*bump_alloc(t_bump_allocator *alloc, size_t size)
 // 	printf("\n");
 // }
 
-void	free_bump_alloc(t_bump_allocator *alloc)
+void	bump_alloc_free(t_bump_allocator *alloc)
 {
 	t_bump_arena	*curr;
 	t_bump_arena	*temp;

@@ -84,8 +84,9 @@ SOURCES +=	dsa/dyn_str.c\
 			dsa/prng.c\
 			dsa/vec_dyn_str.c
 
-SOURCES +=	alloc/mmalloc.c\
-			alloc/alloc.c
+SOURCES +=	alloc/mmalloc.c \
+			alloc/alloc.c   \
+			alloc/alloc2.c
 
 BUILD_DIR := build
 
