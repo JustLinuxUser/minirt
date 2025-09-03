@@ -1,43 +1,43 @@
 NAME := libft.a
 CC := cc
 
-SOURCES := src/ft_atoi.c\
+SOURCES := src/ft_atoi.c        \
 		   src/ft_checked_atoi.c\
-		   src/ft_bzero.c\
-		   src/ft_calloc.c\
-		   src/ft_isalnum.c\
-		   src/ft_isalpha.c\
-		   src/ft_isascii.c\
-		   src/ft_isdigit.c\
-		   src/ft_isprint.c\
-		   src/ft_itoa.c\
-		   src/ft_memchr.c\
-		   src/ft_memcmp.c\
-		   src/ft_memcpy.c\
-		   src/ft_memmove.c\
-		   src/ft_memset.c\
-		   src/ft_putchar_fd.c\
-		   src/ft_putendl_fd.c\
-		   src/ft_putnbr_fd.c\
-		   src/ft_putstr_fd.c\
-		   src/ft_split.c\
-		   src/ft_split_str.c\
-		   src/ft_strchr.c\
-		   src/ft_strnchr.c\
-		   src/ft_strrchr.c\
-		   src/ft_strdup.c\
-		   src/ft_striteri.c\
-		   src/ft_strjoin.c\
-		   src/ft_strlcat.c\
-		   src/ft_strlcpy.c\
-		   src/ft_strlen.c\
-		   src/ft_strmapi.c\
-		   src/ft_strncmp.c\
-		   src/ft_strcmp.c\
-		   src/ft_strnstr.c\
-		   src/ft_strtrim.c\
-		   src/ft_substr.c\
-		   src/ft_tolower.c\
+		   src/ft_bzero.c       \
+		   src/ft_calloc.c      \
+		   src/ft_isalnum.c     \
+		   src/ft_isalpha.c     \
+		   src/ft_isascii.c     \
+		   src/ft_isdigit.c     \
+		   src/ft_isprint.c     \
+		   src/ft_itoa.c        \
+		   src/ft_memchr.c      \
+		   src/ft_memcmp.c      \
+		   src/ft_memcpy.c      \
+		   src/ft_memmove.c     \
+		   src/ft_memset.c      \
+		   src/ft_putchar_fd.c  \
+		   src/ft_putendl_fd.c  \
+		   src/ft_putnbr_fd.c   \
+		   src/ft_putstr_fd.c   \
+		   src/ft_split.c       \
+		   src/ft_split_str.c   \
+		   src/ft_strchr.c      \
+		   src/ft_strnchr.c     \
+		   src/ft_strrchr.c     \
+		   src/ft_strdup.c      \
+		   src/ft_striteri.c    \
+		   src/ft_strjoin.c     \
+		   src/ft_strlcat.c     \
+		   src/ft_strlcpy.c     \
+		   src/ft_strlen.c      \
+		   src/ft_strmapi.c     \
+		   src/ft_strncmp.c     \
+		   src/ft_strcmp.c      \
+		   src/ft_strnstr.c     \
+		   src/ft_strtrim.c     \
+		   src/ft_substr.c      \
+		   src/ft_tolower.c     \
 		   src/ft_toupper.c
 SOURCES += src/ft_lstadd_back_bonus.c\
 		   src/ft_lstadd_front_bonus.c\
@@ -88,7 +88,14 @@ SOURCES +=	alloc/mmalloc.c \
 			alloc/alloc.c   \
 			alloc/alloc2.c
 
+GEN_NAMES += 							int
+GEN_TYPES_$(lastword $(GEN_NAMES)) = 	int
+
+GEN_NAMES += 							fvec3
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_fvec3
+
 BUILD_DIR := build
+CODEGEN_DIR := generated
 
 ifndef PROFILE
 	PROFILE=debug
@@ -120,6 +127,8 @@ PROFILE_FOUND := $(filter $(PROFILE), $(PROFILES))
 
 OBJS := $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.o)
 
+GEN_HEADERS		:= $(GEN_NAMES:%=$(CODEGEN_DIR)/vec_%.h)
+
 ifeq ($(PROFILE_FOUND),)
 all::
 	@echo "Unknown profile" ${PROFILE};
@@ -132,19 +141,55 @@ all:: $(NAME)
 $(NAME): $(NAME_PROFILE) ${TAG_FILE}
 	cp $(NAME_PROFILE) $(NAME)
 
-$(NAME_PROFILE): $(OBJS)
+
+$(NAME_PROFILE): $(OBJS) $(GEN_HEADERS)
 	ar -rsc $(NAME_PROFILE) $(OBJS)
+
+${CODEGEN_DIR}/vec_%.h: templates/vec_template.hpp Makefile
+	mkdir -p $(dir $@)
+
+	rm -f $@
+
+	echo '/* ************************************************************************** */' >>   $@
+	echo '/*                                                                            */' >>   $@
+	echo '/*                                                        :::      ::::::::   */' >>   $@
+	printf '/*   %-20s                               :+:      :+:    :+:   */\n' $${FILE_NAME} >>$@
+	echo '/*                                                    +:+ +:+         +:+     */' >>   $@
+	echo '/*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */' >>   $@
+	echo '/*                                                +#+#+#+#+#+   +#+           */' >>   $@
+	echo '/*   Created: 2024/09/28 15:11:48 by anddokhn          #+#    #+#             */' >>   $@
+	echo '/*   Updated: 2025/04/08 22:26:02 by anddokhn         ###   ########.fr       */' >>   $@
+	echo '/*                                                                            */' >>   $@
+	echo '/* ************************************************************************** */' >>   $@
+
+	PROT_NAME=$(shell echo $(notdir $@) | tr . '_' | tr '[:lower:]' '[:upper:]') &&\
+		echo '#ifndef '$$PROT_NAME >> $(abspath $@) &&\
+		echo '# define '$$PROT_NAME >> $(abspath $@)
+	echo '# include "../dsa/vec_gen.h"' >> $(abspath $@)
+	echo '# include "../utils/utils.h"' >> $(abspath $@)
+
+
+	cd templates/ && expand -i vec_template.h |\
+		gcc -E - -DGEN_TYPE=$(GEN_TYPES_$(@:$(CODEGEN_DIR)/vec_%.h=%)) -DTYPE_SHORT=$(@:$(CODEGEN_DIR)/vec_%.h=%) |\
+		unexpand | sed '1,/START/d' |\
+		sed $$'s/\\s*TAB\\s*/\t/g' \
+			>> $(abspath $@)
+
+	echo '#endif' >> $(abspath $@)
+	cat $(abspath $@)
+	norminette $(abspath $@)
 
 ${TAG_FILE}:
 	rm -rf $(BUILD_DIR)/profile_*
 	touch ${TAG_FILE}
 
 $(BUILD_DIR)/$(PROFILE)/%.o: %.c Makefile
-	@mkdir -p $$(dirname $@)
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf $(CODEGEN_DIR)
 
 fclean: clean
 	rm -rf $(NAME)

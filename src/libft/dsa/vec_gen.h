@@ -14,6 +14,7 @@
 # define VEC_GEN_H
 # include <stdint.h>
 # include <stdlib.h>
+# include <stdbool.h>
 
 typedef struct s_vec_gen
 {
@@ -23,9 +24,8 @@ typedef struct s_vec_gen
 	uint8_t		*buff;
 }	t_vec_gen;
 
-int		vec_gen_init(t_vec_gen *ret, size_t el_size, size_t init_alloc);
-int		vec_gen_double(t_vec_gen *v);
-int		vec_gen_push(t_vec_gen *v, void *el);
-int		vec_gen_pop(t_vec_gen *v, void *ret);
+bool	vec_gen_init(t_vec_gen *ret, size_t el_size, size_t init_alloc);
+bool	vec_gen_push(t_vec_gen *v, void *el);
+bool	vec_gen_pop(t_vec_gen *v, void *ret);
 void	*vec_gen_idx(t_vec_gen *v, size_t idx);
 #endif
