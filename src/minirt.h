@@ -65,8 +65,8 @@ typedef struct s_state {
 
 	t_linear_bvh_nd *bvh;
 
-	int last_x;
-	int last_y;
+	// int last_x;
+	// int last_y;
 	int total_runs;
 } t_state;
 
