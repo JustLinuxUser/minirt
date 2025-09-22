@@ -10,6 +10,7 @@
 #include "vecs/vec_plane.h"
 #include "vecs/vec_triangle.h"
 #include "light.h"
+#include "obj_file/obj_tokenizer.h"
 
 #include <raylib.h>
 #include <stdbool.h>

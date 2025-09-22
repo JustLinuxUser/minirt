@@ -49,7 +49,11 @@ ifeq ($(PROFILE),debug_mem)
 endif
 
 ifeq ($(PROFILE),debug_mem_sanitize)
-	CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak
+	ifeq ($(UNAME_S),Darwin)
+		CFLAGS += -DDEBUG_ALLOC -fsanitize=address
+	else
+		CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak
+	endif
 endif
 
 PROFILE_FOUND := $(filter $(PROFILE), $(PROFILES))

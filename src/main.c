@@ -212,8 +212,11 @@ int main(int argc, char** argv) {
     t_state state = init(800, 600, 70);
     int i;
 
-    if (!process_file(argv[1], &state))
+    // if (!process_file(argv[1], &state))
+    //     return 1;
+    if (!process_obj_file(argv[1]))
         return 1;
+    return 0;
 
 	state.light_pos = state.cam.pos;
     vec_sphere_push(&state.spheres, (t_sphere){
