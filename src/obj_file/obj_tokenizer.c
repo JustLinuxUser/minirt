@@ -6,7 +6,7 @@
 /*   By: mhornero <mhornero@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/07 18:10:19 by mhornero          #+#    #+#             */
-/*   Updated: 2025/09/23 17:49:30 by mhornero         ###   ########.fr       */
+/*   Updated: 2025/09/24 15:53:22 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -98,36 +98,49 @@ bool tokenize_obj_number(t_obj_tokenizer* tokenizer, float *fret, bool *is_int, 
 	return (true);
 }
 
-void tokenize_obj_tuple(t_obj_tokenizer* tokenizer)
+bool tokenize_obj_tuple(t_obj_tokenizer* tokenizer)
 {
     t_obj_token tok;
     init_tok(&tok, OBJ_TUPLE, tokenizer->curr_idx);
     bool is_int = true;
     float ret = 0.f;
     int i = 0;
+
+    if (peek_obj_char(tokenizer) == '/')
+    {
+        consume_obj_char(tokenizer);
+        tok.len++;
+        tok.vals[i++] = 0;
+    }
     
     while (peek_obj_char(tokenizer) != ' ' && peek_obj_char(tokenizer) != '\n' && chars_left(tokenizer))
     {
         if (!tokenize_obj_number(tokenizer, &ret, &is_int, &tok))
-            return ;
+            return (false);
         if (!is_int)
         {
             tok.parsed_num = ret;
             tok.t = OBJ_NUMBER;
             tokenizer->tokens[tokenizer->num_tokens++] = tok;
-            return ;
+            return (true);
         }
         if (i < 3)
             tok.vals[i++] = (int)ret;
         if (peek_obj_char(tokenizer) == '/'){
             consume_obj_char(tokenizer);
             tok.len++;
+            if (peek_obj_char(tokenizer) == '/'){
+                consume_obj_char(tokenizer);
+                tok.len++;
+                tok.vals[i++] = 0;
+            }
         }
     }
     tokenizer->tokens[tokenizer->num_tokens++] = tok;
+    return (true);
 }
 
-void tokenize_word(t_obj_tokenizer* tokenizer)
+bool tokenize_word(t_obj_tokenizer* tokenizer)
 {
     t_obj_token tok;
     init_tok(&tok, OBJ_IDENT, tokenizer->curr_idx);
@@ -137,6 +150,7 @@ void tokenize_word(t_obj_tokenizer* tokenizer)
         consume_obj_char(tokenizer);
     }
     tokenizer->tokens[tokenizer->num_tokens++] = tok;
+    return (true);
 }
 
 void tokenize_newline(t_obj_tokenizer* tokenizer)
@@ -169,41 +183,44 @@ char* obj_type_conversion(unsigned int t)
 }
 
 //add token array to function signature
-int process_obj_file(char* filename)
+int process_obj_file(char* filename, t_obj_tokenizer* tokenizer)
 {
     t_dyn_str ret = {0};
-    t_obj_tokenizer tokenizer = {0};
 
     if (!dyn_str_read_file(filename, &ret))
         return 0;
-    tokenizer.str = ret;
-    // printf("ret: %s\n", tokenizer.str.buff);
+    tokenizer->str = ret;
 
-    while (chars_left(&tokenizer))
+    while (chars_left(tokenizer))
     {
-        if (peek_obj_char(&tokenizer) == '#')
-            tokenize_comment(&tokenizer);
-        else if (peek_obj_char(&tokenizer) == '\n')
-            tokenize_newline(&tokenizer); 
-        else if (peek_obj_char(&tokenizer) == ' ')
-            consume_obj_char(&tokenizer);
-        else if (peek_obj_char(&tokenizer) == '-' || ft_strchr("0123456789", peek_obj_char(&tokenizer)))
-            tokenize_obj_tuple(&tokenizer);
-        else
-            tokenize_word(&tokenizer);
-    }
-    printf("num tokens: %d\n", tokenizer.num_tokens);
-    int i = -1;
-    while (++i < tokenizer.num_tokens)
-    {
-        printf("[type: %s; %.*s]\n", obj_type_conversion(tokenizer.tokens[i].t), tokenizer.tokens[i].len, tokenizer.str.buff + tokenizer.tokens[i].start_idx);
-        if (tokenizer.tokens[i].parsed_num != -99999.f)
-           printf("num: %f\n", tokenizer.tokens[i].parsed_num);
-        if (tokenizer.tokens[i].vals[0] != 0)
+        if (peek_obj_char(tokenizer) == '#')
+            tokenize_comment(tokenizer);
+        else if (peek_obj_char(tokenizer) == '\n')
+            tokenize_newline(tokenizer); 
+        else if (peek_obj_char(tokenizer) == ' ')
+            consume_obj_char(tokenizer);
+        else if (peek_obj_char(tokenizer) == '-' || peek_obj_char(tokenizer) == '/' || ft_strchr("0123456789", peek_obj_char(tokenizer)))
         {
-            printf("vals: %d\n", tokenizer.tokens[i].vals[0]); 
-            printf("vals: %d\n", tokenizer.tokens[i].vals[1]); 
-            printf("vals: %d\n", tokenizer.tokens[i].vals[2]);
+            if (!tokenize_obj_tuple(tokenizer))
+                return (0);
+        }
+        else
+            tokenize_word(tokenizer);
+    }
+
+    //PRINT STUFF
+    printf("num tokens: %d\n", tokenizer->num_tokens);
+    int i = -1;
+    while (++i < tokenizer->num_tokens)
+    {
+        printf("[type: %s; %.*s]\n", obj_type_conversion(tokenizer->tokens[i].t), tokenizer->tokens[i].len, tokenizer->str.buff + tokenizer->tokens[i].start_idx);
+        if (tokenizer->tokens[i].parsed_num != -99999.f)
+           printf("num: %f\n", tokenizer->tokens[i].parsed_num);
+        if (tokenizer->tokens[i].vals[0] != 0)
+        {
+            printf("vals: %d\n", tokenizer->tokens[i].vals[0]); 
+            printf("vals: %d\n", tokenizer->tokens[i].vals[1]); 
+            printf("vals: %d\n", tokenizer->tokens[i].vals[2]);
         }
     }
     return 1;

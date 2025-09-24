@@ -6,7 +6,7 @@
 /*   By: mhornero <mhornero@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/07 19:04:29 by mhornero          #+#    #+#             */
-/*   Updated: 2025/09/22 20:39:39 by mhornero         ###   ########.fr       */
+/*   Updated: 2025/09/23 17:57:15 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,4 +42,4 @@ typedef struct t_obj_tokenizer {
     int num_tokens;
 } t_obj_tokenizer;
 
-int process_obj_file(char* filename);
+int process_obj_file(char* filename, t_obj_tokenizer* tokenizer);
