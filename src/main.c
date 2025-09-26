@@ -7,6 +7,7 @@
 #include "minirt.h"
 #include "mymath.h"
 #include "obj_file/obj_tokenizer.h"
+#include "obj_file/obj_parser.h"
 #include "rt_file/rt_consumer.h"
 #include "samplers.h"
 #include <pthread.h>
@@ -215,8 +216,9 @@ int main(int argc, char** argv) {
 
     // if (!process_file(argv[1], &state))
     //     return 1;
-    t_obj_tokenizer tokenizer = {0};
-    if (!process_obj_file(argv[1], &tokenizer))
+    // t_obj_tokenizer tokenizer = {0};
+    // if (!process_obj_file(argv[1], &tokenizer))
+    if (get_obj(argv[1]))
         return 1;
     return 0;
 
