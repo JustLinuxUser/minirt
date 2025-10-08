@@ -104,7 +104,7 @@ bool tokenize_number(t_rt_tokenizer *tokenizer, float *fret, bool *is_int) {
 		num_fract++;
 	}
 	*fret = whole_part * sign;
-	*fret += fract_part / powf(10, num_fract);
+	*fret += sign * fract_part / powf(10, num_fract);
 	return (true);
 }
 

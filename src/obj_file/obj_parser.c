@@ -94,21 +94,6 @@ int get_obj(char *filename, t_obj_parser *ret)
         consume_obj_token(&parser);
     }
 
-    //PRINT
-    for (int i = 0; i < parser.vertices.len; i++)
-    {
-        t_fvec3 ret = parser.vertices.buff[i]; 
-        printf("here: %f %f %f\n", ret.x, ret.y, ret.z);
-    }
-
-    for (int i = 0; i < (int)parser.faces.len/3; i++)
-    {
-
-        int a = parser.faces.buff[i*3];
-        int b = parser.faces.buff[i*3+1];
-        int c = parser.faces.buff[i*3+2];  
-        printf("here: %d %d %d\n", a, b, c);
-    }
 	free(parser.tokenizer.tokens.buff);
     
 	*ret = parser;
