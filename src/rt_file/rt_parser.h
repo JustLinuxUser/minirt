@@ -90,3 +90,4 @@ void free_node(t_rt_node nd);
 bool dyn_str_read_file(char* file, t_dyn_str* ret);
 void pprint_node(t_rt_parser parser, t_rt_node nd, int indent);
 bool parse_statement(t_rt_parser* parser, t_rt_kv* stmt);
+bool parse_file(t_dyn_str file, t_rt_parser *parser);

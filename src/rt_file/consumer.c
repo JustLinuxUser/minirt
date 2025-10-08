@@ -71,18 +71,33 @@ bool process_ambiant(t_rt_consumer_tl* tl) {
     return (true);
 }
 
+t_fvec3 get_fvec3(t_rt_token tk) {
+	t_fvec3 ret;
+
+	ft_assert(tk.tuple_len == 3);
+	ret.x = tk.vals_f[0];
+	ret.y = tk.vals_f[1];
+	ret.z = tk.vals_f[2];
+	return (ret);
+}
+
+float get_float(t_rt_token tk) {
+	ft_assert(tk.tuple_len == 1);
+	return (tk.vals_f[0]);
+}
+
 bool process_camera(t_rt_consumer_tl* tl) {
     t_rt_node nd;
     if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 
-	tl->state->cam.pos = *(t_fvec3 *)(void *)&nd.token.vals_f;
+	tl->state->cam.pos = get_fvec3(nd.token);
 
 	// TODO: check if normalizable, or gracefully fallback
     if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 
-	tl->state->cam.dir = *(t_fvec3 *)(void *)&nd.token.vals_f;
+	tl->state->cam.dir = get_fvec3(nd.token);
 
     if (get_tl_typed(tl, "fov", RT_ND_TUPLE_F1, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 180))
@@ -106,12 +121,19 @@ bool process_light(t_rt_consumer_tl* tl) {
 }
 
 bool process_sphere(t_rt_consumer_tl* tl) {
+	t_sphere sp;
+
     t_rt_node nd;
     if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
+	sp.p = get_fvec3(nd.token);
 
     if (get_tl_typed(tl, "diameter", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
+
+	sp.r = get_float(nd.token);
+
+	vec_sphere_push(&tl->state->spheres, sp);
 
     if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
@@ -121,17 +143,47 @@ bool process_sphere(t_rt_consumer_tl* tl) {
 
 bool process_plane(t_rt_consumer_tl* tl) {
     t_rt_node nd;
+	t_plane pl = {0};
 
     if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
+
+	pl.pos = get_fvec3(nd.token);
 
 	// TODO: check if normalizable, or gracefully fallback
     if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 
+	pl.dir = fvec3_norm(get_fvec3(nd.token));
+
     if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
+
+	vec_plane_push(&tl->state->planes, pl);
+    return (true);
+}
+
+bool process_obj(t_rt_consumer_tl* tl) {
+    t_rt_node nd;
+
+    if (get_tl_typed(tl, "path", RT_ND_STRING, &nd) != 1)
+		return (false);
+
+	char *path = ft_strndup(tl->consumer->parser.tokenizer.file.buff + nd.token.start_idx + 1, nd.token.len - 2);
+
+	// TODO: check if normalizable, or gracefully fallback
+    if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
+		return (false);
+
+	t_fvec3 pos = get_fvec3(nd.token);
+
+    if (get_tl_typed(tl, "scale", RT_ND_TUPLE_F1, &nd) != 1)
+		return (false);
+	float scale = get_float(nd.token);
+
+	load_triangles(tl->state, path, pos, scale);
+	free(path);
     return (true);
 }
 
@@ -180,18 +232,20 @@ bool process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv) {
     // cy
 	kv->v.used = true;
 	kv->used = true;
-    if (ft_strncmp(buff + kv->k.start_idx, "A", kv->k.len) == 0) {
+    if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "A")) {
         return process_ambiant(&tl);
-    } else if (ft_strncmp(buff + kv->k.start_idx, "C", kv->k.len) == 0) {
+    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "C")) {
         return process_camera(&tl);
-    } else if (ft_strncmp(buff + kv->k.start_idx, "L", kv->k.len) == 0) {
+    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "L")) {
         return process_light(&tl);
-    } else if (ft_strncmp(buff + kv->k.start_idx, "pl", kv->k.len) == 0) {
+    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "pl")) {
         return process_plane(&tl);
-    } else if (ft_strncmp(buff + kv->k.start_idx, "sp", kv->k.len) == 0) {
+    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "sp")) {
         return process_sphere(&tl);
-    } else if (ft_strncmp(buff + kv->k.start_idx, "cy", kv->k.len) == 0) {
+    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "cy")) {
         return process_cylinder(&tl);
+    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "obj")) {
+        return process_obj(&tl);
     } else {
 		kv->v.used = false;
 		consumer->last_key = kv->k;
@@ -208,19 +262,20 @@ bool check_unused(t_rt_consumer *consumer, t_rt_node nd) {
 		consumer->last_node = nd;
 		return (false);
 	}
-	for (size_t i = 0; i < nd.list.len; i++) {
-		if (!check_unused(consumer, nd.list.buff[i]))
-			return (false);
-	}
 	for (size_t i = 0; i < nd.dict.len; i++) {
 		if (!nd.dict.buff[i].used)
 		{
-			ft_printf("Hello\n");
+			// ft_printf("Hello\n\n\n");
+			// exit (1);
 			consumer->err = RT_ERR_KEY_NOT_USED;
 			consumer->last_key = nd.dict.buff[i].k;
 			return (false);
 		}
 		if (!check_unused(consumer, nd.dict.buff[i].v))
+			return (false);
+	}
+	for (size_t i = 0; i < nd.list.len; i++) {
+		if (!check_unused(consumer, nd.list.buff[i]))
 			return (false);
 	}
 	return (true);

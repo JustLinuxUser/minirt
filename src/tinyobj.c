@@ -6,7 +6,6 @@
 #include <unistd.h>
 #include "libft/utils/utils.h"
 #include "minirt.h"
-#include "vecs/vec_mesh.h"
 
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include "tinyobj_loader_c.h"
@@ -74,7 +73,7 @@ static void get_file_data(void* ctx,
     (*len) = data_len;
 }
 
-void load_triangles(t_state* state) {
+void load_triangles(t_state* state, char *path, t_fvec3 pos, float scale) {
     tinyobj_attrib_t attrib;
     tinyobj_shape_t* shapes = NULL;
     size_t num_shapes;
@@ -87,10 +86,12 @@ void load_triangles(t_state* state) {
     int ret = tinyobj_parse_obj(&attrib, &shapes, &num_shapes, &materials,
                                 &num_materials,
 								// "objs/cube2.obj",
-								"objs/vrmovil/VR-Mobil.obj",
+								// "objs//vrmovil/VR-Mobil.obj",
 								// "objs/Matteuccia_Struthiopteris_OBJ/matteucia_struthiopteris_1.obj",
 								// "objs/skull/12140_Skull_v3_L2.obj",
 								// "objs/skull/skull.obj",
+								// "objs/sponza/sponza.obj",
+								path,
                                 get_file_data, NULL, flags);
     if (ret != 0) {
         printf("Parsing failed\n");
@@ -105,12 +106,12 @@ void load_triangles(t_state* state) {
     // attrib.vertices
 
     // printf("num_shapes: %zu\n", num_shapes);
+	// printf("indexes: \n");
     for (size_t i = 0; i < attrib.num_faces; i++) {
-			vec_int_push(&mesh.vertex_idxs, attrib.faces[i].v_idx);
-
-		if (attrib.face_num_verts[i] != 3)
-			continue;
+		vec_int_push(&mesh.vertex_idxs, attrib.faces[i].v_idx);
+		// printf("%i ", attrib.faces[i].v_idx);
     }
+	// printf("\n");
 
 	// for (size_t i = 0; i < num_shapes; i++) {
 	// 	tinyobj_shape_t shape = shapes[i];
@@ -132,11 +133,15 @@ void load_triangles(t_state* state) {
 	// }
 
 	t_fvec3 sum ={0};
+	// printf("vertecies: \n");
     for (size_t i = 0; i < attrib.num_vertices; i++) {
         t_fvec3 vert;
         vert = *(t_fvec3*)&attrib.vertices[i * 3];
 		sum = fvec3_add(vert, sum);
+		// printf("%f %f %f   ", vert.x, vert.y, vert.z);
 	}
+	// printf("\n");
+	// exit(0);
 	t_fvec3 avg = fvec3_scale(sum, 1./ attrib.num_vertices);
 
     // for (size_t i = 0; i < attrib.num_vertices; i++) {
@@ -160,11 +165,14 @@ void load_triangles(t_state* state) {
         t_fvec3 vert;
 		vert = *(t_fvec3*)&attrib.vertices[i * 3];
 		vert = fvec3_sub(vert, avg);
-        vert = vec3_rotate_pitch_yaw(vert, 0, PI / 13);
+        vert = fvec3_scale(vert, scale);
+
+        // vert = vec3_rotate_pitch_yaw(vert, 0, PI / 3);
+
+		vert = fvec3_add(vert, pos);
 
         // vert.z = -vert.z;
-        vert = fvec3_scale(vert, 30);
-        vert = fvec3_add(vert, (t_fvec3){.z = 150});
+        // vert = fvec3_add(vert, (t_fvec3){.z = 15});
         vec_fvec3_push(&mesh.vertices, vert);
     }
 

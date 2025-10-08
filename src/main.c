@@ -87,7 +87,7 @@ void render_step(t_state* state, int render_px) {
                 return;
             t_ray curr_ray;
             t_SampledSpectrum res_color = {0};
-            t_sampler_state sstate = {.stratified_x = 3, .stratified_y = 3};
+            t_sampler_state sstate = {.stratified_x = 1, .stratified_y = 1};
 
             t_fvec2 sample;
 			t_fvec3 xyz_color = {0};
@@ -140,28 +140,45 @@ void load_shapes(t_state* state) {
             &state->shapes,
             (t_shape){.type = OBJ_TRIANGLE, .ptr = state->triangles.buff + i});
     }
-    // for (size_t i = 0; i < state->spheres.len; i++) {
-    //     vec_shape_push(
-    //         &state->shapes,
-    //         (t_shape){.type = OBJ_SPHERE, .ptr = state->spheres.buff + i});
-    // }
+    for (size_t i = 0; i < state->spheres.len; i++) {
+        vec_shape_push(
+            &state->shapes,
+            (t_shape){.type = OBJ_SPHERE, .ptr = state->spheres.buff + i});
+    }
+
+	// unbounded shapes
+    for (size_t i = 0; i < state->planes.len; i++) {
+        vec_shape_push(
+            &state->unbounded_shapes,
+            (t_shape){.type = OBJ_PLANE, .ptr = state->planes.buff + i});
+    }
 }
 void build_bvh(t_state* state);
 
+void free_state(t_state *state) {
+	free(state->unbounded_shapes.buff);
+	free(state->shapes.buff);
+	free(state->triangles.buff);
+	free(state->planes.buff);
+	free(state->spheres.buff);
+	free(state->s_colors);
+}
 int main(int argc, char** argv) {
     if (argc != 2)
         return (1);
     t_state state = init(800, 600, 70);
-    int i;
 
     if (!process_file(argv[1], &state))
-        return 1;
+	{
+        return (free_state(&state), 1);
+	}
+	return free_state(&state), 0;
 
 	state.light_pos = state.cam.pos;
-    vec_sphere_push(&state.spheres, (t_sphere){
-                                        .r = 150,
-                                        .p = {.x = 0, .y = 0, .z = 75},
-                                    });
+    // vec_sphere_push(&state.spheres, (t_sphere){
+    //                                     .r = 150,
+    //                                     .p = {.x = 0, .y = 0, .z = 75},
+    //                                 });
 
     // vec_sphere_push(&state.spheres, (t_sphere){
     //                                     .r = 3,
@@ -186,7 +203,6 @@ int main(int argc, char** argv) {
     //                                     .r = 3,
     //                                     .p = {.x = 20, .y = 10, .z = 75},
     //                                 });
-    load_triangles(&state);
     load_shapes(&state);
 	build_bvh(&state);
 // 	printf("min: %f %f %f, max: %f %f %f\n", state.bvh->bounds.min.x, state.bvh->bounds.min.y, state.bvh->bounds.min.z,
@@ -199,25 +215,24 @@ int main(int argc, char** argv) {
     /*LIGHTS*/
     t_lights lights = {0};
 
-    t_light light1 = {.t = POINT_LIGHT, .intensity = 5000.f, .position = state.light_pos};
+    t_light light1 = {.t = POINT_LIGHT, .intensity = 500.f, .position = state.light_pos};
     light1.spec = calculateDenselySampledSpectrum(9000);
     
-    t_light light2 = {.t = POINT_LIGHT, .intensity = 3000.f, .position = {.y = 70, .z = 150, .x = 100}};
+    t_light light2 = {.t = POINT_LIGHT, .intensity = 15000.f, .position = {.y = 70, .z = 150, .x = 100}};
     light2.spec = calculateDenselySampledSpectrum(6200);
 
-    t_light light3 = {.t = POINT_LIGHT, .intensity = 5000.f, .position = {.y = 70, .z = 50, .x = 50}};
+    t_light light3 = {.t = POINT_LIGHT, .intensity = 15000.f, .position = {.y = 70, .z = 50, .x = 50}};
     light2.spec = calculateDenselySampledSpectrum(3000);
 
     add_light(&lights, light1);
-    add_light(&lights, light2);
-    add_light(&lights, light3);
+    // add_light(&lights, light2);
+    // add_light(&lights, light3);
     calculatePDFs(&lights);
     createAliasTable(&lights);
 
     state.lights = lights;
 
     //state.light = light1;
-// >>>>>>> cc8e67f ("abstract logic for light and color")
 
     InitWindow(state.screen_width, state.screen_height,
                "raylib [core] example - basic window");
@@ -299,18 +314,23 @@ int main(int argc, char** argv) {
         BeginDrawing();
         ClearBackground(WHITE);
 
-		while (GetTime() - start < 0.2)
-			render_step(&state, 50);
+		render_step(&state, state.screen_width * state.screen_height);
 
         printf("total_runs: %i\n", state.total_runs);
         printf("curr_px: %i\n",
                state.last_y * state.screen_width + state.last_x);
         for (int x = 0; x < state.screen_width; x++) {
             for (int y = 0; y < state.screen_height; y++) {
-                if (state.total_runs == 1 &&
-                    y * state.screen_width + x >
+                if (y * state.screen_width + x >
                         state.last_y * state.screen_width + state.last_x) {
-                    DrawPixel(x, y, WHITE);
+					if (state.total_runs == 1)
+						DrawPixel(x, y, WHITE);
+					else {
+						DrawPixel(x, y,
+								XYZToRGB(fvec3_scale(state.s_colors[y * state.screen_width + x],
+									1. / (state.total_runs - 1)))
+						);
+					}
                 } else {
 					DrawPixel(x, y,
 							XYZToRGB(fvec3_scale(state.s_colors[y * state.screen_width + x],
@@ -320,6 +340,8 @@ int main(int argc, char** argv) {
             }
         }
         EndDrawing();
+		// if (state.total_runs > 1)
+		// 	exit(0);
         double end = GetTime();
         printf("%lf\n", end - start);
 

@@ -1,0 +1,36 @@
+C: {
+	position: 0,0,0
+	fov: 70
+	direction: 1,1,1
+}
+
+
+sp: {
+	position: -20,-13,30
+	diameter: 1.1
+	color: 0,0,0
+}
+
+sp: {
+	position: -20,-13,30
+	diameter: 1.1
+	color: 0,0,0
+}
+
+pl: {
+	position: 0,30,40
+	direction: 1,1,1
+	color: 255,255,255
+}
+
+# obj: {
+# 	position: 0,0,0
+# 	scale: 10
+# 	path: "objs/sponza/sponza.obj"
+# }
+
+#obj: {
+#	position: 0,0,0
+#	scale: 10
+#	path: "objs/sponza/sponza.obj"
+#}

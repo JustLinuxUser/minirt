@@ -38,7 +38,9 @@ SOURCES := src/ft_atoi.c        \
 		   src/ft_strtrim.c     \
 		   src/ft_substr.c      \
 		   src/ft_tolower.c     \
-		   src/ft_toupper.c
+		   src/ft_toupper.c     \
+		   src/ft_memswap.c
+
 SOURCES += src/ft_lstadd_back_bonus.c\
 		   src/ft_lstadd_front_bonus.c\
 		   src/ft_lstclear_bonus.c\
@@ -73,7 +75,6 @@ SOURCES +=	utils/string_utils.c\
 
 
 SOURCES +=	dsa/dyn_str.c\
-			dsa/vec_int.c\
 			dsa/vec_gen.c\
 			dsa/dyn_str.c\
 			dsa/dyn_str2.c\
@@ -82,7 +83,10 @@ SOURCES +=	dsa/dyn_str.c\
 			dsa/deque_char.c\
 			dsa/deque_char2.c\
 			dsa/prng.c\
-			dsa/vec_dyn_str.c
+			dsa/vec_dyn_str.c\
+			dsa/smoothsort.c\
+			dsa/smoothsort2.c\
+			dsa/partition.c
 
 SOURCES +=	alloc/mmalloc.c \
 			alloc/alloc.c   \
@@ -120,23 +124,30 @@ ifeq ($(PROFILE),debug_mem)
 endif
 
 ifeq ($(PROFILE),debug_mem_sanitize)
-	CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak
+	CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak,undefined
 endif
 
 PROFILE_FOUND := $(filter $(PROFILE), $(PROFILES))
+
+define NL
+
+
+endef
+
+$(if ${PROFILE_FOUND}, , $(error Unknown profile" ${PROFILE}${NL}Choose one of: $(PROFILES)))
 
 OBJS := $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.o)
 
 GEN_HEADERS		:= $(GEN_NAMES:%=$(CODEGEN_DIR)/vec_%.h)
 
 ifeq ($(PROFILE_FOUND),)
-all::
+error::
 	@echo "Unknown profile" ${PROFILE};
 	@echo "Choose one of: $(PROFILES)";
 	@exit 1;
 endif
 
-all:: $(NAME)
+all: $(NAME)
 
 $(NAME): $(NAME_PROFILE) ${TAG_FILE}
 	cp $(NAME_PROFILE) $(NAME)
@@ -169,8 +180,8 @@ ${CODEGEN_DIR}/vec_%.h: templates/vec_template.hpp Makefile
 	echo '# include "../utils/utils.h"' >> $(abspath $@)
 
 
-	cd templates/ && expand -i vec_template.h |\
-		gcc -E - -DGEN_TYPE=$(GEN_TYPES_$(@:$(CODEGEN_DIR)/vec_%.h=%)) -DTYPE_SHORT=$(@:$(CODEGEN_DIR)/vec_%.h=%) |\
+	cd templates/ && expand -i $< |\
+		gcc -E - -DGEN_TYPE=$(GEN_TYPES_$(@:$(CODEGEN_DIR)/vec_%.h=%)) -DGEN_SHORT_TYPE=$(@:$(CODEGEN_DIR)/vec_%.h=%) |\
 		unexpand | sed '1,/START/d' |\
 		sed $$'s/\\s*TAB\\s*/\t/g' \
 			>> $(abspath $@)

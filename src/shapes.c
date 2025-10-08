@@ -2,7 +2,6 @@
 #include <float.h>
 #include <math.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include "bounds.h"
 #include "libft/utils/utils.h"
 #include "minirt.h"
@@ -34,17 +33,21 @@ bool intersect_sphere(t_sphere s, t_ray r, float* t, bool* inside) {
     // *p = fvec3_add(Vector3Scale(r.direction, closest_t), r.position);
     // return (true);
     *inside = t1 > 0 && t2 > 0;
-    *t *= 0.99;
+    // *t *= 0.99;
     return (*t > 0.1);
 }
 
-int intersect_plane(t_ray plane, t_ray r, float* t) {
+bool intersect_plane(t_plane plane, t_ray r, float* t) {
+	// gamma5
     float denom = fvec3_dot(r.dir, plane.dir);
+
     // close enough to parallel, to be considered paralell
-    if (fabs(denom) < 1e-7) {
+    if (fabs(denom) <= 1e-6) {
         return false;
     }
-    *t = fvec3_dot(fvec3_sub(plane.pos, r.pos), plane.dir) / denom;
+
+	*t = fvec3_dot(fvec3_sub(plane.pos, r.pos), plane.dir) / denom;
+
     if (*t < 1e-6)
         return false;
     return (true);
@@ -82,7 +85,7 @@ bool intersect_triangle(t_ray ray,
 
     // At this stage we can compute t to find out where the intersection point
     // is on the line.
-    coll->t = inv_det * fvec3_dot(edge2, s_cross_e1) * 0.99;
+    coll->t = inv_det * fvec3_dot(edge2, s_cross_e1);
 
     return (coll->t > epsilon);  // ray intersection
 }
@@ -98,10 +101,7 @@ t_triangle_pts triangle_points(t_state* state, t_triangle triangle) {
     return (ret);
 }
 
-t_collision collide_shape(t_state* state,
-                          t_shape shape,
-                          t_ray ray,
-                          float t_max) {
+t_collision collide_shape(t_state* state, t_shape shape, t_ray_isector isector) {
     t_collision ret = {.shape = shape};
     float t;
 
@@ -109,26 +109,37 @@ t_collision collide_shape(t_state* state,
         t_triangle_pts pts = triangle_points(state, *(t_triangle*)shape.ptr);
 
         t_triangle_collision coll;
-        if (intersect_triangle(ray, pts.b, pts.c, pts.a, &coll) &&
-            coll.t < t_max) {
+        if (intersect_triangle(isector.ray, pts.b, pts.c, pts.a, &coll)) {
             ret.collided = true;
             ret.t = coll.t;
             ret.u = coll.u;
             ret.v = coll.v;
         }
-        return ret;
     } else if (shape.type == OBJ_SPHERE) {
         t_sphere* sphere = (t_sphere*)shape.ptr;
         bool inside;
-        if (intersect_sphere(*sphere, ray, &t, &inside) && t < t_max) {
+
+		if (intersect_sphere(*sphere, isector.ray, &t, &inside)) {
             ret.collided = true;
             ret.t = t;
             ret.u = inside;
         }
-        return ret;
-    }
+    } else if (shape.type == OBJ_PLANE) {
+        t_plane* plane = (t_plane*)shape.ptr;
 
-    ft_assert("Unreachable" != 0);
+		if (intersect_plane(*plane, isector.ray, &ret.t)) {
+			ret.collided = true;
+		}
+	} else {
+		ft_assert("Unreachable" != 0);
+	}
+	if (ret.collided && (ret.t > isector.t_max
+		|| (shape.ptr == isector.ignore_shape && ret.t < isector.t_min)
+	)) {
+		ret.collided = false;
+		ret.t = 0;
+	}
+
     return ret;
 }
 
@@ -145,17 +156,19 @@ t_fvec3 collision_norm(t_state* state, t_collision collision, t_fvec3 pos) {
         if (collision.u == 0)
             return (fvec3_invert(fvec3_norm(fvec3_sub(pos, sphere->p))));
         return (fvec3_norm(fvec3_sub(pos, sphere->p)));
-    }
+    } else if (collision.shape.type == OBJ_PLANE) {
+        t_plane* plane = (t_plane*)collision.shape.ptr;
+		return (plane->dir);
+	}
     ft_assert("Unreachable" != 0);
     return (t_fvec3){0};
 }
 
 t_bounds3f shape_bounds(t_state* state, t_shape shape) {
-    t_bounds3f bounds = {0};
+    t_bounds3f bounds = BOUNDS_DEGENERATE;
     if (shape.type == OBJ_TRIANGLE) {
         t_triangle_pts pts = triangle_points(state, *(t_triangle*)shape.ptr);
-        bounds.min = pts.a;
-        bounds.max = pts.a;
+        bounds = bounds_extend_pt(bounds, pts.a);
         bounds = bounds_extend_pt(bounds, pts.b);
         bounds = bounds_extend_pt(bounds, pts.c);
     } else if (shape.type == OBJ_SPHERE) {

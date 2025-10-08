@@ -18,14 +18,13 @@
 
 typedef struct s_vec_gen
 {
-	size_t		el_size;
 	size_t		cap;
 	size_t		len;
 	uint8_t		*buff;
 }	t_vec_gen;
 
 bool	vec_gen_init(t_vec_gen *ret, size_t el_size, size_t init_alloc);
-bool	vec_gen_push(t_vec_gen *v, void *el);
-bool	vec_gen_pop(t_vec_gen *v, void *ret);
-void	*vec_gen_idx(t_vec_gen *v, size_t idx);
+bool	vec_gen_push(t_vec_gen *v, size_t el_size, void *el);
+bool	vec_gen_pop(t_vec_gen *v, size_t el_size, void *ret);
+void	*vec_gen_idx(t_vec_gen *v, size_t el_size, size_t idx);
 #endif

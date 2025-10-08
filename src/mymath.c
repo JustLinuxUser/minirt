@@ -12,6 +12,7 @@ t_fvec3 fvec3_sub(t_fvec3 a, t_fvec3 b) {
 }
 
 float fvec3_dot(t_fvec3 a, t_fvec3 b) {
+	// error probably < gamma5
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 

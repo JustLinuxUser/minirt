@@ -3,12 +3,8 @@
 #include "mymath.h"
 #include "spectrum.h"
 
-#include "vecs/vec_mesh.h"
 #include "shapes.h"
-#include "vecs/vec_shape.h"
-#include "vecs/vec_sphere.h"
-#include "vecs/vec_plane.h"
-#include "vecs/vec_triangle.h"
+#include "bounds.h"
 #include "light.h"
 
 #include <raylib.h>
@@ -63,6 +59,8 @@ typedef struct s_state {
 
 	t_vec_shape shapes;
 
+	t_vec_shape unbounded_shapes;
+
 	t_linear_bvh_nd *bvh;
 
 	int last_x;
@@ -70,7 +68,7 @@ typedef struct s_state {
 	int total_runs;
 } t_state;
 
-t_collision collide_bvh(t_state* state, t_ray ray, float t_max, int *steps);
+t_collision collide_bvh(t_state* state, t_ray_isector isector);
 
 
 typedef struct output_config {
@@ -102,5 +100,5 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
         t_SampledWavelengths lambdas, int iters_left);
 
 // tinyobj.c
-void load_triangles(t_state* state);
+void load_triangles(t_state* state, char *path, t_fvec3 pos, float scale);
 #endif

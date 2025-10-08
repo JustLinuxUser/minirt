@@ -16,7 +16,7 @@ TAG_FILE := $(BUILD_DIR)/profile_$(PROFILE)
 NAME_PROFILE := $(BUILD_DIR)/$(PROFILE)_$(NAME)
 PROFILES := opt debug debug_mem debug_mem_sanitize
 
-CFLAGS := -MMD -fPIE -Wall -Wextra --std=c99 -pedantic -g3 $(FLAGS)
+CFLAGS := -MMD -fPIE -Wall -Wextra -Wmaybe-uninitialized -Wmissing-field-initializers --std=c99 -pedantic -g3 $(FLAGS)
 
 # TODO: Add this before entering the project
 # CFLAGS += -Werror
@@ -49,19 +49,19 @@ ifeq ($(PROFILE),debug_mem)
 endif
 
 ifeq ($(PROFILE),debug_mem_sanitize)
-	CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak
+	CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak,undefined
 endif
 
 PROFILE_FOUND := $(filter $(PROFILE), $(PROFILES))
 
 OBJS := $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.o)
 
-ifeq ($(PROFILE_FOUND),)
-all::
-	@echo "Unknown profile" ${PROFILE};
-	@echo "Choose one of: $(PROFILES)";
-	@exit 1;
-endif
+define NL
+
+
+endef
+
+$(if ${PROFILE_FOUND}, , $(error Unknown profile" ${PROFILE}${NL}Choose one of: $(PROFILES)))
 
 all:: $(LIBFT)
 all:: $(NAME)

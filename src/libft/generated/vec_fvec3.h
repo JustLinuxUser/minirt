@@ -1,28 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   vec_int.h                                          :+:      :+:    :+:   */
+/*                                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/13 22:52:15 by anddokhn          #+#    #+#             */
-/*   Updated: 2024/10/14 23:24:09 by anddokhn         ###   ########.fr       */
+/*   Created: 2024/09/28 15:11:48 by anddokhn          #+#    #+#             */
+/*   Updated: 2025/04/08 22:26:02 by anddokhn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-#ifndef VEC_INT_H
-# define VEC_INT_H
-# include <stdlib.h>
-
-typedef struct s_vec_int
-{
-	size_t	cap;
-	size_t	len;
-	int		*buff;
-}	t_vec_int;
-int	vec_int_init(t_vec_int *ret);
-int	vec_int_double(t_vec_int *v);
-int	vec_int_push(t_vec_int *v, int el);
-int	vec_int_pop(t_vec_int *v);
-int	vec_int_idx(t_vec_int *v, size_t idx);
+#ifndef VEC_FVEC3_H
+# define VEC_FVEC3_H
+# include "../dsa/vec_gen.h"
+# include "../utils/utils.h"
 #endif

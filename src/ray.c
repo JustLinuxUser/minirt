@@ -4,24 +4,26 @@
 #include "shapes.h"
 #include <math.h>
 #include <stdlib.h>
-
-t_collision ray_collision(t_state* state, t_ray curr_ray, float t_max) {
-	t_collision curr_coll = {.collided = false};
-
-    for (size_t obj_idx = 0; obj_idx < state->shapes.len; obj_idx++) {
-		t_shape shape = state->shapes.buff[obj_idx];
-		t_collision coll = collide_shape(state, shape, curr_ray, t_max);
-
-		if (coll.collided) {
-            if (!curr_coll.collided || coll.t < curr_coll.t) {
-				curr_coll = coll;
-				if (isfinite(t_max) && curr_coll.t < t_max)
-					break;
-			}
-		}
-	}
-	return curr_coll;
-}
+//
+// t_collision ray_collision(t_state* state, t_ray curr_ray, float t_max, void *ignore_shape) {
+// 	t_collision curr_coll = {.collided = false};
+//
+//     for (size_t obj_idx = 0; obj_idx < state->shapes.len; obj_idx++) {
+// 		if (&state->shapes.buff[obj_idx].ptr == ignore_shape)
+// 			continue;
+// 		t_shape shape = state->shapes.buff[obj_idx];
+// 		t_collision coll = collide_shape(state, shape, curr_ray, t_max);
+//
+// 		if (coll.collided) {
+//             if (!curr_coll.collided || coll.t < curr_coll.t) {
+// 				curr_coll = coll;
+// 				if (isfinite(t_max) && curr_coll.t < t_max)
+// 					break;
+// 			}
+// 		}
+// 	}
+// 	return curr_coll;
+// }
 
 /*NEW CAST REFLECTABLE RAY!!!*/
 //#TODO
@@ -49,14 +51,14 @@ t_SampledWavelengths get_values_pdf(t_state* state, t_fvec3 p)
 }
 
 t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, 
-        t_SampledWavelengths lambdas, int iters_left) {
+										   t_SampledWavelengths lambdas, int iters_left) {
     t_SampledSpectrum L = {0};
     t_SampledSpectrum beta = {1.f};
 	t_collision coll;
     int i;
     t_fvec3 p;
     t_fvec3 norm = {0};
-	int steps = 0;
+	void *ignored_shape = 0;
 
     //INIT BETA
     i = -1;
@@ -66,14 +68,17 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
 
     while (iters_left-- > 0)
     {
-        coll = collide_bvh(state, ray, INFINITY, &steps);
+        coll = collide_bvh(state, (t_ray_isector){.ray = ray, .t_max = INFINITY, .t_min = 0.001, .ignore_shape = ignored_shape});
         if (!coll.collided)
             break;
+		ignored_shape = coll.shape.ptr;
         //TO BE USED WHEN BSDF IMPLEMENTED:
 
         //HIT POS AND NORMAL TO HIT
         p = fvec3_add(fvec3_scale(ray.dir, coll.t), ray.pos);
 		norm = collision_norm(state, coll, p);
+		if (fvec3_dot(norm, ray.dir) > 0)
+			norm = fvec3_invert(norm);
         
         /*LIGHT THING*/
 
@@ -92,7 +97,8 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
         float dot = 0.f;
         float distance_decrease = 0.f;
 
-        coll = collide_bvh(state, (t_ray){.pos = p, .dir = norm_light}, light_t, &steps);
+		t_ray light_ray = (t_ray){.pos = p, .dir = norm_light};
+        coll = collide_bvh(state, (t_ray_isector){.ray = light_ray, .t_max = light_t, .t_min = 0.001, .ignore_shape = ignored_shape});
         if (!coll.collided)
         {
             //GET COSINE (AS BEFORE)
@@ -128,56 +134,5 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
                 beta.values[i] *= color.values[i] * dot;// / lambdas.pdf[i];
         }
     }
-    //printf("Final L: %f, %f, %f\n", L.values[0], L.values[1], L.values[2]);
     return L;
-    // float t;
-    // t_fvec3 p;
-    // t_SampledSpectrum ret;
-
-    // t = cast_ray(state, ray, 0);
-    // if (!t)
-    // {
-    //     //check collision in infinity
-    //     // return smthin else
-    //     return (t_SampledSpectrum){};
-    // }
-    // else
-    // {
-    //     obj o = state->objs[state->last_collided_idx];
-        
-    //     //emissive surfaces
-        
-    //     /*WHAT IS ITERS FOR?*/
-    //     iters_left--;
-    //     if (iters_left <= 0)
-    //         return ;
-        
-    //     ///BSDF and skip over medium boundaries
-
-    //     /// sample illumination
-
-    //     /// outgoing dir at intersection to continue path
-    //     int sampleBSDF = 1;
-    //     if (sampleBSDF)
-    //     {
-    //         /// sample BSDF for new dir
-    //     }
-    //     else
-    //     {
-    //         /// Uniformly sample
-    //         float pdf;
-    //         t_fvec3 p;
-    //         /// var for bsdf flags
-    //         if (!pdf) //Wrong. Need some flags
-    //         {
-    //             //Reflexive and transmissive
-    //         }
-    //         else 
-    //         {
-    //             //Else
-    //         }
-
-    //     }
-    // }
-    // return ret;
 }
