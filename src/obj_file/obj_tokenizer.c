@@ -53,7 +53,7 @@ void tokenize_comment(t_obj_tokenizer* tokenizer)
     init_tok(&comm, OBJ_COMMENT, tokenizer->curr_idx);
     while (consume_obj_char(tokenizer) != '\n')
         comm.len++;
-    tokenizer->tokens[tokenizer->num_tokens++] = comm;
+	vec_obj_token_push(&tokenizer->tokens, comm);
 }
 
 bool tokenize_obj_number(t_obj_tokenizer* tokenizer, float *fret, bool *is_int, t_obj_token* tok)
@@ -121,7 +121,7 @@ bool tokenize_obj_tuple(t_obj_tokenizer* tokenizer)
         {
             tok.parsed_num = ret;
             tok.t = OBJ_NUMBER;
-            tokenizer->tokens[tokenizer->num_tokens++] = tok;
+			vec_obj_token_push(&tokenizer->tokens, tok);
             return (true);
         }
         if (i < 3)
@@ -136,7 +136,7 @@ bool tokenize_obj_tuple(t_obj_tokenizer* tokenizer)
             }
         }
     }
-    tokenizer->tokens[tokenizer->num_tokens++] = tok;
+	vec_obj_token_push(&tokenizer->tokens, tok);
     return (true);
 }
 
@@ -149,7 +149,7 @@ bool tokenize_word(t_obj_tokenizer* tokenizer)
         tok.len++;
         consume_obj_char(tokenizer);
     }
-    tokenizer->tokens[tokenizer->num_tokens++] = tok;
+	vec_obj_token_push(&tokenizer->tokens, tok);
     return (true);
 }
 
@@ -159,7 +159,7 @@ void tokenize_newline(t_obj_tokenizer* tokenizer)
     init_tok(&tok, OBJ_NEWLINE, tokenizer->curr_idx);
     tok.len++;
     tokenizer->curr_idx++;
-    tokenizer->tokens[tokenizer->num_tokens++] = tok;
+	vec_obj_token_push(&tokenizer->tokens, tok);
 }
 
 char* obj_type_conversion(unsigned int t)
@@ -186,8 +186,8 @@ char* obj_type_conversion(unsigned int t)
 int process_obj_file(char* filename, t_obj_tokenizer* tokenizer)
 {
     t_dyn_str ret = {0};
-	tokenizer->tokens = malloc(sizeof(t_obj_token) * 1000000);
 
+	*tokenizer = (t_obj_tokenizer){0};
     if (!dyn_str_read_file(filename, &ret))
         return 0;
     tokenizer->str = ret;

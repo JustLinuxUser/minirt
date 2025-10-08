@@ -15,6 +15,7 @@
 #include "../rt_file/rt_parser.h"
 #include <stdio.h>
 
+
 enum OBJ_TT {
     OBJ_NONE = 0,
 
@@ -35,11 +36,14 @@ typedef struct t_obj_token {
     int vals[3];
 } t_obj_token;
 
+#define GEN_TYPE t_obj_token
+#define GEN_SHORT_TYPE obj_token
+#include "../libft/templates/vec_template.hpp"
+
 typedef struct t_obj_tokenizer {
     size_t curr_idx;
-    t_obj_token *tokens;
+    t_vec_obj_token tokens;
     t_dyn_str str;
-    int num_tokens;
 } t_obj_tokenizer;
 
 int process_obj_file(char* filename, t_obj_tokenizer* tokenizer);

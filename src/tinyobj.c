@@ -84,25 +84,10 @@ void load_triangles(t_state* state, char* path, t_fvec3 pos, float scale) {
 	for (size_t i = 0; i < mesh.vertices.len; i++) {
 		t_fvec3 vert;
 		vert = mesh.vertices.buff[i];
-		printf("%f %f %f\n", vert.x, vert.y, vert.z);
 		vert = fvec3_sub(vert, avg);
 		vert = fvec3_scale(vert, scale);
 		vert = fvec3_add(vert, pos);
 		mesh.vertices.buff[i] = vert;
 	}
 	vec_mesh_push(&state->meshes, mesh);
-
-
-	// ft_assert(mesh1.vertex_idxs.len == mesh2.vertex_idxs.len);
-	// ft_assert(mesh1.vertices.len == mesh2.vertices.len);
-	// for (size_t i = 0; i < mesh1.vertices.len; i++) {
-	// 	printf("x %f\n", mesh1.vertices.buff[i].x - mesh2.vertices.buff[i].x);
-	// 	printf("y %f\n", mesh1.vertices.buff[i].y - mesh2.vertices.buff[i].y);
-	// 	printf("z %f\n", mesh1.vertices.buff[i].z - mesh2.vertices.buff[i].z);
-	// }
-	//
-	// for (size_t i = 0; i < mesh1.vertex_idxs.len; i++) {
-	// 	printf("%i, %i\n", mesh1.vertex_idxs.buff[i], mesh2.vertex_idxs.buff[i]);
-	// }
-	// exit(1);
 }

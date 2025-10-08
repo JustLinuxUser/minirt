@@ -14,19 +14,19 @@
 
 bool tokens_left(t_obj_parser* parser)
 {
-    if (parser->curr_token < (size_t)parser->tokenizer.num_tokens)
+    if (parser->curr_token < (size_t)parser->tokenizer.tokens.len)
         return 1;
     return 0;
 }
 
 t_obj_token consume_obj_token(t_obj_parser* parser)
 {
-    return (parser->tokenizer.tokens[parser->curr_token++]);
+    return (parser->tokenizer.tokens.buff[parser->curr_token++]);
 }
 
 t_obj_token peek_obj_token(t_obj_parser* parser)
 {
-    return (parser->tokenizer.tokens[parser->curr_token]); 
+    return (parser->tokenizer.tokens.buff[parser->curr_token]); 
 }
 
 void parse_obj_vertices(t_obj_parser *parser)
@@ -109,6 +109,7 @@ int get_obj(char *filename, t_obj_parser *ret)
         int c = parser.faces.buff[i*3+2];  
         printf("here: %d %d %d\n", a, b, c);
     }
+	free(parser.tokenizer.tokens.buff);
     
 	*ret = parser;
     return (1);
