@@ -6,8 +6,11 @@
 #include <string.h>
 #include "minirt.h"
 #include "mymath.h"
+#include "obj_file/obj_tokenizer.h"
+#include "obj_file/obj_parser.h"
 #include "rt_file/rt_consumer.h"
 #include "samplers.h"
+#include <pthread.h>
 
 // TODOS:
 // - Generics
@@ -45,7 +48,7 @@ t_state init(int screen_width, int screen_height, float fov_deg) {
         .screen_height = screen_height,
         .light_pos = {.y = 0, .z = -100, .x = 0},
         .screen_dist = 1,
-        .total_runs = 1,
+        .total_runs = 0,
         //.debug = 1,
         // .preview = true,
     };
@@ -61,30 +64,43 @@ t_state init(int screen_width, int screen_height, float fov_deg) {
     return ret;
 }
 
-void render_step(t_state* state, int render_px) {
+typedef struct {
+    t_state *state;
+    int num_threads;
+    int thread_id;
+    int* exit_flag;
+} t_render_task;
+
+void* render_step(void *arg) {
     // Draw
+    t_render_task t = *(t_render_task*)arg;
     t_fvec3 x0y0 = vec3_rotate_pitch_yaw(
-        perspective_cam_ray(state, (t_fvec2){}, (t_fvec2){}), state->cam_pitch,
-        state->cam_yaw);
+        perspective_cam_ray(t.state, (t_fvec2){}, (t_fvec2){}), t.state->cam_pitch,
+        t.state->cam_yaw);
     t_fvec3 x1y0 = vec3_rotate_pitch_yaw(
-        perspective_cam_ray(state, (t_fvec2){.x = state->screen_width},
+        perspective_cam_ray(t.state, (t_fvec2){.x = t.state->screen_width},
                             (t_fvec2){}),
-        state->cam_pitch, state->cam_yaw);
+        t.state->cam_pitch, t.state->cam_yaw);
     t_fvec3 x0y1 = vec3_rotate_pitch_yaw(
-        perspective_cam_ray(state, (t_fvec2){.y = state->screen_height},
+        perspective_cam_ray(t.state, (t_fvec2){.y = t.state->screen_height},
                             (t_fvec2){}),
-        state->cam_pitch, state->cam_yaw);
+        t.state->cam_pitch, t.state->cam_yaw);
     t_fvec3 x1y1 = vec3_rotate_pitch_yaw(
         perspective_cam_ray(
-            state,
-            (t_fvec2){.x = state->screen_width, .y = state->screen_height},
+            t.state,
+            (t_fvec2){.x = t.state->screen_width, .y = t.state->screen_height},
             (t_fvec2){}),
-        state->cam_pitch, state->cam_yaw);
+        t.state->cam_pitch, t.state->cam_yaw);
+    int x, y = 0;
+    while (y < t.state->screen_height) {
+        x = 0;
+        while (x < t.state->screen_width) {
+            if ((y * t.state->screen_width + x) % t.num_threads != t.thread_id)
+            {
+                x++;
+                continue;
 
-    while (state->last_y < state->screen_height) {
-        while (state->last_x < state->screen_width) {
-            if (--render_px <= 0)
-                return;
+            }
             t_ray curr_ray;
             t_SampledSpectrum res_color = {0};
             t_sampler_state sstate = {.stratified_x = 1, .stratified_y = 1};
@@ -94,44 +110,88 @@ void render_step(t_state* state, int render_px) {
             while (sample_stratified(&sstate, &sample)) {
 				float lu = random_generator();
 				t_SampledWavelengths lambdas = SampleUniform(lu, 360, 830);
-                curr_ray.pos = state->cam.pos;
+                curr_ray.pos = t.state->cam.pos;
                 t_fvec3 l1 = fvec3_lerp(
                     x0y0, x0y1,
-                    (state->last_y + sample.y) / state->screen_height);
+                    (y + sample.y) / t.state->screen_height);
                 t_fvec3 l2 = fvec3_lerp(
                     x1y0, x1y1,
-                    (state->last_y + sample.y) / state->screen_height);
+                    (y + sample.y) / t.state->screen_height);
                 t_fvec3 pt = fvec3_norm(fvec3_lerp(
-                    l2, l1, (state->last_x + sample.x) / state->screen_width));
+                    l2, l1, (x + sample.x) / t.state->screen_width));
                 curr_ray.dir = pt;
 
-				res_color = cast_reflectable_ray_new(state, curr_ray, lambdas, 1);
+				res_color = cast_reflectable_ray_new(t.state, curr_ray, lambdas, 1);
 				xyz_color = fvec3_add(SpectrumToXYZ(res_color, lambdas), xyz_color);
             }
 			xyz_color = fvec3_scale(xyz_color, 1. / (sstate.stratified_x *
 						   sstate.stratified_y));
 
 			//RES COLOR TO XYZ (T_FVEC3)
-			state->s_colors[state->last_y * state->screen_width + state->last_x] = fvec3_add(state->s_colors[state->last_y * state->screen_width + state->last_x], xyz_color);
-
-            // res_color = sampled_spectrum_scale(
-            //     res_color, 1. / (sstate.stratified_x * sstate.stratified_y));
-            /*DO WE NEED TO SCALE??????*/
-
-            // state->s_colors[state->last_y * state->screen_width +
-            //                 state->last_x] =
-            //     sampled_spectrum_add(
-            //         state->s_colors[state->last_y * state->screen_width +
-            //                         state->last_x],
-            //         res_color);
-            state->last_x++;
+			t.state->s_colors[y * t.state->screen_width + x] = fvec3_add(t.state->s_colors[y * t.state->screen_width + x], xyz_color);
+            x++;
         }
-        state->last_y++;
-        state->last_x = 0;
+        y++;
     }
-    state->last_x = 0;
-    state->last_y = 0;
+    *t.exit_flag = 1;
+}
+
+void drawinator(t_state *state)
+{
+    BeginDrawing();
+    ClearBackground(WHITE);
+    printf("total_runs: %i\n", state->total_runs);
+    // printf("curr_px: %i\n",
+    //        state.last_y * state.screen_width + state.last_x);
+    for (int x = 0; x < state->screen_width; x++) {
+        for (int y = 0; y < state->screen_height; y++) {
+            // if (state.total_runs == 1 &&
+            //     y * state.screen_width + x >
+            //         state.last_y * state.screen_width + state.last_x) {
+            //     DrawPixel(x, y, WHITE);
+            // } else {
+                DrawPixel(x, y,
+                        XYZToRGB(fvec3_scale(state->s_colors[y * state->screen_width + x],
+                            1. / state->total_runs))
+                );
+            // }
+        }
+    }
+    EndDrawing();
+}
+
+int threads_finished(int num_threads, int* exit_flags)
+{
+    int ret = 1;
+
+    for (int j = 0; j < num_threads; j++)
+        if (exit_flags[j] == 0)
+            ret = 0;
+    return ret;
+}
+
+void render_multithread(t_state* state, int num_threads){
+    pthread_t threads[num_threads];
+    t_render_task tasks[num_threads];
+    int i = -1;
+    int exit_flags[100] = {0};
     state->total_runs++;
+
+    while (++i < num_threads)
+    {
+        tasks[i] = (t_render_task){ .state = state, .num_threads = num_threads, .thread_id = i, .exit_flag = &exit_flags[i] };
+        pthread_create(&threads[i], NULL, render_step, &tasks[i]);
+    }
+    while (true)
+    {
+        if (threads_finished(num_threads, exit_flags))
+            break;
+        drawinator(state);
+    }
+    i = -1;
+    while (++i < num_threads)
+        pthread_join(threads[i], NULL);
+    
 }
 
 void load_shapes(t_state* state) {
@@ -172,7 +232,9 @@ int main(int argc, char** argv) {
 	{
         return (free_state(&state), 1);
 	}
-	return free_state(&state), 0;
+    // if (get_obj(argv[1]))
+    //     return 1;
+    // return 0;
 
 	state.light_pos = state.cam.pos;
     // vec_sphere_push(&state.spheres, (t_sphere){
@@ -215,10 +277,10 @@ int main(int argc, char** argv) {
     /*LIGHTS*/
     t_lights lights = {0};
 
-    t_light light1 = {.t = POINT_LIGHT, .intensity = 500.f, .position = state.light_pos};
+    t_light light1 = {.t = POINT_LIGHT, .intensity = 8000.f, .position = state.light_pos};
     light1.spec = calculateDenselySampledSpectrum(9000);
     
-    t_light light2 = {.t = POINT_LIGHT, .intensity = 15000.f, .position = {.y = 70, .z = 150, .x = 100}};
+    t_light light2 = {.t = POINT_LIGHT, .intensity = 10000.f, .position = {.y = 70, .z = 150, .x = 100}};
     light2.spec = calculateDenselySampledSpectrum(6200);
 
     t_light light3 = {.t = POINT_LIGHT, .intensity = 15000.f, .position = {.y = 70, .z = 50, .x = 50}};
@@ -231,8 +293,6 @@ int main(int argc, char** argv) {
     createAliasTable(&lights);
 
     state.lights = lights;
-
-    //state.light = light1;
 
     InitWindow(state.screen_width, state.screen_height,
                "raylib [core] example - basic window");
@@ -311,37 +371,7 @@ int main(int argc, char** argv) {
         }
         // Update
         double start = GetTime();
-        BeginDrawing();
-        ClearBackground(WHITE);
-
-		render_step(&state, state.screen_width * state.screen_height);
-
-        printf("total_runs: %i\n", state.total_runs);
-        printf("curr_px: %i\n",
-               state.last_y * state.screen_width + state.last_x);
-        for (int x = 0; x < state.screen_width; x++) {
-            for (int y = 0; y < state.screen_height; y++) {
-                if (y * state.screen_width + x >
-                        state.last_y * state.screen_width + state.last_x) {
-					if (state.total_runs == 1)
-						DrawPixel(x, y, WHITE);
-					else {
-						DrawPixel(x, y,
-								XYZToRGB(fvec3_scale(state.s_colors[y * state.screen_width + x],
-									1. / (state.total_runs - 1)))
-						);
-					}
-                } else {
-					DrawPixel(x, y,
-							XYZToRGB(fvec3_scale(state.s_colors[y * state.screen_width + x],
-								1. / state.total_runs))
-					);
-                }
-            }
-        }
-        EndDrawing();
-		// if (state.total_runs > 1)
-		// 	exit(0);
+        render_multithread(&state, 8);
         double end = GetTime();
         printf("%lf\n", end - start);
 

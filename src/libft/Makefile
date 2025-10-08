@@ -1,6 +1,7 @@
 NAME := libft.a
 CC := cc
 
+UNAME_S := $(shell uname -s)
 SOURCES := src/ft_atoi.c        \
 		   src/ft_checked_atoi.c\
 		   src/ft_bzero.c       \
@@ -124,7 +125,11 @@ ifeq ($(PROFILE),debug_mem)
 endif
 
 ifeq ($(PROFILE),debug_mem_sanitize)
-	CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak,undefined
+	ifeq ($(UNAME_S),Darwin)
+		CFLAGS += -DDEBUG_ALLOC -fsanitize=address
+	else
+		CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak,undefined
+	endif
 endif
 
 PROFILE_FOUND := $(filter $(PROFILE), $(PROFILES))
