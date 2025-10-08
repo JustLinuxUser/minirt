@@ -68,7 +68,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
 
     while (iters_left-- > 0)
     {
-        coll = collide_bvh(state, (t_ray_isector){.ray = ray, .t_max = INFINITY, .t_min = 0.001, .ignore_shape = ignored_shape});
+        coll = collide_bvh(state, (t_ray_isector){.ray = ray, .t_max = INFINITY, .t_min = 0.01, .ignore_shape = ignored_shape});
         if (!coll.collided)
             break;
 		ignored_shape = coll.shape.ptr;
@@ -98,7 +98,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
         float distance_decrease = 0.f;
 
 		t_ray light_ray = (t_ray){.pos = p, .dir = norm_light};
-        coll = collide_bvh(state, (t_ray_isector){.ray = light_ray, .t_max = light_t, .t_min = 0.001, .ignore_shape = ignored_shape});
+        coll = collide_bvh(state, (t_ray_isector){.ray = light_ray, .t_max = light_t, .t_min = 0.01, .ignore_shape = ignored_shape});
         if (!coll.collided)
         {
             //GET COSINE (AS BEFORE)

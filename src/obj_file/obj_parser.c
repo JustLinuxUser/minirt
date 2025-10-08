@@ -40,7 +40,7 @@ void parse_obj_vertices(t_obj_parser *parser)
             vert.x = num;
         else if (i == 1)
             vert.y = num;
-        else
+        else if (i == 2)
             vert.z = num;
     }
     vec_fvec3_push(&parser->vertices, vert);
@@ -48,19 +48,26 @@ void parse_obj_vertices(t_obj_parser *parser)
 
 void parse_obj_faces(t_obj_parser *parser)
 {
+	int i = 0;
+
     while (peek_obj_token(parser).t == OBJ_TUPLE)
     {
         t_obj_token face = consume_obj_token(parser);
-        int i = -1;
-        while (++i < 3)
-        {
-            int ret = face.vals[i];
-            vec_int_push(&parser->faces, ret);
-        }
+		// 1 indexed
+		vec_int_push(&parser->faces, face.vals[0] - 1);
+
+		// simple quad triangulation
+		i++;
+		if (i > 3) {
+			int first = parser->faces.buff[parser->faces.len - i];
+			int prev =  parser->faces.buff[parser->faces.len - 2];
+			vec_int_push(&parser->faces, prev);
+			vec_int_push(&parser->faces, first);
+		}
     }
 }
 
-int get_obj(char *filename)
+int get_obj(char *filename, t_obj_parser *ret)
 {
     t_obj_parser parser = {0};
     parser.curr_token = 0;
@@ -73,7 +80,8 @@ int get_obj(char *filename)
 
     while (tokens_left(&parser))
     {
-        if (parser.tokenizer.str.buff[peek_obj_token(&parser).start_idx] == 'v')
+		
+        if (str_slice_eq_str(&parser.tokenizer.str.buff[peek_obj_token(&parser).start_idx], peek_obj_token(&parser).len, "v"))
         {
             consume_obj_token(&parser);
             parse_obj_vertices(&parser);
@@ -87,7 +95,7 @@ int get_obj(char *filename)
     }
 
     //PRINT
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < parser.vertices.len; i++)
     {
         t_fvec3 ret = parser.vertices.buff[i]; 
         printf("here: %f %f %f\n", ret.x, ret.y, ret.z);
@@ -102,5 +110,6 @@ int get_obj(char *filename)
         printf("here: %d %d %d\n", a, b, c);
     }
     
+	*ret = parser;
     return (1);
 }

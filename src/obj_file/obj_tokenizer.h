@@ -37,7 +37,7 @@ typedef struct t_obj_token {
 
 typedef struct t_obj_tokenizer {
     size_t curr_idx;
-    t_obj_token tokens[2048];
+    t_obj_token *tokens;
     t_dyn_str str;
     int num_tokens;
 } t_obj_tokenizer;

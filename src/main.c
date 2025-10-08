@@ -66,12 +66,21 @@ t_state init(int screen_width, int screen_height, float fov_deg) {
 
 typedef struct {
     t_state *state;
-    int num_threads;
-    int thread_id;
+	int start_pixel;
+	int num_pixels;
     int* exit_flag;
 } t_render_task;
 
-void* render_step(void *arg) {
+size_t coord_to_idx(t_state *state, int x, int y) {
+	return (state->screen_width * y + x);
+}
+
+void idx_to_coords(t_state *state, size_t idx, int *x, int *y) {
+	*x = idx % state->screen_width;
+	*y = idx / state->screen_width;
+}
+
+void *render_step(void *arg) {
     // Draw
     t_render_task t = *(t_render_task*)arg;
     t_fvec3 x0y0 = vec3_rotate_pitch_yaw(
@@ -91,16 +100,15 @@ void* render_step(void *arg) {
             (t_fvec2){.x = t.state->screen_width, .y = t.state->screen_height},
             (t_fvec2){}),
         t.state->cam_pitch, t.state->cam_yaw);
-    int x, y = 0;
+    int x, y;
+	idx_to_coords(t.state, t.start_pixel, &x, &y);
     while (y < t.state->screen_height) {
-        x = 0;
         while (x < t.state->screen_width) {
-            if ((y * t.state->screen_width + x) % t.num_threads != t.thread_id)
-            {
-                x++;
-                continue;
-
-            }
+			if (coord_to_idx(t.state, x, y) - t.start_pixel >= t.num_pixels)
+			{
+				*t.exit_flag = 0;
+				return 0;
+			}
             t_ray curr_ray;
             t_SampledSpectrum res_color = {0};
             t_sampler_state sstate = {.stratified_x = 1, .stratified_y = 1};
@@ -121,7 +129,7 @@ void* render_step(void *arg) {
                     l2, l1, (x + sample.x) / t.state->screen_width));
                 curr_ray.dir = pt;
 
-				res_color = cast_reflectable_ray_new(t.state, curr_ray, lambdas, 1);
+				res_color = cast_reflectable_ray_new(t.state, curr_ray, lambdas, 2);
 				xyz_color = fvec3_add(SpectrumToXYZ(res_color, lambdas), xyz_color);
             }
 			xyz_color = fvec3_scale(xyz_color, 1. / (sstate.stratified_x *
@@ -131,9 +139,11 @@ void* render_step(void *arg) {
 			t.state->s_colors[y * t.state->screen_width + x] = fvec3_add(t.state->s_colors[y * t.state->screen_width + x], xyz_color);
             x++;
         }
+		x = 0;
         y++;
     }
-    *t.exit_flag = 1;
+    *t.exit_flag = 2;
+	return 0;
 }
 
 void drawinator(t_state *state)
@@ -160,34 +170,50 @@ void drawinator(t_state *state)
     EndDrawing();
 }
 
-int threads_finished(int num_threads, int* exit_flags)
+int free_thread_idx(int num_threads, int* exit_flags)
 {
-    int ret = 1;
-
     for (int j = 0; j < num_threads; j++)
-        if (exit_flags[j] == 0)
-            ret = 0;
+        if (exit_flags[j] == 0 || exit_flags[j] == 2)
+			return j;
+    return -1;
+}
+
+int num_free_threads(int num_threads, int* exit_flags)
+{
+	int ret = 0;
+    for (int j = 0; j < num_threads; j++)
+        if (exit_flags[j] == 0 || exit_flags[j] == 2)
+			ret++;
     return ret;
 }
 
 void render_multithread(t_state* state, int num_threads){
     pthread_t threads[num_threads];
     t_render_task tasks[num_threads];
-    int i = -1;
     int exit_flags[100] = {0};
     state->total_runs++;
-
-    while (++i < num_threads)
-    {
-        tasks[i] = (t_render_task){ .state = state, .num_threads = num_threads, .thread_id = i, .exit_flag = &exit_flags[i] };
-        pthread_create(&threads[i], NULL, render_step, &tasks[i]);
-    }
-    while (true)
-    {
-        if (threads_finished(num_threads, exit_flags))
-            break;
+	int curr_px = 0;
+	int i = -1;
+	while (curr_px < state->screen_width * state->screen_height) {
+		i = -1;
+		int pos;
+		while ((pos = free_thread_idx(num_threads, exit_flags)) != -1)
+		{
+			if (exit_flags[pos] == 2)
+				pthread_join(threads[pos], NULL);
+			exit_flags[pos] = 1;
+			int incr = 5000;
+			tasks[pos] = (t_render_task){ .state = state, .start_pixel = curr_px, .num_pixels = incr, .exit_flag = &exit_flags[pos] };
+			curr_px += incr;
+			pthread_create(&threads[pos], NULL, render_step, &tasks[pos]);
+		}
         drawinator(state);
-    }
+	}
+
+	while (num_free_threads(num_threads, exit_flags) != num_threads) {
+        drawinator(state);
+	}
+
     i = -1;
     while (++i < num_threads)
         pthread_join(threads[i], NULL);
@@ -277,13 +303,13 @@ int main(int argc, char** argv) {
     /*LIGHTS*/
     t_lights lights = {0};
 
-    t_light light1 = {.t = POINT_LIGHT, .intensity = 8000.f, .position = state.light_pos};
+    t_light light1 = {.t = POINT_LIGHT, .intensity = 800.f, .position = state.light_pos};
     light1.spec = calculateDenselySampledSpectrum(9000);
     
-    t_light light2 = {.t = POINT_LIGHT, .intensity = 10000.f, .position = {.y = 70, .z = 150, .x = 100}};
+    t_light light2 = {.t = POINT_LIGHT, .intensity = 1000.f, .position = {.y = 70, .z = 150, .x = 100}};
     light2.spec = calculateDenselySampledSpectrum(6200);
 
-    t_light light3 = {.t = POINT_LIGHT, .intensity = 15000.f, .position = {.y = 70, .z = 50, .x = 50}};
+    t_light light3 = {.t = POINT_LIGHT, .intensity = 1500.f, .position = {.y = 70, .z = 50, .x = 50}};
     light2.spec = calculateDenselySampledSpectrum(3000);
 
     add_light(&lights, light1);

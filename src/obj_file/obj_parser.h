@@ -21,4 +21,4 @@ typedef struct s_obj_parser {
     t_vec_int faces;
 } t_obj_parser;
 
-int get_obj(char *filename);
+int get_obj(char *filename, t_obj_parser *ret);

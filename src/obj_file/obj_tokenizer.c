@@ -94,7 +94,7 @@ bool tokenize_obj_number(t_obj_tokenizer* tokenizer, float *fret, bool *is_int, 
 		num_fract++;
 	}
 	*fret = whole_part * sign;
-	*fret += fract_part / powf(10, num_fract);
+	*fret += sign * fract_part / powf(10, num_fract);
 	return (true);
 }
 
@@ -186,6 +186,7 @@ char* obj_type_conversion(unsigned int t)
 int process_obj_file(char* filename, t_obj_tokenizer* tokenizer)
 {
     t_dyn_str ret = {0};
+	tokenizer->tokens = malloc(sizeof(t_obj_token) * 1000000);
 
     if (!dyn_str_read_file(filename, &ret))
         return 0;
@@ -209,19 +210,19 @@ int process_obj_file(char* filename, t_obj_tokenizer* tokenizer)
     }
 
     //PRINT STUFF
-    printf("num tokens: %d\n", tokenizer->num_tokens);
-    int i = -1;
-    while (++i < tokenizer->num_tokens)
-    {
-        printf("[type: %s; %.*s]\n", obj_type_conversion(tokenizer->tokens[i].t), tokenizer->tokens[i].len, tokenizer->str.buff + tokenizer->tokens[i].start_idx);
-        if (tokenizer->tokens[i].parsed_num != -99999.f)
-           printf("num: %f\n", tokenizer->tokens[i].parsed_num);
-        if (tokenizer->tokens[i].vals[0] != 0)
-        {
-            printf("vals: %d\n", tokenizer->tokens[i].vals[0]); 
-            printf("vals: %d\n", tokenizer->tokens[i].vals[1]); 
-            printf("vals: %d\n", tokenizer->tokens[i].vals[2]);
-        }
-    }
+    // printf("num tokens: %d\n", tokenizer->num_tokens);
+    // int i = -1;
+    // while (++i < tokenizer->num_tokens)
+    // {
+    //     printf("[type: %s; %.*s]\n", obj_type_conversion(tokenizer->tokens[i].t), tokenizer->tokens[i].len, tokenizer->str.buff + tokenizer->tokens[i].start_idx);
+    //     if (tokenizer->tokens[i].parsed_num != -99999.f)
+    //        printf("num: %f\n", tokenizer->tokens[i].parsed_num);
+    //     if (tokenizer->tokens[i].vals[0] != 0)
+    //     {
+    //         printf("vals: %d\n", tokenizer->tokens[i].vals[0]); 
+    //         printf("vals: %d\n", tokenizer->tokens[i].vals[1]); 
+    //         printf("vals: %d\n", tokenizer->tokens[i].vals[2]);
+    //     }
+    // }
     return 1;
 }
