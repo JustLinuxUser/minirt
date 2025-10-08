@@ -43,7 +43,7 @@ void parse_obj_vertices(t_obj_parser *parser)
         else
             vert.z = num;
     }
-    vec_gen_push(&parser->vertices, &vert);
+    vec_fvec3_push(&parser->vertices, vert);
 }
 
 void parse_obj_faces(t_obj_parser *parser)
@@ -55,7 +55,7 @@ void parse_obj_faces(t_obj_parser *parser)
         while (++i < 3)
         {
             int ret = face.vals[i];
-            vec_gen_push(&parser->faces, &ret);
+            vec_int_push(&parser->faces, ret);
         }
     }
 }
@@ -68,8 +68,8 @@ int get_obj(char *filename)
     if (!process_obj_file(filename, &parser.tokenizer))
         return (0);
 
-    vec_gen_init(&parser.vertices, sizeof(t_fvec3), 0);
-    vec_gen_init(&parser.faces, sizeof(int), 0);
+    vec_fvec3_init(&parser.vertices, 0);
+    vec_int_init(&parser.faces, 0);
 
     while (tokens_left(&parser))
     {
@@ -89,16 +89,16 @@ int get_obj(char *filename)
     //PRINT
     for (int i = 0; i < 8; i++)
     {
-        t_fvec3 ret = *(t_fvec3 *)vec_gen_idx(&parser.vertices, i); 
+        t_fvec3 ret = parser.vertices.buff[i]; 
         printf("here: %f %f %f\n", ret.x, ret.y, ret.z);
     }
 
     for (int i = 0; i < (int)parser.faces.len/3; i++)
     {
 
-        int a = *(int *)vec_gen_idx(&parser.faces, i*3);
-        int b = *(int *)vec_gen_idx(&parser.faces, i*3+1);
-        int c = *(int *)vec_gen_idx(&parser.faces, i*3+2);  
+        int a = parser.faces.buff[i*3];
+        int b = parser.faces.buff[i*3+1];
+        int c = parser.faces.buff[i*3+2];  
         printf("here: %d %d %d\n", a, b, c);
     }
     
