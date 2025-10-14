@@ -162,11 +162,11 @@ void cie_xyz(float lambda, float *x, float *y, float *z)
 //     return xyz_to_rgb(X, Y, Z);
 // }
 
-t_ColorRGB clamp_rgb(t_ColorRGB c) {
-    t_ColorRGB out;
-    out.r = clamp(c.r, 0.0f, 1.0f);
-    out.g = clamp(c.g, 0.0f, 1.0f);
-    out.b = clamp(c.b, 0.0f, 1.0f);
+t_color clamp_rgb(t_color c) {
+    t_color out;
+    out.x = clamp(c.x, 0.0f, 1.0f);
+    out.y = clamp(c.y, 0.0f, 1.0f);
+    out.z = clamp(c.z, 0.0f, 1.0f);
     return out;
 }
 

@@ -4,3 +4,4 @@ src/libft/build
 objs/
 **compile_commands.json
 **/*.a
+src/libft/generated

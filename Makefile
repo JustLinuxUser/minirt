@@ -28,12 +28,14 @@ LIBS := -lm -L ${LIBFT_DIR} -lft
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
+	LIBS += -Lsrc/MLX42/build -lmlx42 -lglfw
+	CFLAGS += -I src/MLX42/include
 	LIBS += -Lraylib-5.5_linux_amd64/lib -lraylib
 	CFLAGS += -I raylib-5.5_linux_amd64/include
 endif
 ifeq ($(UNAME_S),Darwin)
-	LIBS += -Lraylib-5.5_macos/lib/ raylib-5.5_macos/lib/libraylib.a -framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT -framework OpenGL
-	CFLAGS += -I raylib-5.5_macos/include
+	LIBS += -Lsrc/MLX42/build -lmlx42
+	CFLAGS += -I src/MLX42/include
 endif
 
 ifeq ($(PROFILE),opt)

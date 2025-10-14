@@ -1,5 +1,6 @@
 #ifndef MINIRT_H
 # define MINIRT_H
+#include "MLX42/MLX42.h"
 #include "mymath.h"
 #include "spectrum.h"
 
@@ -7,10 +8,17 @@
 #include "bounds.h"
 #include "light.h"
 
-#include <raylib.h>
+#include <pthread.h>
 #include <stdbool.h>
 
 typedef t_fvec3 t_color;
+typedef struct s_8bcolor {
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
+	uint8_t a;
+} t_8bcolor;
+
 #define DARKDARKGRAY (t_color){.x = 0.01, .y = 0.01, .z = 0.01}
 
 typedef struct perspective_cam {
@@ -31,6 +39,23 @@ typedef struct s_linear_bvh_nd {
     uint16_t n_primitives;  // 0 -> interior node
     uint8_t axis;           // interior node: xyz
 } t_linear_bvh_nd;
+
+struct s_state ;
+
+typedef struct {
+    struct s_state* state;
+    int start_pixel;
+    int num_pixels;
+    int* exit_flag;
+} t_render_task;
+
+typedef struct s_renderer_state {
+	int curr_px;
+    pthread_t threads[100];
+    t_render_task tasks[100];
+    int exit_flags[100];
+	int total_runs;
+} t_renderer_state;
 
 typedef struct s_state {
     t_fvec3* s_colors;
@@ -65,7 +90,9 @@ typedef struct s_state {
 
 	// int last_x;
 	// int last_y;
-	int total_runs;
+	mlx_t *mlx;
+	mlx_image_t *mlx_image;
+	t_renderer_state rndr;
 } t_state;
 
 t_collision collide_bvh(t_state* state, t_ray_isector isector);
@@ -81,15 +108,18 @@ void createAliasTable(t_lights *lights);
 int SampleAliasTable(t_lights *lights, float lu);
 
 // colors.c
-t_color RGBToColor(Color c);
+t_color RGBToColor(t_color c);
 float linear_to_gamma(float c);
 /*NEW*/
-Color ColortoRGB(t_color c);
+t_8bcolor ColortoRGB(t_color c);
 t_fvec3 SpectrumToXYZ(t_SampledSpectrum s, t_SampledWavelengths lambda);
-Color XYZToRGB(t_fvec3 t);
-t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda);
-t_ColorRGB clamp_rgb(t_ColorRGB c);
+t_8bcolor XYZToRGB(t_fvec3 t);
+uint32_t conv_8bcolor_to_uint32(t_8bcolor c);
+t_color spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda);
+t_color clamp_rgb(t_color c);
+
 float random_generator();
+
 /*END NEW*/
 t_fvec3 perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
@@ -101,4 +131,8 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
 
 // tinyobj.c
 void load_triangles(t_state* state, char *path, t_fvec3 pos, float scale);
+
+// draw.c
+void loop_hook(void *state_param);
+
 #endif

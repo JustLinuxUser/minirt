@@ -17,20 +17,20 @@ sp: {
 	color: 0,0,0
 }
 
-pl: {
-	position: 0,30,40
-	direction: 1,1,1
-	color: 255,255,255
+#pl: {
+#	position: 0,30,40
+#	direction: 1,1,1
+#	color: 255,255,255
+#}
+
+obj: {
+	position: 0,0,0
+	scale: 10
+	path: "objs/sponza2/sponza.obj"
 }
 
 # obj: {
-# 	position: 0,0,0
+# 	position: 0,0,100
 # 	scale: 10
-# 	path: "objs/sponza/sponza.obj"
+# 	path: "objs/cube.obj"
 # }
-
-#obj: {
-#	position: 0,0,0
-#	scale: 10
-#	path: "objs/sponza/sponza.obj"
-#}

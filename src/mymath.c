@@ -1,6 +1,5 @@
 #include "mymath.h"
 #include <math.h>
-#include <raylib.h>
 #include <raymath.h>
 
 t_fvec3 fvec3_sub(t_fvec3 a, t_fvec3 b) {
@@ -79,12 +78,38 @@ t_fvec3 fvec3_cross(t_fvec3 v1, t_fvec3 v2) {
     return result;
 }
 
-// TODO: Delete this
+t_fvec2 vec2_rotate(t_fvec2 v, float angle) {
+	float s;
+	float c;
+	t_fvec2 ret;
+	
+	s = sin(angle);
+	c = cos(angle);
+	ret.x = v.x * c + v.y * s;
+	ret.y = v.x * s - v.y * c;
+	return (ret);
+}
+
 t_fvec3 vec3_rotate_pitch_yaw(t_fvec3 v, float pitch, float yaw)
 {
-    Vector3 ret = Vector3RotateByQuaternion(*(Vector3*)(void*)&v,
-                                            QuaternionFromEuler(pitch, yaw, 0));
-    return (*(t_fvec3*)(void*)&ret);
+	 // Vector3 ret = Vector3RotateByQuaternion(*(Vector3*)(void*)&v,
+  //                                           QuaternionFromEuler(pitch, yaw, 0));
+  //   return (*(t_fvec3*)(void*)&ret);
+	t_fvec2 zy;
+	t_fvec2 xy;
+
+	zy.x = v.z;
+	zy.y = v.y;
+	zy = vec2_rotate(zy, pitch);
+	v.z = zy.x;
+	v.y = zy.y;
+
+	xy.x = v.x;
+	xy.y = v.y;
+	xy = vec2_rotate(xy, yaw);
+	v.x = xy.x;
+	v.y = xy.y;
+    return(v);
 }
 
 float fvec3_idx(t_fvec3 v, int idx)

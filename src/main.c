@@ -1,15 +1,13 @@
 #include <math.h>
-#include <raylib.h>
 #include <raymath.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "minirt.h"
 #include "mymath.h"
-#include "obj_file/obj_tokenizer.h"
-#include "obj_file/obj_parser.h"
 #include "rt_file/rt_consumer.h"
 #include "samplers.h"
+#include "MLX42/MLX42.h"
 #include <pthread.h>
 
 // TODOS:
@@ -48,9 +46,9 @@ t_state init(int screen_width, int screen_height, float fov_deg) {
         .screen_height = screen_height,
         .light_pos = {.y = 0, .z = -100, .x = 0},
         .screen_dist = 1,
-        .total_runs = 0,
-        //.debug = 1,
-        // .preview = true,
+		.rndr = {
+			.total_runs = 1,
+		}
     };
 
     ret.s_colors = calloc(ret.screen_width * ret.screen_height, sizeof(t_fvec3));
@@ -61,163 +59,11 @@ t_state init(int screen_width, int screen_height, float fov_deg) {
     const float proj_plane_width = 2 * tan(fov_x / 2) * screen_dist;
     const float proj_coef = proj_plane_width / ret.screen_width;
     ret.proj_coef = proj_coef;
+
+	ret.mlx = mlx_init(screen_width, screen_height, "MiniRT", false);
+	ret.mlx_image = mlx_new_image(ret.mlx, screen_width, screen_height);
+	mlx_image_to_window(ret.mlx, ret.mlx_image, 0, 0);
     return ret;
-}
-
-typedef struct {
-    t_state *state;
-	int start_pixel;
-	int num_pixels;
-    int* exit_flag;
-} t_render_task;
-
-size_t coord_to_idx(t_state *state, int x, int y) {
-	return (state->screen_width * y + x);
-}
-
-void idx_to_coords(t_state *state, size_t idx, int *x, int *y) {
-	*x = idx % state->screen_width;
-	*y = idx / state->screen_width;
-}
-
-void *render_step(void *arg) {
-    // Draw
-    t_render_task t = *(t_render_task*)arg;
-    t_fvec3 x0y0 = vec3_rotate_pitch_yaw(
-        perspective_cam_ray(t.state, (t_fvec2){}, (t_fvec2){}), t.state->cam_pitch,
-        t.state->cam_yaw);
-    t_fvec3 x1y0 = vec3_rotate_pitch_yaw(
-        perspective_cam_ray(t.state, (t_fvec2){.x = t.state->screen_width},
-                            (t_fvec2){}),
-        t.state->cam_pitch, t.state->cam_yaw);
-    t_fvec3 x0y1 = vec3_rotate_pitch_yaw(
-        perspective_cam_ray(t.state, (t_fvec2){.y = t.state->screen_height},
-                            (t_fvec2){}),
-        t.state->cam_pitch, t.state->cam_yaw);
-    t_fvec3 x1y1 = vec3_rotate_pitch_yaw(
-        perspective_cam_ray(
-            t.state,
-            (t_fvec2){.x = t.state->screen_width, .y = t.state->screen_height},
-            (t_fvec2){}),
-        t.state->cam_pitch, t.state->cam_yaw);
-    int x, y;
-	idx_to_coords(t.state, t.start_pixel, &x, &y);
-    while (y < t.state->screen_height) {
-        while (x < t.state->screen_width) {
-			if (coord_to_idx(t.state, x, y) - t.start_pixel >= t.num_pixels)
-			{
-				*t.exit_flag = 0;
-				return 0;
-			}
-            t_ray curr_ray;
-            t_SampledSpectrum res_color = {0};
-            t_sampler_state sstate = {.stratified_x = 1, .stratified_y = 1};
-
-            t_fvec2 sample;
-			t_fvec3 xyz_color = {0};
-            while (sample_stratified(&sstate, &sample)) {
-				float lu = random_generator();
-				t_SampledWavelengths lambdas = SampleUniform(lu, 360, 830);
-                curr_ray.pos = t.state->cam.pos;
-                t_fvec3 l1 = fvec3_lerp(
-                    x0y0, x0y1,
-                    (y + sample.y) / t.state->screen_height);
-                t_fvec3 l2 = fvec3_lerp(
-                    x1y0, x1y1,
-                    (y + sample.y) / t.state->screen_height);
-                t_fvec3 pt = fvec3_norm(fvec3_lerp(
-                    l2, l1, (x + sample.x) / t.state->screen_width));
-                curr_ray.dir = pt;
-
-				res_color = cast_reflectable_ray_new(t.state, curr_ray, lambdas, 2);
-				xyz_color = fvec3_add(SpectrumToXYZ(res_color, lambdas), xyz_color);
-            }
-			xyz_color = fvec3_scale(xyz_color, 1. / (sstate.stratified_x *
-						   sstate.stratified_y));
-
-			//RES COLOR TO XYZ (T_FVEC3)
-			t.state->s_colors[y * t.state->screen_width + x] = fvec3_add(t.state->s_colors[y * t.state->screen_width + x], xyz_color);
-            x++;
-        }
-		x = 0;
-        y++;
-    }
-    *t.exit_flag = 2;
-	return 0;
-}
-
-void drawinator(t_state *state)
-{
-    BeginDrawing();
-    ClearBackground(WHITE);
-    printf("total_runs: %i\n", state->total_runs);
-    // printf("curr_px: %i\n",
-    //        state.last_y * state.screen_width + state.last_x);
-    for (int x = 0; x < state->screen_width; x++) {
-        for (int y = 0; y < state->screen_height; y++) {
-            // if (state.total_runs == 1 &&
-            //     y * state.screen_width + x >
-            //         state.last_y * state.screen_width + state.last_x) {
-            //     DrawPixel(x, y, WHITE);
-            // } else {
-                DrawPixel(x, y,
-                        XYZToRGB(fvec3_scale(state->s_colors[y * state->screen_width + x],
-                            1. / state->total_runs))
-                );
-            // }
-        }
-    }
-    EndDrawing();
-}
-
-int free_thread_idx(int num_threads, int* exit_flags)
-{
-    for (int j = 0; j < num_threads; j++)
-        if (exit_flags[j] == 0 || exit_flags[j] == 2)
-			return j;
-    return -1;
-}
-
-int num_free_threads(int num_threads, int* exit_flags)
-{
-	int ret = 0;
-    for (int j = 0; j < num_threads; j++)
-        if (exit_flags[j] == 0 || exit_flags[j] == 2)
-			ret++;
-    return ret;
-}
-
-void render_multithread(t_state* state, int num_threads){
-    pthread_t threads[num_threads];
-    t_render_task tasks[num_threads];
-    int exit_flags[100] = {0};
-    state->total_runs++;
-	int curr_px = 0;
-	int i = -1;
-	while (curr_px < state->screen_width * state->screen_height) {
-		i = -1;
-		int pos;
-		while ((pos = free_thread_idx(num_threads, exit_flags)) != -1)
-		{
-			if (exit_flags[pos] == 2)
-				pthread_join(threads[pos], NULL);
-			exit_flags[pos] = 1;
-			int incr = 5000;
-			tasks[pos] = (t_render_task){ .state = state, .start_pixel = curr_px, .num_pixels = incr, .exit_flag = &exit_flags[pos] };
-			curr_px += incr;
-			pthread_create(&threads[pos], NULL, render_step, &tasks[pos]);
-		}
-        drawinator(state);
-	}
-
-	while (num_free_threads(num_threads, exit_flags) != num_threads) {
-        drawinator(state);
-	}
-
-    i = -1;
-    while (++i < num_threads)
-        pthread_join(threads[i], NULL);
-    
 }
 
 void load_shapes(t_state* state) {
@@ -233,11 +79,11 @@ void load_shapes(t_state* state) {
     }
 
 	// unbounded shapes
-    for (size_t i = 0; i < state->planes.len; i++) {
-        vec_shape_push(
-            &state->unbounded_shapes,
-            (t_shape){.type = OBJ_PLANE, .ptr = state->planes.buff + i});
-    }
+	for (size_t i = 0; i < state->planes.len; i++) {
+		vec_shape_push(
+			&state->unbounded_shapes,
+			(t_shape){.type = OBJ_PLANE, .ptr = state->planes.buff + i});
+	}
 }
 void build_bvh(t_state* state);
 
@@ -249,10 +95,13 @@ void free_state(t_state *state) {
 	free(state->spheres.buff);
 	free(state->s_colors);
 }
+
+void render_multithread(t_state* state, int num_threads);
+
 int main(int argc, char** argv) {
     if (argc != 2)
         return (1);
-    t_state state = init(800, 600, 70);
+    t_state state = init(1000, 600, 70);
 
     if (!process_file(argv[1], &state))
 	{
@@ -320,87 +169,11 @@ int main(int argc, char** argv) {
 
     state.lights = lights;
 
-    InitWindow(state.screen_width, state.screen_height,
-               "raylib [core] example - basic window");
-
-    SetTargetFPS(
-        60);  // Set our game to run at 60 frames-per-second (Yea! no way!)
-
     int num_frames = -10;
     // Main game loop
     state.preview = true;
-    while (!WindowShouldClose() &&
-           num_frames--)  // Detect window close button or ESC key
-    {
-        int reset = 0;
-        if (IsKeyDown(KEY_Q)) {
-            state.cam.pos.y += 10;
-            reset = 1;
-        }
-        if (IsKeyPressed(KEY_P)) {
-            state.preview ^= true;
-            printf("preview: %i\n", state.preview);
-            reset = 1;
-        }
-        if (IsKeyDown(KEY_E)) {
-            state.cam.pos.y -= 10;
-            reset = 1;
-        }
-        if (IsKeyDown(KEY_W)) {
-            state.cam.pos = fvec3_add(
-                state.cam.pos,
-                vec3_rotate_pitch_yaw((t_fvec3){.z = 1}, 0, state.cam_yaw));
-            reset = 1;
-        }
-        if (IsKeyDown(KEY_S)) {
-            state.cam.pos = fvec3_add(
-                state.cam.pos, vec3_rotate_pitch_yaw((t_fvec3){.z = 1}, 0,
-                                                     PI + state.cam_yaw));
-            reset = 1;
-        }
-        if (IsKeyDown(KEY_A)) {
-            state.cam.pos = fvec3_add(
-                state.cam.pos, vec3_rotate_pitch_yaw((t_fvec3){.z = 1}, 0,
-                                                     -PI / 2 + state.cam_yaw));
-            reset = 1;
-        }
-        if (IsKeyDown(KEY_D)) {
-            state.cam.pos = fvec3_add(
-                state.cam.pos, vec3_rotate_pitch_yaw((t_fvec3){.z = 1}, 0,
-                                                     PI / 2 + state.cam_yaw));
-            reset = 1;
-        }
-
-        if (IsKeyDown(KEY_RIGHT)) {
-            state.cam_yaw += 0.1;
-            reset = 1;
-        }
-        if (IsKeyDown(KEY_LEFT)) {
-            state.cam_yaw -= 0.1;
-            reset = 1;
-        }
-        if (IsKeyDown(KEY_UP)) {
-            state.cam_pitch -= 0.1;
-            reset = 1;
-        }
-        if (IsKeyDown(KEY_DOWN)) {
-            state.cam_pitch += 0.1;
-            reset = 1;
-        }
-
-        if (reset) {
-            printf("reset\n");
-            memset(state.s_colors, 0,
-                   state.screen_width * state.screen_height *
-                       sizeof(t_SampledSpectrum));
-            state.total_runs = 1;
-        }
+	// TODO: Close hook
         // Update
-        double start = GetTime();
-        render_multithread(&state, 8);
-        double end = GetTime();
-        printf("%lf\n", end - start);
-
-        //----------------------------------------------------------------------------------
-    }
+	mlx_loop_hook(state.mlx, loop_hook, &state);
+	mlx_loop(state.mlx);
 }
