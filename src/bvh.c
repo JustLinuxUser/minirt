@@ -45,8 +45,8 @@ void bvh_create_leaf_node(t_bvh_build_state* state,
                           t_bvh_primitive* bvh_primitives,
                           size_t bvh_prim_len,
                           t_bvh_build_node* ret) {
-    if (bvh_prim_len != 1)
-        printf("bvh_len: %zu\n", bvh_prim_len);
+    // if (bvh_prim_len != 1)
+        // ft_printf("bvh_len: %zu\n", bvh_prim_len);
 
     ret->first_prim_offset = state->ordered_shapes->len;
     for (size_t i = 0; i < bvh_prim_len; i++) {
@@ -55,10 +55,10 @@ void bvh_create_leaf_node(t_bvh_build_state* state,
 
         t_bounds3f bounds = shape_bounds(&state->state, shape);
         if (!bounds_is_encapsulated(ret->bounds, bounds))
-            printf("Failing in bvh leaf node\n");
+            ft_printf("Failing in bvh leaf node\n");
 
 		if (ft_memcmp(&bounds, &bvh_primitives[i].bounds, sizeof(bounds))) {
-            printf("Got different bounds\n");
+            ft_printf("Got different bounds\n");
 		}
         vec_shape_push(state->ordered_shapes, shape);
     }
@@ -145,16 +145,16 @@ typedef struct s_sah_splitfn_arg {
 } t_sah_splitfn_arg;
 
 void print_pt(t_fvec3 pt) {
-	printf("x: %f\n", pt.x);
-	printf("y: %f\n", pt.y);
-	printf("z: %f\n", pt.z);
+	ft_printf("x: %f\n", pt.x);
+	ft_printf("y: %f\n", pt.y);
+	ft_printf("z: %f\n", pt.z);
 }
 
 void print_bounds(t_bounds3f bounds) {
-	printf("bounds_min: \n");
+	ft_printf("bounds_min: \n");
 	print_pt(bounds.min);
 
-	printf("\nbounds_max: \n");
+	ft_printf("\nbounds_max: \n");
 	print_pt(bounds.max);
 }
 
@@ -229,14 +229,14 @@ t_bvh_build_node* bvh_build_recursive(t_bvh_build_state* state,
 			t_bounds3f curr_bound = bvh_primitives[i].bounds;
 			int bucket = fvec3_idx(bounds_offset(centroid_bounds, bounds_centroid(curr_bound)), dim) * SAH_BUCKETS;
 			if (bucket < 0) {
-				printf("bucket: %i\n", bucket);
-				printf("dim: %i\n", dim);
-				printf("num_primitives: %zu\n", bvh_prim_len);
-				printf("float: %f\n", fvec3_idx(bounds_offset(centroid_bounds, bounds_centroid(curr_bound)), dim));
+				// ft_printf("bucket: %i\n", bucket);
+				// ft_printf("dim: %i\n", dim);
+				// ft_printf("num_primitives: %zu\n", bvh_prim_len);
+				// ft_printf("float: %f\n", fvec3_idx(bounds_offset(centroid_bounds, bounds_centroid(curr_bound)), dim));
 
-				print_bounds(curr_bound);
-				printf("\n");
-				print_bounds(centroid_bounds);
+				// print_bounds(curr_bound);
+				// ft_printf("\n");
+				// print_bounds(centroid_bounds);
 			}
 
 			if (bucket == SAH_BUCKETS)
@@ -281,8 +281,8 @@ t_bvh_build_node* bvh_build_recursive(t_bvh_build_state* state,
 		float leaf_cost = bvh_prim_len;
 		// printf("leaf_cost: %f, min_cost: %f\n", leaf_cost, min_cost);
 		if ((leaf_cost < min_cost || bvh_prim_len < 3)) {
-			printf("child: %zu\n", bvh_prim_len);
-			printf("child: len: %zu, min_split_idx: %i, split_cost: %f, split_count: %i\n", bvh_prim_len, min_split_idx, min_cost, split_counts[min_split_idx]);
+			// ft_printf("child: %zu\n", bvh_prim_len);
+			// ft_printf("child: len: %zu, min_split_idx: %i, split_cost: %f, split_count: %i\n", bvh_prim_len, min_split_idx, min_cost, split_counts[min_split_idx]);
 			// Crate leaf node
 			bvh_create_leaf_node(state, bvh_primitives, bvh_prim_len, ret);
 			return ret;
@@ -296,7 +296,7 @@ t_bvh_build_node* bvh_build_recursive(t_bvh_build_state* state,
 			if (mid == 0 || mid == bvh_prim_len) {
 				bvh_create_leaf_node(state, bvh_primitives, bvh_prim_len, ret);
 			} else {
-				printf("mid: %zu, len: %zu, min_split_idx: %i, split_cost: %f, split_count: %i\n", mid, bvh_prim_len, min_split_idx, min_cost, split_counts[min_split_idx]);
+				// ft_printf("mid: %zu, len: %zu, min_split_idx: %i, split_cost: %f, split_count: %i\n", mid, bvh_prim_len, min_split_idx, min_cost, split_counts[min_split_idx]);
 				ret->children[0] = bvh_build_recursive(state, bvh_primitives, mid);
 				ret->children[1] =
 					bvh_build_recursive(state, p2, bvh_prim_len - mid);
@@ -339,21 +339,21 @@ void build_bvh(t_state* state) {
     vec_shape_init(&ordered_shapes, state->shapes.len);
     t_bvh_build_state bstate = {.state = *state,
                                 .ordered_shapes = &ordered_shapes,
-		.allocator = {.arena_size = 20000}
+		.allocator = {.arena_size = 20000000}
 	};
 
-    printf("starting build\n");
+    ft_printf("starting build\n");
     t_bvh_build_node* tree =
         bvh_build_recursive(&bstate, bvh_primitives, state->shapes.len);
 
-    printf("tree built\n");
-    printf("verifying tree\n");
+    ft_printf("tree built\n");
+    ft_printf("verifying tree\n");
 
-    printf("tree built\n");
+    ft_printf("tree built\n");
     free(bvh_primitives);
 	// exit(0);
 
-    printf("tree_size: %i\n", bstate.total_nodes);
+    ft_printf("tree_size: %i\n", bstate.total_nodes);
 
     t_linear_bvh_nd* linear_bvh =
         malloc(sizeof(t_linear_bvh_nd) * bstate.total_nodes);

@@ -4,7 +4,7 @@
 #include "../libft/libft.h"
 
 char	consume_char(t_rt_tokenizer *tokenizer) {
-	char ret = tokenizer->file.buff[tokenizer->i];
+	char ret = tokenizer->file.contents.buff[tokenizer->i];
 
 	ft_assert(ret);
 	tokenizer->i++;
@@ -12,9 +12,9 @@ char	consume_char(t_rt_tokenizer *tokenizer) {
 }
 
 char peek_char(t_rt_tokenizer *tokenizer) {
-	if (tokenizer->file.len == 0)
+	if (tokenizer->file.contents.len == 0)
 		return (0);
-	return (tokenizer->file.buff[tokenizer->i]);
+	return (tokenizer->file.contents.buff[tokenizer->i]);
 }
 
 void skip_whitespace(t_rt_tokenizer *tokenizer) {
@@ -72,7 +72,6 @@ bool tokenize_number(t_rt_tokenizer *tokenizer, float *fret, bool *is_int) {
 	int num_fract;
 	int sign;
 
-	ft_assert(ft_strchr("-0123456789", peek_char(tokenizer)) != 0);
 	*is_int = true;
 	whole_part = 0;
 	sign = 1;
@@ -116,7 +115,7 @@ bool tokenize_tuple(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 	ret->tuple_len = 0;
 
 	ft_assert(ft_strchr("-0123456789", peek_char(tokenizer)) != 0);
-	while (ft_strchr("-0123456789", peek_char(tokenizer)) != 0) {
+	while (ft_strchr("\t\n ", peek_char(tokenizer)) == 0) {
 		if (!tokenize_number(tokenizer, ret->vals_f + ret->tuple_len, &is_int)) {
 			return (false);
 		}
@@ -124,12 +123,12 @@ bool tokenize_tuple(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 		ret->tuple_len++;
 		if (peek_char(tokenizer) == ',')
 		{
-			consume_char(tokenizer);
 			if (ret->tuple_len == 3)
 			{
 				tokenizer->err = RT_ERR_TUPLE_TOO_LARGE;
 				return (false);
 			}
+			consume_char(tokenizer);
 		}
 	}
 	return (true);
@@ -179,6 +178,8 @@ bool consume_token(t_rt_tokenizer *tokenizer, t_rt_token *ret)
 {
 	if (tokenizer->has_token)
 	{
+		if (tokenizer->err != RT_ERR_NONE)
+			return (false);
 		*ret = tokenizer->curr_tok;
 		tokenizer->has_token = false;
 		return (true);
@@ -197,6 +198,8 @@ t_rt_token consume_token_panic(t_rt_tokenizer *tokenizer)
 }
 
 bool peek_token(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
+	if (tokenizer->err != RT_ERR_NONE)
+		return (RT_NONE);
 	if (tokenizer->has_token)
 	{
 		*ret = tokenizer->curr_tok;
@@ -213,6 +216,8 @@ bool peek_token(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 
 enum RT_TT peek_token_type(t_rt_tokenizer *tokenizer)
 {
+	if (tokenizer->err != RT_ERR_NONE)
+		return (RT_NONE);
 	if (tokenizer->has_token)
 		return (tokenizer->curr_tok.t);
 	if (next_token(tokenizer, &tokenizer->curr_tok))

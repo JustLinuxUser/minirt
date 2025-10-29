@@ -1,6 +1,7 @@
 #ifndef MINIRT_H
 # define MINIRT_H
 #include "MLX42/MLX42.h"
+#include "MLX42/include/MLX42/MLX42.h"
 #include "mymath.h"
 #include "spectrum.h"
 
@@ -16,7 +17,6 @@ typedef struct s_8bcolor {
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;
-	uint8_t a;
 } t_8bcolor;
 
 #define DARKDARKGRAY (t_color){.x = 0.01, .y = 0.01, .z = 0.01}
@@ -46,15 +46,23 @@ typedef struct {
     struct s_state* state;
     int start_pixel;
     int num_pixels;
-    int* exit_flag;
+    uint8_t* thrd_state;
+	int exit_immediatelly;
 } t_render_task;
+
+enum e_THRD_STATE {
+	THRD_NONE = 1 << 0,
+	THRD_RUNNING = 1 << 1,
+	THRD_FINISHED = 1 << 2,
+};
 
 typedef struct s_renderer_state {
 	int curr_px;
-    pthread_t threads[100];
-    t_render_task tasks[100];
-    int exit_flags[100];
+    pthread_t threads[1000];
+    t_render_task tasks[1000];
+    uint8_t thrd_states[1000];
 	int total_runs;
+	int num_threads;
 } t_renderer_state;
 
 typedef struct s_state {
@@ -63,15 +71,21 @@ typedef struct s_state {
     int screen_width;
     int screen_height;
 
+	int samples_x;
+	int samples_y;
+
     t_ray cam;
+	float fov;
     float cam_pitch;
     float cam_yaw;
-    int last_collided_idx;
-    int debug;
 
+	t_densely_sampled_spectrum		ambiant_light_spec;
+
+	// TODO: Delete this
     t_fvec3 light_pos;
-    t_light light;
+
     t_lights lights;
+
     float proj_coef;
     float screen_dist;
     bool preview;
@@ -81,15 +95,16 @@ typedef struct s_state {
 
 	t_vec_sphere spheres;
 	t_vec_plane planes;
+	t_vec_cylinder cylinders;
 
 	t_vec_shape shapes;
 
 	t_vec_shape unbounded_shapes;
 
+	t_vec_densely_sampled_spectrum spectrums;
+
 	t_linear_bvh_nd *bvh;
 
-	// int last_x;
-	// int last_y;
 	mlx_t *mlx;
 	mlx_image_t *mlx_image;
 	t_renderer_state rndr;
@@ -104,18 +119,18 @@ typedef struct output_config {
 } output_config;
 
 // probability.c
-void createAliasTable(t_lights *lights);
-int SampleAliasTable(t_lights *lights, float lu);
+void create_alias_table(t_lights *lights);
+int sample_alias_table(t_lights *lights, float lu);
 
 // colors.c
-t_color RGBToColor(t_color c);
 float linear_to_gamma(float c);
 /*NEW*/
 t_8bcolor ColortoRGB(t_color c);
 t_fvec3 SpectrumToXYZ(t_SampledSpectrum s, t_SampledWavelengths lambda);
-t_8bcolor XYZToRGB(t_fvec3 t);
+t_8bcolor xyz_to_rgb(t_fvec3 t);
+t_fvec3 rgb_to_xyz(t_8bcolor c);
 uint32_t conv_8bcolor_to_uint32(t_8bcolor c);
-t_color spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda);
+t_fvec3 densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum s);
 t_color clamp_rgb(t_color c);
 
 float random_generator();
@@ -124,15 +139,14 @@ float random_generator();
 t_fvec3 perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c
-t_color cast_reflectable_ray(t_state* state, t_ray ray, int iters_left);
-/*TO BE CHANGE ONCE LOGIC CHANGED*/
 t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, 
         t_SampledWavelengths lambdas, int iters_left);
 
 // tinyobj.c
-void load_triangles(t_state* state, char *path, t_fvec3 pos, float scale);
+void load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec2 rotation, int spectrum_idx);
 
 // draw.c
 void loop_hook(void *state_param);
+void exit_hook(void *state_param);
 
 #endif

@@ -9,6 +9,8 @@
 
 #ifndef AUTOGENERATING
 # define TAB
+# define SIZE_T_TAB
+# define TYPE_TAB
 # define START
 # else
 # define TAB TAB
@@ -32,33 +34,40 @@ START
 
 typedef struct VEC_STRUCT_TYPE
 {
-	size_t			cap;
-	size_t			len;
-	GEN_TYPE		*buff;
+	size_t	SIZE_T_TAB cap;
+	size_t	SIZE_T_TAB len;
+	GEN_TYPE TYPE_TAB *buff;
 } TAB VEC_TYPE;
 
-
-inline static bool TAB FNAME(init)(VEC_TYPE *ret, size_t init_alloc)
+inline static bool TAB FNAME(init)(
+TAB VEC_TYPE *ret, size_t init_alloc)
 {
-	return (vec_gen_init((t_vec_gen *)ret, sizeof(GEN_TYPE), init_alloc));
+	return (vec_gen_init((t_vec_gen *)ret,
+	TAB TAB TAB sizeof(GEN_TYPE), init_alloc));
 }
 
-inline static bool TAB FNAME(push)(VEC_TYPE *v, GEN_TYPE el)
+inline static bool TAB FNAME(push)(
+TAB VEC_TYPE *v, GEN_TYPE el)
 {
-	return (vec_gen_push((t_vec_gen *)v, sizeof(GEN_TYPE), &el));
+	return (vec_gen_push((t_vec_gen *)v,
+	TAB TAB TAB	sizeof(GEN_TYPE), &el));
 }
 
-inline static GEN_TYPE TAB FNAME(pop)(VEC_TYPE *v)
+inline static GEN_TYPE TAB FNAME(pop)(
+TAB	VEC_TYPE *v)
 {
 	GEN_TYPE TAB el;
 
-	ft_assert(vec_gen_pop((t_vec_gen *)v, sizeof(GEN_TYPE), &el));
+	ft_assert(vec_gen_pop((t_vec_gen *)v,
+	TAB TAB TAB sizeof(GEN_TYPE), &el));
 	return (el);
 }
 
-inline static GEN_TYPE TAB *FNAME(idx)(VEC_TYPE *v, size_t idx)
+inline static GEN_TYPE TAB *FNAME(idx)(
+TAB	VEC_TYPE *v, size_t idx)
 {
-	return ((GEN_TYPE *)vec_gen_idx((t_vec_gen *)v, sizeof(GEN_TYPE), idx));
+	return ((GEN_TYPE *)vec_gen_idx((t_vec_gen *)v,
+	TAB TAB TAB sizeof(GEN_TYPE), idx));
 }
 
 #undef GEN_SHORT_TYPE

@@ -82,7 +82,6 @@ typedef struct s_rt_parser {
 	enum RT_ERR_TYPE	err;
 	t_vec_rt_kv	statements;
 } t_rt_parser;
-void print_line_highlight_range_col(char *buff, int start, int len, int ascii_color);
 bool consume_parsed_nodes(t_rt_parser parser, t_state *state);
 void print_parser_err(t_rt_parser *parser);
 
@@ -90,4 +89,4 @@ void free_node(t_rt_node nd);
 bool dyn_str_read_file(char* file, t_dyn_str* ret);
 void pprint_node(t_rt_parser parser, t_rt_node nd, int indent);
 bool parse_statement(t_rt_parser* parser, t_rt_kv* stmt);
-bool parse_file(t_dyn_str file, t_rt_parser *parser);
+bool parse_file(t_rt_parser *parser);

@@ -72,7 +72,7 @@ int get_obj(char *filename, t_obj_parser *ret)
     t_obj_parser parser = {0};
     parser.curr_token = 0;
 
-    if (!process_obj_file(filename, &parser.tokenizer))
+    if (!tokenize_obj(filename, &parser.tokenizer))
         return (0);
 
     vec_fvec3_init(&parser.vertices, 0);
@@ -95,7 +95,6 @@ int get_obj(char *filename, t_obj_parser *ret)
     }
 
 	free(parser.tokenizer.tokens.buff);
-    
 	*ret = parser;
     return (1);
 }

@@ -13,6 +13,7 @@
 #include "minirt.h"
 #include <stdio.h>
 #include "cie.h"
+#include "libft/libft.h"
 
 /*SAMPLED SPECTRUM*/
 
@@ -93,17 +94,6 @@ float clamp(float x, float minVal, float maxVal)
         return x;
 }
 
-
-/*FROM sRGB conversion matrix XYZ to RGB*/
-t_ColorRGB xyz_to_rgb(t_fvec3 t)
-{
-    t_ColorRGB rgb;
-    rgb.r =  3.2406f * t.x - 1.5372f * t.y - 0.4986f * t.z;
-    rgb.g = -0.9689f * t.x + 1.8758f * t.y + 0.0415f * t.z;
-    rgb.b =  0.0557f * t.x - 0.2040f * t.y + 1.0570f * t.z;
-    return rgb;
-}
-
 /*WAVELENGTHS TO XYZ (invented converision values based on graphic)*/
 void cie_xyz(float lambda, float *x, float *y, float *z)
 {
@@ -129,38 +119,33 @@ void cie_xyz(float lambda, float *x, float *y, float *z)
     *z = CIE_Z[idx] * (1.0f - t) + CIE_Z[idx+1] * t;
 }
 
-// t_ColorRGB spectrum_to_rgb(t_SampledSpectrum s, t_SampledWavelengths lambda) {
-//     float X = 0.0f, Y = 0.0f, Z = 0.0f;
+t_fvec3 densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum s) {
+    float X = 0.0f, Y = 0.0f, Z = 0.0f;
 
-//     for (int i = 0; i < NUM_SPECTRUM_SAMPLES; ++i) {
-//         float l = lambda.lambda[i];
-//         float pdf = lambda.pdf[i];
-//         float value = s.values[i];
-        
-//         //They use saveDiv, but was easier for now
-//         if (pdf == 0.0f)
-//             continue;
+    for (int i = CIE_MIN_LAMBDA; i <= CIE_MAX_LAMBDA; ++i) {
+        float l = i;
+        float value = s.samples[i - (int)CIE_MIN_LAMBDA];
+     
+        //Need the color evaluation (static for now)
+        //Need to understand chromacity
+        float x_bar, y_bar, z_bar;
+        cie_xyz(l, &x_bar, &y_bar, &z_bar);
+        X += value * x_bar;
+        Y += value * y_bar;
+        Z += value * z_bar;
+    }
 
-//         //Need the color evaluation (static for now)
-//         //Need to understand chromacity
-//         float x_bar, y_bar, z_bar;
-//         cie_xyz(l, &x_bar, &y_bar, &z_bar);
-//         X += value * x_bar / pdf;
-//         Y += value * y_bar / pdf;
-//         Z += value * z_bar / pdf;
-//     }
-
-//     //The average part
-//     X /= NUM_SPECTRUM_SAMPLES;
-//     Y /= NUM_SPECTRUM_SAMPLES;
-//     Z /= NUM_SPECTRUM_SAMPLES;
-//     //Correction by the CIE_Y integral
-//     X /= CIE_Y_integral;
-//     Y /= CIE_Y_integral;
-//     Z /= CIE_Y_integral;
-    
-//     return xyz_to_rgb(X, Y, Z);
-// }
+    //The average part
+    X /= CIE_SAMPLES / CIE_Y_integral;
+    Y /= CIE_SAMPLES / CIE_Y_integral;
+    Z /= CIE_SAMPLES / CIE_Y_integral;
+    //Correction by the CIE_Y integral
+    X /= CIE_Y_integral;
+    Y /= CIE_Y_integral;
+    Z /= CIE_Y_integral;
+ 
+    return (t_fvec3){X, Y, Z};
+}
 
 t_color clamp_rgb(t_color c) {
     t_color out;
@@ -185,9 +170,9 @@ t_color clamp_rgb(t_color c) {
 //     return (0);
 // }
 
-float blackbody(float lambda, float T)
+float blackbody(float lambda, float t)
 {
-    if (T <= 0)
+    if (t <= 0)
     {
         return 0;
     }
@@ -196,7 +181,129 @@ float blackbody(float lambda, float T)
     float kb = 1.3806488e-23f;
     
     float l = lambda * 1e-9f;
-    float Le = (2 * h * c * c) / (powf(l, 5) * (expf((h * c) / (l * kb * T)) - 1));
+    float Le = (2 * h * c * c) / (powf(l, 5) * (expf((h * c) / (l * kb * t)) - 1));
     //printf("LE: %f\n", Le);
     return Le;
+}
+
+// typedef struct s_sigmoid {
+// 	float c1, c2, c3;
+// } t_sigmoid;
+//
+// float sigmoid(float x) 
+// {
+// 	if (isinf(x))
+// 	{
+// 		if (x > 0)
+// 		 return 1;
+// 		return 0;
+// 	}
+// 	return (0.5 + x / (2 * sqrtf(1 + x * x)));
+// }
+//
+// float eval_sigmoid(t_sigmoid sigm, float lambda) {
+// 	float f = eval_poly_2(lambda, sigm.c1, sigm.c2, sigm.c3);
+// 	// printf("%f\n", f);
+// 	return sigmoid(f);
+// }
+//
+// void sample_sigmoid(t_sigmoid sigm, t_densely_sampled_spectrum *spec) {
+//     int i = CIE_MIN_LAMBDA;
+//     while (i < CIE_MAX_LAMBDA)
+//     {
+//         spec->samples[i - (int)CIE_MIN_LAMBDA] = eval_sigmoid(sigm, i);
+//         i++;
+//     }
+// }
+//
+// void print_spec_color(t_densely_sampled_spectrum *spec) {
+//
+// 	t_color xyz = densely_sampled_spectrum_to_xyz(*spec);
+// 	ft_printf("x: %f, y: %f, z: %f\n", xyz.x, xyz.y, xyz.z);
+// 	t_8bcolor color = xyz_to_rgb(xyz);
+// 	ft_printf("%i %i %i\n", color.r, color.g, color.b);
+// 	ft_printf("\033[48;2;%i;%i;%im                       \033[0m\n", color.r, color.g, color.b);
+// }
+//
+// void print_densly_sampled_spec(t_densely_sampled_spectrum *spec) {
+// 	for (int i = 0; i <= CIE_SAMPLES; i++) {
+// 		ft_printf("%.10f", spec->samples[i]);
+// 		for (int j = 0; j < spec->samples[i] * 50; j++) ft_printf(" ");
+// 		ft_printf("*\n");
+// 	}
+// }
+//
+// t_fvec3 sigm_to_xyz(t_sigmoid sig) {
+// 	t_densely_sampled_spectrum spec = {0}; //calculateDenselySampledSpectrum(6200);
+// 	sample_sigmoid(sig, &spec);
+//
+// 	print_spec_color(&spec);
+// 	return densely_sampled_spectrum_to_xyz(spec);
+// }
+//
+//
+inline static float color_error(t_fvec3 c0, t_fvec3 c1) {
+	return fvec3_len_sq(fvec3_sub(c0, c1));
+}
+
+t_densely_sampled_spectrum xyz_to_spectrum(t_fvec3 target_xyz, bool clamp, float *err)
+{
+
+	t_densely_sampled_spectrum spec = {0};
+
+	ft_memcpy(spec.samples, CIE_X, sizeof(CIE_X));
+	float x_contrib = densely_sampled_spectrum_to_xyz(spec).x;
+
+	ft_memcpy(spec.samples, CIE_Y, sizeof(CIE_Y));
+	float y_contrib = densely_sampled_spectrum_to_xyz(spec).y;
+
+	ft_memcpy(spec.samples, CIE_Z, sizeof(CIE_Z));
+	float z_contrib = densely_sampled_spectrum_to_xyz(spec).z;
+
+	t_densely_sampled_spectrum curr_spec = {0};
+
+	for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 100; i++) {
+			t_fvec3 curr_xyz = densely_sampled_spectrum_to_xyz(curr_spec);
+
+			if (i % 3 == 0) {
+				float diff_x = target_xyz.x - curr_xyz.x;
+				float factor_x = diff_x / x_contrib / 10;
+				for (int i = 0; i < CIE_SAMPLES; i++) {
+					curr_spec.samples[i] += CIE_X[i] * factor_x;
+				}
+			} else if (i % 3 == 1) {
+				float diff_y = target_xyz.y - curr_xyz.y;
+				float factor_y = diff_y / y_contrib / 10;
+				for (int i = 0; i < CIE_SAMPLES; i++) {
+					curr_spec.samples[i] += CIE_Y[i] * factor_y;
+				}
+			} else {
+				float diff_z = target_xyz.z - curr_xyz.z;
+				float factor_z = diff_z / z_contrib / 10;
+				for (int i = 0; i < CIE_SAMPLES; i++) {
+					curr_spec.samples[i] += CIE_Z[i] * factor_z;
+				}
+			}
+		}
+		for (int i = 0; i < CIE_SAMPLES; i++) {
+			curr_spec.samples[i] = fmax(curr_spec.samples[i], 0);
+		}
+		t_fvec3 curr_xyz = densely_sampled_spectrum_to_xyz(curr_spec);
+		if (err)
+			*err = color_error(target_xyz, curr_xyz);
+	}
+	if (clamp) {
+		float max = 0;
+		for (int i = 0; i < CIE_SAMPLES; i++) {
+			curr_spec.samples[i] = fmax(curr_spec.samples[i], 0);
+			max = fmax(curr_spec.samples[i], max);
+		}
+		max = fmax(max, 1);
+		for (int i = 0; i < CIE_SAMPLES; i++) {
+			curr_spec.samples[i] /= max;
+		}
+	}
+	// print_spec_color(&curr_spec);
+	return curr_spec;
 }

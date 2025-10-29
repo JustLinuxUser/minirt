@@ -2,40 +2,50 @@
 #include "minirt.h"
 #include "samplers.h"
 #include "shapes.h"
+#include "spectrum.h"
 #include <math.h>
 #include <stdlib.h>
 //
-// t_collision ray_collision(t_state* state, t_ray curr_ray, float t_max, void *ignore_shape) {
-// 	t_collision curr_coll = {.collided = false};
-//
-//     for (size_t obj_idx = 0; obj_idx < state->shapes.len; obj_idx++) {
-// 		if (&state->shapes.buff[obj_idx].ptr == ignore_shape)
-// 			continue;
-// 		t_shape shape = state->shapes.buff[obj_idx];
-// 		t_collision coll = collide_shape(state, shape, curr_ray, t_max);
-//
-// 		if (coll.collided) {
-//             if (!curr_coll.collided || coll.t < curr_coll.t) {
-// 				curr_coll = coll;
-// 				if (isfinite(t_max) && curr_coll.t < t_max)
-// 					break;
-// 			}
-// 		}
-// 	}
-// 	return curr_coll;
-// }
+t_collision collide_ray_slow(t_state* state, t_ray_isector isect) {
+	t_collision curr_coll = {.collided = false};
+
+    for (size_t obj_idx = 0; obj_idx < state->shapes.len; obj_idx++) {
+		if (&state->shapes.buff[obj_idx].ptr == isect.ignore_shape)
+			continue;
+		t_shape shape = state->shapes.buff[obj_idx];
+		t_collision coll = collide_shape(state, shape, isect);
+
+		if (coll.collided) {
+            if (!curr_coll.collided || coll.t < curr_coll.t) {
+				curr_coll = coll;
+				if (isfinite(isect.t_max) && curr_coll.t < isect.t_max)
+					break;
+			}
+		}
+	}
+	return curr_coll;
+}
 
 /*NEW CAST REFLECTABLE RAY!!!*/
 //#TODO
 
+t_SampledSpectrum sample_densely_sampled_spectrum(const t_densely_sampled_spectrum *spec, t_SampledWavelengths lambdas) {
+	int	i;
+	t_SampledSpectrum	ret;
+
+	i = 0;
+	ret = (t_SampledSpectrum){0};
+	while (++i < NUM_SPECTRUM_SAMPLES)
+	{
+		ret.values[i] = spec->samples[(int)(lambdas.lambda[i] - CIE_MIN_LAMBDA)];
+	}
+	return ret;
+}
+
 //EASY GET SURFACE COLOR AS BSDF
-t_SampledSpectrum get_surface_color(t_state* state, t_fvec3 p)
+t_SampledSpectrum get_surface_color(t_state* state, t_SampledWavelengths lambdas, t_collision coll)
 {
-    t_SampledSpectrum color;
-    int i = -1;
-    while (++i < NUM_SPECTRUM_SAMPLES)
-       color.values[i] = 1.0f; 
-    return color;
+	return sample_densely_sampled_spectrum(shape_spectrum(state, coll), lambdas);
 }
 
 t_SampledWavelengths get_values_pdf(t_state* state, t_fvec3 p)
@@ -55,9 +65,11 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
     t_SampledSpectrum L = {0};
     t_SampledSpectrum beta = {1.f};
 	t_collision coll;
+	t_collision coll2;
     int i;
     t_fvec3 p;
     t_fvec3 norm = {0};
+	t_SampledSpectrum light_spec;
 	void *ignored_shape = 0;
 
     //INIT BETA
@@ -69,6 +81,12 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
     while (iters_left-- > 0)
     {
         coll = collide_bvh(state, (t_ray_isector){.ray = ray, .t_max = INFINITY, .t_min = 0.01, .ignore_shape = ignored_shape});
+		// if (rand() % 100 == 0) {
+		// 	coll2 = collide_ray_slow(state, (t_ray_isector){.ray = ray, .t_max = INFINITY, .t_min = 0.01, .ignore_shape = ignored_shape});
+		// 	if (coll.collided != coll2.collided || coll2.shape.ptr != coll.shape.ptr) {
+		// 		L = sampled_spectrum_add(L, sampled_spectrum_scale(sample_densely_sampled_spectrum(&SPECTRUM_ONES, lambdas), 100));
+		// 	}
+		// }
         if (!coll.collided)
             break;
 		ignored_shape = coll.shape.ptr;
@@ -85,53 +103,65 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
         //LIGHT INFORMATION
         float lu = random_generator();
         t_light s_light;
-        int index = SampleAliasTable(&state->lights, lu);
-        s_light = state->lights.lights[index]; 
-        t_fvec3 light = fvec3_sub(s_light.position, p);
-        float light_t = sqrtf(fvec3_len_sq(light));
-        t_fvec3 norm_light = fvec3_norm(light);
-        
-        //SHADOW RAY
-        t_SampledSpectrum color = {0};
-        color = get_surface_color(state, p);
-        float dot = 0.f;
-        float distance_decrease = 0.f;
 
-		t_ray light_ray = (t_ray){.pos = p, .dir = norm_light};
-        coll = collide_bvh(state, (t_ray_isector){.ray = light_ray, .t_max = light_t, .t_min = 0.01, .ignore_shape = ignored_shape});
-        if (!coll.collided)
-        {
-            //GET COSINE (AS BEFORE)
-            dot = fmax(fvec3_dot(norm, norm_light), 0);
-            //HOW MUCH LIGHT INTENSITY (cos AND distance)
-            distance_decrease = 1.0f / (light_t * light_t);
-            //APPLY BSDF
-            i = -1;
-            while (++i < NUM_SPECTRUM_SAMPLES)
-            {
-                //printf("Update L[%d]: %f, %f, %f, %f\n", i, beta.values[i], color.values[i],  dot, distance_decrease);
-                //#TODO: CHANGE FOR LIGHT.VALUES[i]
-                L.values[i] += beta.values[i] * color.values[i] * dot * (s_light.intensity * s_light.spec.samples[(int)(lambdas.lambda[i] - CIE_MIN_LAMBDA)] * distance_decrease);
-            }
-        }
-        
+		t_SampledSpectrum color = {0};
+		color = get_surface_color(state, lambdas, coll);
+
+		//SHADOW RAY
+		t_SampledSpectrum light_spec = {0};
+        int index = sample_alias_table(&state->lights, lu);
+		if (index != -1) {
+			s_light = state->lights.lights.buff[index]; 
+			float intensity = s_light.intensity / state->lights.pdfs.buff[index];
+
+			t_fvec3 light = fvec3_sub(s_light.position, p);
+			float light_t = sqrtf(fvec3_len_sq(light));
+			t_fvec3 norm_light = fvec3_norm(light);
+
+			float dot = 0.f;
+
+			float distance_decrease = 0.f;
+
+			t_ray light_ray = (t_ray){.pos = p, .dir = norm_light};
+			coll = collide_bvh(state, (t_ray_isector){.ray = light_ray, .t_max = light_t, .t_min = 0.01, .ignore_shape = ignored_shape});
+			if (!coll.collided)
+			{
+				//HOW MUCH LIGHT INTENSITY (cos AND distance)
+				distance_decrease = 1.0f / (light_t * light_t);
+				dot = fmax(fvec3_dot(norm, norm_light), 0);
+				light_spec = sampled_spectrum_scale(sample_densely_sampled_spectrum(&state->spectrums.buff[s_light.spec_idx], lambdas), distance_decrease * intensity * dot);
+			}
+		}
+
+		t_SampledSpectrum ambiant_spec = sample_densely_sampled_spectrum(&state->ambiant_light_spec, lambdas);
+	
+		//APPLY BSDF
+		i = -1;
+		while (++i < NUM_SPECTRUM_SAMPLES)
+		{
+			//printf("Update L[%d]: %f, %f, %f, %f\n", i, beta.values[i], color.values[i],  dot, distance_decrease);
+			//#TODO: CHANGE FOR LIGHT.VALUES[i]
+			L.values[i] += beta.values[i] * color.values[i] * (light_spec.values[i] + ambiant_spec.values[i] * fabs(fvec3_dot(norm, ray.dir)));
+		}
+
         /*LAMBERTIAN SURFACE (BASE CASE)*/
         t_ray new_ray = (t_ray){.pos = p, .dir = rand_halfsphere(norm)};
         ray = new_ray;
         // ray.pos = p;
         // ray.dir = rand_halfsphere(norm);
 
-        dot = fmax(fvec3_dot(norm, new_ray.dir), 0);
+        float dot = fmax(fvec3_dot(norm, new_ray.dir), 0);
 
         //UPDATE BETA NOT CORRECT AT THE MOMENT
         i = -1;
-        //t_SampledWavelengths wv = get_values_pdf(state, p);
+		// TODO: figure out the PDF
         while (++i < NUM_SPECTRUM_SAMPLES)
         {
             if (lambdas.pdf[i] == 0.f)
                 beta.values[i] = 0.f;
             else
-                beta.values[i] *= color.values[i] * dot;// / lambdas.pdf[i];
+                beta.values[i] *= color.values[i] * dot;
+			// / lambdas.pdf[i];
         }
     }
     return L;

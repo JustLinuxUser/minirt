@@ -48,16 +48,19 @@ enum RT_ERR_TYPE {
 	RT_ERR_INVALID_TYPE,
 	RT_ERR_KEY_NOT_USED,
 	RT_ERR_NODE_NOT_USED,
-	RT_ERR_NOT_FOUND_ARR,
+	RT_ERR_ARR_TOO_SHORT,
 	RT_ERR_NOT_FOUND_DICT,
 	RT_ERR_OUT_OF_RANGE,
 };
 
-typedef struct s_rt_tokenizer {
-	// unallocated
+typedef struct t_file {
 	char *fname;
 
-	t_dyn_str	file;
+	t_dyn_str	contents;
+} t_file;
+typedef struct s_rt_tokenizer {
+	// unallocated
+	t_file		file;
 	int 		i;
 
 	enum RT_ERR_TYPE err;

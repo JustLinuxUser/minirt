@@ -12,101 +12,99 @@
 
 #include "minirt.h"
 #include <stdio.h>
+#include "libft/ft_printf/ft_printf.h"
 
 typedef struct t_outcome {
     float pHat;
     int index;
 } t_outcome;
 
-void createAliasTable(t_lights *lights)
-{
-    t_AliasTable ret;
+#include "libft/generated/vec_outcome.h"
 
+void create_alias_table(t_lights *lights)
+{
     int i = -1;
     float sum = lights->total_power;
-    while(++i < lights->n_lights)
-        ret.bins[i].p = lights->lights[i].intensity / sum;
+    while(++i < lights->lights.len) {
+		vec_alias_bin_push(&lights->bins, (t_alias_bin){.prob = (float)lights->lights.len * (float)lights->lights.buff[i].intensity / sum});
+	}
 
-    t_outcome under[3] = {0}, over[3] = {0}, un = {0}, ov = {0};
-    i = -1;
-    int j = 0;
-    int k = 0;
-    while (++i < lights->n_lights)
-    {
-        float pHat = ret.bins[i].p * lights->n_lights;
-        if (pHat < 1)
-        {
-            under[j].pHat = pHat;
-            under[j].index = i;
-            j++;
-        }
-        else {
-            over[k].pHat = pHat;
-            over[k].index = i;
-            k++;
-        }
-    }
-    j--;
-    k--;
-    while (j >= 0 && k >= 0)
-    {
-        un = under[j];
-        ov = over[k];
+	t_vec_outcome under;
+	t_vec_outcome over;
 
-        while (un.pHat == -100)
-            j--;
+	vec_outcome_init(&under, lights->lights.len);
+	vec_outcome_init(&over, lights->lights.len);
+	i = -1;
+	while (++i < lights->lights.len) {
+		t_outcome outcome = {.index = i, .pHat = lights->bins.buff[i].prob};
+		if (lights->lights.buff[i].intensity * lights->lights.len > sum) {
+			vec_outcome_push(&over, outcome);
+		} else {
+			vec_outcome_push(&under, outcome);
+		}
+	}
+	for (size_t i = 0; i < under.len; i++) {
+		ft_printf("under: %f\n", under.buff[i].pHat);
+	}
 
-        while (ov.index == -100)
-            k--;
-        
-        ret.bins[un.index].q = un.pHat;
-        ret.bins[un.index].alias = ov.index;
+	for (size_t i = 0; i < over.len; i++) {
+		ft_printf("over: %f\n", over.buff[i].pHat);
+	}
 
-        float pExcess = un.pHat + ov.pHat - 1;
-        if (pExcess < 1)
-        {
-            under[j].pHat = pExcess;
-            under[j].index = ov.index; 
-            k--;
-        }
-        else
-        {
-            over[k].pHat = pExcess;
-            over[k].index = ov.index;
-            j--;     
-        }  
-    }
-    
-    if (k >= 0)
-    {
-        ov = over[k];
-        ret.bins[ov.index].q = 1;
-        ret.bins[ov.index].alias = -1;
-    }
+	while (under.len > 0 && over.len > 0) {
+		t_outcome un = vec_outcome_pop(&under);
+		t_outcome ov = vec_outcome_pop(&over);
 
-    if (j >= 0)
-    {
-        un = under[j];
-        ret.bins[un.index].q = 1;
-        ret.bins[un.index].alias = -1;
-    }
-    lights->table = ret;
+		ft_printf("got under: %i\n", un.index);
+		ft_printf("got over: %i\n", ov.index);
+		lights->bins.buff[un.index].alias = ov.index;
+
+		ft_printf("un phat: %f\n", un.pHat);
+		ft_printf("ov phat: %f\n", ov.pHat);
+		ov.pHat -= 1.0 - un.pHat;
+		ft_printf("new ov phat: %f\n", ov.pHat);
+		lights->bins.buff[ov.index].prob = ov.pHat;
+		if (ov.pHat > 1) {
+			vec_outcome_push(&over, ov);
+		} else {
+			vec_outcome_push(&under, ov);
+		}
+	}
+
+	while (under.len > 0) {
+		t_outcome un = vec_outcome_pop(&under);
+		lights->bins.buff[un.index].prob = un.pHat;
+		lights->bins.buff[un.index].alias = un.index;
+	}
+
+	while (over.len > 0) {
+		t_outcome ov = vec_outcome_pop(&over);
+		lights->bins.buff[ov.index].prob = ov.pHat;
+		lights->bins.buff[ov.index].alias = ov.index;
+	}
+	for (int i = 0; i < lights->lights.len; i++) {
+		ft_printf("prob: %f, %i\n", lights->bins.buff[i].prob, lights->bins.buff[i].alias);
+	}
+
 }
 
-int SampleAliasTable(t_lights *lights, float lu)
+int sample_alias_table(t_lights *lights, float lu)
 {
     int offset;
-    if (lu * lights->n_lights < lights->n_lights - 1)
-        offset = lu * lights->n_lights;
+	if (lights->lights.len == 0)
+		return (-1);
+    if (lu * lights->lights.len < lights->lights.len - 1)
+        offset = lu * lights->lights.len;
+
     else
-        offset = lights->n_lights - 1;
+        offset = lights->lights.len - 1;
     float up;
-    if (lu * lights->n_lights - offset < 0.9999f)
-        up = lu * lights->n_lights - offset;
+    if (lu * lights->lights.len - offset < 0.9999f)
+        up = lu * lights->lights.len - offset;
     else
         up = 0.9999f;
-    if (up < lights->table.bins[offset].q)
+    if (up < lights->bins.buff[offset].prob)
         return offset;
     else
-        return lights->table.bins[offset].alias; 
+        return lights->bins.buff[offset].alias; 
 }

@@ -13,6 +13,10 @@
 #include "minirt.h"
 #include "cie.h"
 
+const t_densely_sampled_spectrum SPECTRUM_ONES = {.samples = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, }};
+
+const t_densely_sampled_spectrum SPECTRUM_ZEROS = {0};
+
 // t_SampledLight power_light_sample(t_lights *lights)
 // {
 //     t_SampledLight ret = {0};
@@ -33,9 +37,9 @@
 //#TODO: MORE LIGHTS
 
 //Calculate information for lights -> DenselySampledSpectrum
-t_DenselySampledSpectrum calculateDenselySampledSpectrum(float T)
+t_densely_sampled_spectrum calculateDenselySampledSpectrum(float T)
 {
-    t_DenselySampledSpectrum ret;
+    t_densely_sampled_spectrum ret;
 
     int i = CIE_MIN_LAMBDA;
     float bb_const = blackbody(2.89e-3f / T * 1e9f, T);
@@ -50,17 +54,18 @@ t_DenselySampledSpectrum calculateDenselySampledSpectrum(float T)
 void add_light(t_lights *lights, t_light to_add)
 {
     if (!lights)
-        return;
-    lights->lights[lights->n_lights] = to_add;
+		return ;
+	vec_light_push(&lights->lights, to_add);
     lights->total_power += to_add.intensity;
-    lights->n_lights++;
 }
 
 void calculatePDFs(t_lights *lights)
 {
-   int i = -1;
-   while (++i < lights->n_lights)
-   {
-    lights->pdfs[i] = lights->lights[i].intensity / lights->total_power;
-   } 
+	int i = -1;
+	free(lights->pdfs.buff);
+	vec_float_init(&lights->pdfs, lights->lights.len);
+	while (++i < lights->lights.len)
+	{
+		lights->pdfs.buff[i] = lights->lights.buff[i].intensity / lights->total_power;
+	} 
 }

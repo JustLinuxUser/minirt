@@ -99,6 +99,42 @@ GEN_TYPES_$(lastword $(GEN_NAMES)) = 	int
 GEN_NAMES += 							fvec3
 GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_fvec3
 
+GEN_NAMES += 							obj_token
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_obj_token
+
+GEN_NAMES += 							outcome
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_outcome
+
+GEN_NAMES += 							light
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_light
+
+GEN_NAMES += 							float
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	float
+
+GEN_NAMES += 							triangle
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_triangle
+
+GEN_NAMES += 							  sphere
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_sphere
+
+GEN_NAMES += 							  plane
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_plane
+
+GEN_NAMES += 							  mesh
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_mesh
+
+GEN_NAMES += 							  cylinder
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_cylinder
+
+GEN_NAMES += 							  shape
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_shape
+
+GEN_NAMES += 							  densely_sampled_spectrum
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_densely_sampled_spectrum
+
+GEN_NAMES += 							  alias_bin
+GEN_TYPES_$(lastword $(GEN_NAMES)) =	t_alias_bin
+
 BUILD_DIR := build
 CODEGEN_DIR := generated
 
@@ -184,16 +220,22 @@ ${CODEGEN_DIR}/vec_%.h: templates/vec_template.hpp Makefile
 	echo '# include "../dsa/vec_gen.h"' >> $(abspath $@)
 	echo '# include "../utils/utils.h"' >> $(abspath $@)
 
-
-	cd templates/ && expand -i $< |\
-		gcc -E - -DGEN_TYPE=$(GEN_TYPES_$(@:$(CODEGEN_DIR)/vec_%.h=%)) -DGEN_SHORT_TYPE=$(@:$(CODEGEN_DIR)/vec_%.h=%) |\
+	type_len=$$(echo -n $(GEN_TYPES_$(@:$(CODEGEN_DIR)/vec_%.h=%)) | wc -c)\
+		num_tabs=$$(echo $$type_len / 4 + 1 | bc) \
+			&& str="$$(printf "%$${num_tabs}s")" && size_t_tabs=$$(echo -n $${str// /\\t}) \
+																					\
+	&& cd templates/ && expand -i $(abspath $<) |\
+		gcc -E - -DAUTOGENERATING -DGEN_TYPE=$(GEN_TYPES_$(@:$(CODEGEN_DIR)/vec_%.h=%)) -DGEN_SHORT_TYPE=$(@:$(CODEGEN_DIR)/vec_%.h=%) |\
 		unexpand | sed '1,/START/d' |\
-		sed $$'s/\\s*TAB\\s*/\t/g' \
-			>> $(abspath $@)
+		sed "s/\s*SIZE_T_TAB\s*/$$size_t_tabs/g" | \
+		sed "s/\s*TYPE_TAB\s*/\t\t/g" | \
+		sed "s/\s*TAB\s*/\t/g" >> $(abspath $@)
 
 	echo '#endif' >> $(abspath $@)
 	cat $(abspath $@)
-	norminette $(abspath $@)
+	if ! command -v norminette >/dev/null 2>&1; then \
+		norminette $(abspath $@); \
+	fi
 
 ${TAG_FILE}:
 	rm -rf $(BUILD_DIR)/profile_*
@@ -213,5 +255,5 @@ fclean: clean
 re::fclean
 re::all
 
-.PHONY: clean fclean re
+.PHONY: all clean fclean re
 -include $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.d)

@@ -26,10 +26,11 @@ bool try_push_checked_dup(t_rt_parser* parser,
                           bool upper_only) {
     t_rt_kv* duplicate;
 	t_rt_token dup_tk;
-    char first_char = parser->tokenizer.file.buff[kv.k.start_idx];
+    char first_char = parser->tokenizer.file.contents.buff[kv.k.start_idx];
 
-    duplicate = vec_rt_kv_get(v, parser->tokenizer.file.buff, kv.k);
-	if (duplicate && (!upper_only || (first_char >= 'A' && first_char <= 'Z'))) {
+    duplicate = vec_rt_kv_get(v, parser->tokenizer.file.contents.buff, kv.k);
+	if (duplicate && (!upper_only || (first_char >= 'A' && first_char <= 'Z')))
+	{
 		dup_tk = duplicate->k;
 		vec_rt_kv_push(v, kv);
         return (duplicate_key_err(parser, dup_tk, kv.k));
@@ -191,10 +192,11 @@ bool parse_statement(t_rt_parser* parser, t_rt_kv* stmt) {
     return (true);
 }
 
-bool parse_file(t_dyn_str file, t_rt_parser* parser) {
+bool parse_file(t_rt_parser* parser) {
     bool ret = true;
-    *parser = (t_rt_parser){.tokenizer = {.file = file}};
     while (1) {
+        if (peek_token_type(&parser->tokenizer) == RT_EOF)
+            break;
         t_rt_kv stmt;
         if (!parse_statement(parser, &stmt)) {
             ret = false;
@@ -213,8 +215,6 @@ bool parse_file(t_dyn_str file, t_rt_parser* parser) {
 			ret = false;
 			break;
 		}
-        if (peek_token_type(&parser->tokenizer) == RT_EOF)
-            break;
     }
     return ret;
 }

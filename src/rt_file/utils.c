@@ -25,7 +25,8 @@ bool dyn_str_read_file(char* file, t_dyn_str* ret) {
 
     fd = open(file, O_RDONLY);
     if (fd < 0) {
-        ft_eprintf("Open the file for reading: %s: %s\n", file,
+		ft_printf("Error\n");
+        ft_printf("Opening the file for reading: %s: %s\n", file,
                    strerror(errno));
         return (false);
     }
@@ -36,7 +37,7 @@ bool dyn_str_read_file(char* file, t_dyn_str* ret) {
         if (len > 0)
             dyn_str_pushnstr(ret, buff, len);
         else
-            return (ft_eprintf("Failed to read the file: %s: %s\n", file,
+            return (ft_eprintf("Error\nFailed to read the file: %s: %s\n", file,
                                strerror(errno)),
                     close(fd), false);
     }

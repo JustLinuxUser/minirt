@@ -36,9 +36,7 @@ typedef struct t_obj_token {
     int vals[3];
 } t_obj_token;
 
-#define GEN_TYPE t_obj_token
-#define GEN_SHORT_TYPE obj_token
-#include "../libft/templates/vec_template.hpp"
+#include "../libft/generated/vec_obj_token.h"
 
 typedef struct t_obj_tokenizer {
     size_t curr_idx;
@@ -46,4 +44,4 @@ typedef struct t_obj_tokenizer {
     t_dyn_str str;
 } t_obj_tokenizer;
 
-int process_obj_file(char* filename, t_obj_tokenizer* tokenizer);
+int tokenize_obj(char* filename, t_obj_tokenizer* tokenizer);

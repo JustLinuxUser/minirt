@@ -37,6 +37,40 @@ bool intersect_sphere(t_sphere s, t_ray r, float* t, bool* inside) {
     return (*t > 0.1);
 }
 
+// https://iquilezles.org/articles/intersectors/
+bool intersect_cylinder(t_ray r, t_cylinder cy, float *t_ret, t_fvec3 *norm)
+{
+    t_fvec3 ba = fvec3_sub(cy.b, cy.a);
+    t_fvec3 oc = fvec3_sub(r.pos, cy.a);
+    float baba = fvec3_dot(ba, ba);
+    float bard = fvec3_dot(ba, r.dir);
+    float baoc = fvec3_dot(ba, oc);
+    float k2 = baba - bard * bard;
+    float k1 = baba * fvec3_dot(oc, r.dir) - baoc * bard;
+    float k0 = baba * fvec3_dot(oc, oc) - baoc * baoc - cy.radius * cy.radius * baba;
+    float h = k1 * k1 - k2 * k0;
+    if (h < 0.0)
+        return false;  // no intersection
+    h = sqrt(h);
+    float t = (-k1 - h) / k2;
+    // body
+    float y = baoc + t * bard;
+    if (y > 0.0 && y < baba) {
+        *t_ret = t;
+        *norm = fvec3_scale(fvec3_sub(fvec3_add(oc, fvec3_scale(r.dir, t)),
+				fvec3_scale(fvec3_scale(ba, y), 1.0 / baba)), 1 / cy.radius);
+        return true;
+    }
+    // caps
+    t = (((y < 0.0) ? 0.0 : baba) - baoc) / bard;
+    if (fabs(k1 + k2 * t) < h) {
+        *t_ret = t;
+        *norm = fvec3_norm(ba);
+        return true;
+    }
+    return false;  // no intersection
+}
+
 bool intersect_plane(t_plane plane, t_ray r, float* t) {
 	// gamma5
     float denom = fvec3_dot(r.dir, plane.dir);
@@ -124,6 +158,12 @@ t_collision collide_shape(t_state* state, t_shape shape, t_ray_isector isector) 
             ret.t = t;
             ret.u = inside;
         }
+    } else if (shape.type == OBJ_CYLINDER) {
+        t_cylinder* cylinder = (t_cylinder*)shape.ptr;
+		if (intersect_cylinder(isector.ray, *cylinder, &t, &ret.norm)) {
+			ret.collided = true;
+			ret.t = t;
+		}
     } else if (shape.type == OBJ_PLANE) {
         t_plane* plane = (t_plane*)shape.ptr;
 
@@ -156,12 +196,32 @@ t_fvec3 collision_norm(t_state* state, t_collision collision, t_fvec3 pos) {
         if (collision.u == 0)
             return (fvec3_invert(fvec3_norm(fvec3_sub(pos, sphere->p))));
         return (fvec3_norm(fvec3_sub(pos, sphere->p)));
+    } else if (collision.shape.type == OBJ_CYLINDER) {
+		return collision.norm;
     } else if (collision.shape.type == OBJ_PLANE) {
         t_plane* plane = (t_plane*)collision.shape.ptr;
 		return (plane->dir);
 	}
     ft_assert("Unreachable" != 0);
     return (t_fvec3){0};
+}
+
+t_densely_sampled_spectrum *shape_spectrum(t_state *state, t_collision collision) {
+	int idx = 0;
+
+    if (collision.shape.type == OBJ_TRIANGLE) {
+		idx = state->meshes.buff[(*(t_triangle *)collision.shape.ptr).mesh_idx].spectrum_idx;
+    } else if (collision.shape.type == OBJ_SPHERE) {
+		idx = (*(t_sphere *)collision.shape.ptr).spectrum_idx;
+    } else if (collision.shape.type == OBJ_CYLINDER) {
+		idx = (*(t_cylinder *)collision.shape.ptr).spectrum_idx;
+    } else if (collision.shape.type == OBJ_PLANE) {
+		idx = (*(t_plane *)collision.shape.ptr).spectrum_idx;
+	} else {
+		ft_assert("Unreachable" != 0);
+		return 0;
+	}
+	return state->spectrums.buff + idx;
 }
 
 t_bounds3f shape_bounds(t_state* state, t_shape shape) {
@@ -177,6 +237,12 @@ t_bounds3f shape_bounds(t_state* state, t_shape shape) {
             fvec3_sub(sp.p, (t_fvec3){.x = sp.r, .y = sp.r, .z = sp.r});
         bounds.max =
             fvec3_add(sp.p, (t_fvec3){.x = sp.r, .y = sp.r, .z = sp.r});
+    } else if (shape.type == OBJ_CYLINDER) {
+        t_cylinder cylinder = *(t_cylinder*)shape.ptr;
+		bounds = bounds_extend_pt(bounds, fvec3_add(cylinder.a, (t_fvec3){.x = cylinder.radius, .y = cylinder.radius, .z = cylinder.radius}));
+		bounds = bounds_extend_pt(bounds, fvec3_sub(cylinder.a, (t_fvec3){.x = cylinder.radius, .y = cylinder.radius, .z = cylinder.radius}));
+		bounds = bounds_extend_pt(bounds, fvec3_add(cylinder.b, (t_fvec3){.x = cylinder.radius, .y = cylinder.radius, .z = cylinder.radius}));
+		bounds = bounds_extend_pt(bounds, fvec3_sub(cylinder.b, (t_fvec3){.x = cylinder.radius, .y = cylinder.radius, .z = cylinder.radius}));
     } else {
         ft_assert("TODO" == 0);
     }

@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "mmalloc.h"
+#include "../libft.h"
 
 #include <unistd.h>
 #include <stdio.h>
@@ -24,9 +25,10 @@ void	*mmalloc(size_t amount, char *msg)
 	ret = malloc(amount);
 	if (!ret)
 	{
-		printf("ERROR: Failed to allocate %zu bytes of memory while: %s, %s\n",
+		ft_printf("ERROR: Failed to allocate %zu bytes of memory while: %s, %s\n",
 			amount, msg, strerror(errno));
 		exit(1);
 	}
+	ft_memset(ret, 0, amount);
 	return (ret);
 }

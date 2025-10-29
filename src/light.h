@@ -12,41 +12,47 @@
 
 #ifndef LIGHT_H
 # define LIGHT_H
+#include "mymath.h"
+
 
 typedef struct {
-    float p;
-    float q;
-    int alias;
-} t_Bin;
+    float	prob;
+    int		alias;
+} t_alias_bin;
 
-typedef struct {
-    t_Bin bins[3];
-} t_AliasTable;
-
+#include "libft/generated/vec_alias_bin.h"
 
 enum LIGHT_TYPE {
     POINT_LIGHT, //PHI = 4 * PI * INTENSITY * SPEC->SAMPLE(LAMBDA)
     DISTANT_LIGHT
 };
 
-typedef struct t_DenselySampledSpectrum {
+typedef struct t_densely_sampled_spectrum {
     float samples[471];
-} t_DenselySampledSpectrum;
+} t_densely_sampled_spectrum;
+
+extern const t_densely_sampled_spectrum SPECTRUM_ONES;
+extern const t_densely_sampled_spectrum SPECTRUM_ZEROS;
+
+#include "libft/generated/vec_densely_sampled_spectrum.h"
 
 //uniform light sample - vector of lights
 typedef struct t_light {
     enum LIGHT_TYPE t;
     float intensity;
     t_fvec3 position;
-    t_DenselySampledSpectrum spec;
+    int spec_idx;
 } t_light;
 
+#include "libft/generated/vec_light.h"
+#include "libft/generated/vec_float.h"
+
 typedef struct t_lights {
-    t_light lights[3];
-    int n_lights;
     float total_power;
-    float pdfs[3]; //Init to light[i].power/totalPower
-    t_AliasTable table;
+
+    t_vec_light lights;
+    t_vec_float pdfs; //TODO: Init to light[i].power/totalPower
+	t_vec_alias_bin bins;
 } t_lights;
 
 typedef struct t_SampledLight {
@@ -54,7 +60,7 @@ typedef struct t_SampledLight {
     float p;
 } t_SampledLight;
 
-t_DenselySampledSpectrum calculateDenselySampledSpectrum(float T);
+t_densely_sampled_spectrum calculateDenselySampledSpectrum(float T);
 void add_light(t_lights *lights, t_light to_add);
 void calculatePDFs(t_lights *lights);
 

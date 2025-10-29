@@ -90,7 +90,12 @@ t_fvec2 vec2_rotate(t_fvec2 v, float angle) {
 	return (ret);
 }
 
-t_fvec3 vec3_rotate_pitch_yaw(t_fvec3 v, float pitch, float yaw)
+// z        
+// | /y     
+// |/       
+// +---- x  
+
+t_fvec3 vec3_rotate_yaw_pitch(t_fvec3 v, float yaw, float pitch)
 {
 	 // Vector3 ret = Vector3RotateByQuaternion(*(Vector3*)(void*)&v,
   //                                           QuaternionFromEuler(pitch, yaw, 0));
@@ -98,17 +103,18 @@ t_fvec3 vec3_rotate_pitch_yaw(t_fvec3 v, float pitch, float yaw)
 	t_fvec2 zy;
 	t_fvec2 xy;
 
-	zy.x = v.z;
-	zy.y = v.y;
-	zy = vec2_rotate(zy, pitch);
-	v.z = zy.x;
-	v.y = zy.y;
-
 	xy.x = v.x;
 	xy.y = v.y;
 	xy = vec2_rotate(xy, yaw);
 	v.x = xy.x;
 	v.y = xy.y;
+
+	zy.x = v.z;
+	zy.y = v.y;
+	zy = vec2_rotate(zy, pitch);
+
+	v.z = zy.x;
+	v.y = zy.y;
     return(v);
 }
 

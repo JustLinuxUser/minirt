@@ -1,6 +1,6 @@
-
 #include "rt_parser.h"
 #include <stdio.h>
+#include "../libft/libft.h"
 
 bool is_tuple(enum RT_NODE_TYPE t) {
 	switch (t) {
@@ -19,26 +19,26 @@ bool is_tuple(enum RT_NODE_TYPE t) {
 
 void pprint_node(t_rt_parser parser, t_rt_node nd, int indent) {
 	for (int i = 0; i < indent; i++) {
-		printf("    ");
+		ft_printf("    ");
 	}
 	if (nd.t == RT_ND_IDENT || nd.t == RT_ND_STRING || is_tuple(nd.t)) {
-		printf("%.*s\n", nd.token.len, parser.tokenizer.file.buff + nd.token.start_idx);
+		ft_printf("%.*s\n", nd.token.len, parser.tokenizer.file.contents.buff + nd.token.start_idx);
 	}
 	if (nd.t == RT_ND_DICT)
 	{
-		printf("{\n");
+		ft_printf("{\n");
 		for (size_t i = 0; i < nd.dict.len; i++) {
 			t_rt_token k = nd.dict.buff[i].k;
 			for (int i = 0; i < indent + 1; i++) {
-				printf("    ");
+				ft_printf("    ");
 			}
-			printf("%.*s:\n", k.len, parser.tokenizer.file.buff + k.start_idx);
+			ft_printf("%.*s:\n", k.len, parser.tokenizer.file.contents.buff + k.start_idx);
 			pprint_node(parser, nd.dict.buff[i].v, indent + 2);
 		}
 	}
 	if (nd.t == RT_ND_LIST)
 	{
-		printf("[\n");
+		ft_printf("[\n");
 		for (size_t i = 0; i < nd.list.len; i++) {
 			pprint_node(parser, nd.list.buff[i], indent + 1);
 		}
@@ -47,12 +47,12 @@ void pprint_node(t_rt_parser parser, t_rt_node nd, int indent) {
 	if (nd.t == RT_ND_LIST || nd.t == RT_ND_DICT)
 	{
 		for (int i = 0; i < indent; i++) {
-			printf("    ");
+			ft_printf("    ");
 		}
 	}
 	if (nd.t == RT_ND_LIST)
-		printf("]\n");
+		ft_printf("]\n");
 	if (nd.t == RT_ND_DICT)
-		printf("}\n");
+		ft_printf("}\n");
 }
 

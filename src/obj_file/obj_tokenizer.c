@@ -44,7 +44,7 @@ char peek_obj_char(t_obj_tokenizer* tokenizer)
 		return (0);
     if (!chars_left(tokenizer))
         return (0);
-	return (tokenizer->str.buff[tokenizer->curr_idx]);   
+	return (tokenizer->str.buff[tokenizer->curr_idx]);
 }
 
 void tokenize_comment(t_obj_tokenizer* tokenizer)
@@ -112,8 +112,7 @@ bool tokenize_obj_tuple(t_obj_tokenizer* tokenizer)
         tok.len++;
         tok.vals[i++] = 0;
     }
-    
-    while (peek_obj_char(tokenizer) != ' ' && peek_obj_char(tokenizer) != '\n' && chars_left(tokenizer))
+    while (chars_left(tokenizer) && ft_strchr("-0123456789", peek_obj_char(tokenizer)) != 0)
     {
         if (!tokenize_obj_number(tokenizer, &ret, &is_int, &tok))
             return (false);
@@ -157,8 +156,10 @@ void tokenize_newline(t_obj_tokenizer* tokenizer)
 {
     t_obj_token tok;
     init_tok(&tok, OBJ_NEWLINE, tokenizer->curr_idx);
-    tok.len++;
-    tokenizer->curr_idx++;
+	while (peek_obj_char(tokenizer) == '\n' || peek_obj_char(tokenizer) == '\r') {
+		tok.len++;
+		tokenizer->curr_idx++;
+	}
 	vec_obj_token_push(&tokenizer->tokens, tok);
 }
 
@@ -183,7 +184,7 @@ char* obj_type_conversion(unsigned int t)
 }
 
 //add token array to function signature
-int process_obj_file(char* filename, t_obj_tokenizer* tokenizer)
+int tokenize_obj(char* filename, t_obj_tokenizer* tokenizer)
 {
     t_dyn_str ret = {0};
 
@@ -196,14 +197,19 @@ int process_obj_file(char* filename, t_obj_tokenizer* tokenizer)
     {
         if (peek_obj_char(tokenizer) == '#')
             tokenize_comment(tokenizer);
-        else if (peek_obj_char(tokenizer) == '\n')
+        else if (peek_obj_char(tokenizer) == '\n' || peek_obj_char(tokenizer) == '\r')
             tokenize_newline(tokenizer); 
         else if (peek_obj_char(tokenizer) == ' ')
             consume_obj_char(tokenizer);
         else if (peek_obj_char(tokenizer) == '-' || peek_obj_char(tokenizer) == '/' || ft_strchr("0123456789", peek_obj_char(tokenizer)))
         {
             if (!tokenize_obj_tuple(tokenizer))
+			{
+				free(tokenizer->tokens.buff);
+				free(tokenizer->str.buff);
+				*tokenizer = (t_obj_tokenizer){0};
                 return (0);
+			}
         }
         else
             tokenize_word(tokenizer);
