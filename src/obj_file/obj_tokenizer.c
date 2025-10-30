@@ -23,10 +23,9 @@ int chars_left(t_obj_tokenizer* tokenizer)
 
 void init_tok(t_obj_token* tok, enum OBJ_TT t, int curr_idx)
 {
+	*tok = (t_obj_token){0};
     tok->start_idx = curr_idx;
     tok->t = t;
-    tok->len = 0;
-    tok->parsed_num = -99999.f;
     ft_memset(tok->vals, 0, sizeof(tok->vals));
 }
 
@@ -101,39 +100,31 @@ bool tokenize_obj_number(t_obj_tokenizer* tokenizer, float *fret, bool *is_int, 
 bool tokenize_obj_tuple(t_obj_tokenizer* tokenizer)
 {
     t_obj_token tok;
-    init_tok(&tok, OBJ_TUPLE, tokenizer->curr_idx);
+    init_tok(&tok, OBJ_I_TUPLE, tokenizer->curr_idx);
     bool is_int = true;
     float ret = 0.f;
-    int i = 0;
 
-    if (peek_obj_char(tokenizer) == '/')
+    while (chars_left(tokenizer) && ft_strchr("-0123456789/", peek_obj_char(tokenizer)) != 0)
     {
-        consume_obj_char(tokenizer);
-        tok.len++;
-        tok.vals[i++] = 0;
-    }
-    while (chars_left(tokenizer) && ft_strchr("-0123456789", peek_obj_char(tokenizer)) != 0)
-    {
-        if (!tokenize_obj_number(tokenizer, &ret, &is_int, &tok))
-            return (false);
-        if (!is_int)
-        {
-            tok.parsed_num = ret;
-            tok.t = OBJ_NUMBER;
-			vec_obj_token_push(&tokenizer->tokens, tok);
-            return (true);
-        }
-        if (i < 3)
-            tok.vals[i++] = (int)ret;
+		if (tok.num_vals >= 3) return false;
         if (peek_obj_char(tokenizer) == '/'){
             consume_obj_char(tokenizer);
             tok.len++;
-            if (peek_obj_char(tokenizer) == '/'){
-                consume_obj_char(tokenizer);
-                tok.len++;
-                tok.vals[i++] = 0;
-            }
-        }
+		}
+		if (ft_strchr("-0123456789", peek_obj_char(tokenizer))) {
+			if (!tokenize_obj_number(tokenizer, &ret, &is_int, &tok))
+				return (false);
+			tok.parsed_num = ret;
+			tok.vals[tok.num_vals] = ret;
+			if (!is_int)
+			{
+				if (tok.num_vals != 0)
+					return (false);
+				tok.t = OBJ_FLOAT;
+				break;
+			}
+		}
+		tok.num_vals++;
     }
 	vec_obj_token_push(&tokenizer->tokens, tok);
     return (true);
@@ -169,7 +160,7 @@ char* obj_type_conversion(unsigned int t)
         return ("none");
     else if (t == OBJ_IDENT)
         return ("ident");
-    else if (t == OBJ_NUMBER)
+    else if (t == OBJ_FLOAT)
         return ("number");
     else if (t == OBJ_COMMENT)
         return ("comment");
@@ -177,7 +168,7 @@ char* obj_type_conversion(unsigned int t)
         return ("whitespace");
     else if (t == OBJ_NEWLINE)
         return ("newline");
-    else if (t == OBJ_TUPLE)
+    else if (t == OBJ_I_TUPLE)
         return ("tuple");
     else
         return ("eof");

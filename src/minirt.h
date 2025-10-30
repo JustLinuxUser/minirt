@@ -80,6 +80,7 @@ typedef struct s_state {
     float cam_yaw;
 
 	t_densely_sampled_spectrum		ambiant_light_spec;
+	t_densely_sampled_spectrum		sky_spec;
 
 	// TODO: Delete this
     t_fvec3 light_pos;
@@ -88,7 +89,6 @@ typedef struct s_state {
 
     float proj_coef;
     float screen_dist;
-    bool preview;
 
 	t_vec_mesh meshes;
 	t_vec_triangle triangles;
@@ -143,7 +143,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
         t_SampledWavelengths lambdas, int iters_left);
 
 // tinyobj.c
-void load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec2 rotation, int spectrum_idx);
+bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec2 rotation, int spectrum_idx);
 
 // draw.c
 void loop_hook(void *state_param);

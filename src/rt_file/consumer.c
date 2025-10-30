@@ -119,6 +119,28 @@ bool process_ambiant(t_rt_consumer_tl* tl) {
     return (true);
 }
 
+bool process_sky(t_rt_consumer_tl* tl) {
+    t_rt_node nd;
+
+    if (get_tl_typed(tl, "lighting_ratio", RT_ND_TUPLE_F1, &nd) != 1
+		|| !check_range(tl->consumer, nd, 0, INFINITY))
+		return (false);
+	float scale = get_float(nd.token);
+
+    if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
+		|| !check_range(tl->consumer, nd, 0, 255))
+		return (false);
+
+	t_fvec3 color = get_fvec3(nd.token);
+	t_fvec3 xyz = rgb_to_xyz((t_8bcolor){color.x, color.y, color.z});
+
+	tl->state->sky_spec = xyz_to_spectrum(xyz, false, 0);
+	for (int i = 0; i < CIE_SAMPLES; i++) {
+		tl->state->sky_spec.samples[i] *= scale;
+	}
+    return (true);
+}
+
 bool process_camera(t_rt_consumer_tl* tl) {
     t_rt_node nd;
 	int		ret;
@@ -163,6 +185,33 @@ bool process_light(t_rt_consumer_tl* tl, bool is_blackbody) {
     t_rt_node nd;
 	t_light l = {.t = POINT_LIGHT };
     if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
+		return (false);
+	l.position = get_fvec3(nd.token);
+
+    if (get_tl_typed(tl, "brightness", RT_ND_TUPLE_F1, &nd) != 1
+		|| !check_range(tl->consumer, nd, 0, INFINITY))
+		return (false);
+	l.intensity = get_float(nd.token);
+
+	if (is_blackbody) {
+		if (get_tl_typed(tl, "temperature", RT_ND_TUPLE_F1, &nd) != 1
+			|| !check_range(tl->consumer, nd, 0, 100000))
+			return (false);
+		l.spec_idx = push_blackbody(nd.token, tl->state);
+	}else {
+		if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
+			|| !check_range(tl->consumer, nd, 0, 255))
+			return (false);
+		l.spec_idx = push_color(nd.token, tl->state, false);
+	}
+	add_light(&tl->state->lights, l);
+    return (true);
+}
+
+bool process_inf_light(t_rt_consumer_tl* tl, bool is_blackbody) {
+    t_rt_node nd;
+	t_light l = {.t = DISTANT_LIGHT };
+    if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 	l.position = get_fvec3(nd.token);
 
@@ -262,7 +311,12 @@ bool process_obj(t_rt_consumer_tl* tl) {
 		return (false);
 
 	int color_idx = push_color(nd.token, tl->state, true);
-	load_triangles(tl->state, path, pos, scale, rotation, color_idx);
+	if (!load_triangles(tl->state, path, pos, scale, rotation, color_idx)) {
+		free(path);
+		tl->consumer->last_key = tl->kv->k;
+		tl->consumer->err = RT_ERR_FAILED_PROCESSING_KEY;
+		return (false);
+	}
 	free(path);
     return (true);
 }
@@ -323,6 +377,8 @@ bool process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv) {
     // cy
     if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "A")) {
         return process_ambiant(&tl);
+    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "Sky")) {
+        return process_sky(&tl);
     } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "C")) {
         return process_camera(&tl);
     } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "L")) {
@@ -331,6 +387,10 @@ bool process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv) {
         return process_light(&tl, false);
     } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "blackbody")) {
         return process_light(&tl, true);
+    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "distant")) {
+        return process_inf_light(&tl, false);
+    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "distant_blackbody")) {
+        return process_inf_light(&tl, true);
     } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "pl")) {
         return process_plane(&tl);
     } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "sp")) {

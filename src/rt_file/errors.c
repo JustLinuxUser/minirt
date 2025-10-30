@@ -122,7 +122,7 @@ void print_consumer_err(t_rt_consumer* consumer)
 			e.start_idx = consumer->last_node.token.start_idx;
 			e.len = consumer->last_node.token.len;
 
-			print_warn_lvl(e.warn_level);
+			print_warn_lvl(ANSI_NUM_RED);
 			ft_printf(
 				"Unused node: " ANSI_BOLD ANSI_RED "%.*s\n" ANSI_RESET,
 				consumer->last_node.token.len,
@@ -137,7 +137,7 @@ void print_consumer_err(t_rt_consumer* consumer)
 			e.len = consumer->last_key.len;
 			e.warn_level = ANSI_NUM_YELLOW;
 
-			print_warn_lvl(e.warn_level);
+			print_warn_lvl(ANSI_NUM_RED);
 			ft_printf(
 				ANSI_RESET "List \"" ANSI_BOLD ANSI_YELLOW "%.*s"ANSI_RESET"\" too short, expected an item of type: \"" ANSI_BOLD  ANSI_YELLOW "%s"ANSI_RESET"\" at position "ANSI_BOLD  ANSI_GREEN"%i\n" ANSI_RESET,
 				consumer->last_key.len,
@@ -154,7 +154,7 @@ void print_consumer_err(t_rt_consumer* consumer)
 			e.len = consumer->last_key.len;
 			e.warn_level = ANSI_NUM_YELLOW;
 
-			print_warn_lvl(e.warn_level);
+			print_warn_lvl(ANSI_NUM_RED);
 			ft_printf(
 				ANSI_RESET "The key \""ANSI_BOLD  ANSI_YELLOW"%.*s"ANSI_RESET"\" does not contain an identifier \""ANSI_BOLD  ANSI_GREEN "%s"ANSI_RESET"\" of type: \""ANSI_BOLD  ANSI_YELLOW"%s"ANSI_RESET"\"\n",
 				consumer->last_key.len,
@@ -171,7 +171,7 @@ void print_consumer_err(t_rt_consumer* consumer)
 			e.len = consumer->last_node.token.len;
 			e.warn_level = ANSI_NUM_YELLOW;
 
-			print_warn_lvl(e.warn_level);
+			print_warn_lvl(ANSI_NUM_RED);
 
 			ft_printf(
 				ANSI_RESET"The tuple \""ANSI_BOLD  ANSI_YELLOW"%.*s"ANSI_RESET"\" contains value outside the range ["ANSI_BOLD ANSI_GREEN"%i"ANSI_RESET", "ANSI_BOLD ANSI_GREEN"%i"ANSI_RESET"]\n",
@@ -179,6 +179,20 @@ void print_consumer_err(t_rt_consumer* consumer)
 				consumer->parser.tokenizer.file.contents.buff + consumer->last_node.token.start_idx,
 				(int)consumer->range_start,
 				(int)consumer->range_end);
+			print_line_highlight_range_col(e);
+			break;
+		case RT_ERR_FAILED_PROCESSING_KEY:
+			ft_assert(consumer->last_key.t != RT_NONE);
+
+			e.start_idx = consumer->last_key.start_idx;
+			e.len = consumer->last_key.len;
+			e.warn_level = ANSI_NUM_YELLOW;
+
+			print_warn_lvl(ANSI_NUM_RED);
+			ft_printf(
+				ANSI_RESET "Got an error while processing the key \""ANSI_BOLD  ANSI_YELLOW"%.*s"ANSI_RESET"\"\n",
+				consumer->last_key.len,
+				consumer->parser.tokenizer.file.contents.buff + consumer->last_key.start_idx);
 			print_line_highlight_range_col(e);
 			break;
 		default: 

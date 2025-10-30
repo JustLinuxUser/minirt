@@ -24,18 +24,21 @@ CFLAGS := -MMD -fPIE -Wall -Wextra -Wmaybe-uninitialized -Wmissing-field-initial
 LIBFT_DIR := ./src/libft
 LIBFT := ${LIBFT_DIR}/build/$(PROFILE)_libft.a
 
-LIBMLX := ./src/MLX42/build/libmlx.a
+
+MLX_DIR := ./src/MLX42/build
+MLX_INCLUDE := ./src/MLX42/include
+LIBMLX := ${MLX_DIR}/libmlx42.a
 
 LIBS := -lm -L ${LIBFT_DIR} -lft 
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-	LIBS += -Lsrc/MLX42/build -lmlx42 -lglfw
-	CFLAGS += -I src/MLX42/include
+	LIBS += -L${MLX_DIR} -lmlx42 -lglfw
+	CFLAGS += -I ${MLX_INCLUDE}
 endif
 ifeq ($(UNAME_S),Darwin)
-	LIBS += -Lsrc/MLX42/build -lmlx42
-	CFLAGS += -I src/MLX42/include
+	LIBS += -L${MLX_DIR} -lmlx42 -lglfw
+	CFLAGS += -I ${MLX_INCLUDE}
 endif
 
 ifeq ($(PROFILE),opt)
@@ -89,9 +92,9 @@ $(LIBFT): FORCE
 	$(MAKE) -j -C ${LIBFT_DIR}
 
 $(LIBMLX):
-	mkdir -p src/MLX42/build
-	cd src/MLX42/build && cmake .. -G "Unix Makefiles"
-	$(MAKE) -C src/MLX42/build -j
+	mkdir -p ${MLX_DIR}
+	cd ${MLX_DIR} && cmake .. -G "Unix Makefiles"
+	$(MAKE) -C ${MLX_DIR} -j
 
 FORCE: ;
 
@@ -102,7 +105,7 @@ build/${PROFILE}/%.o: %.c Makefile
 clean:
 	rm -rf $(BUILD_DIR)
 	$(MAKE) -C $(LIBFT_DIR) fclean
-	rm -rf src/MLX42/build
+	rm -rf ${MLX_Dir}
 
 fclean: clean
 	rm -rf $(NAME)

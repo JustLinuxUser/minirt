@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "cie.h"
 #include "libft/alloc/mmalloc.h"
 #include "minirt.h"
 #include "mymath.h"
@@ -12,6 +11,7 @@
 #include "libft/libft.h"
 #include "MLX42/MLX42.h"
 #include <pthread.h>
+#include "rt_utils.h"
 
 // TODOS:
 // - Generics
@@ -94,13 +94,28 @@ void load_shapes(t_state* state) {
 void build_bvh(t_state* state);
 
 void free_state(t_state *state) {
-	free(state->unbounded_shapes.buff);
-	free(state->shapes.buff);
-	free(state->triangles.buff);
-	free(state->planes.buff);
-	free(state->spheres.buff);
-	free(state->s_colors);
-	mlx_terminate(state->mlx);
+	size_t i;
+
+	free_zero(&state->unbounded_shapes.buff);
+	free_zero(&state->shapes.buff);
+
+	free_zero(&state->triangles.buff);
+	i = 0;
+	while (i < state->meshes.len) {
+		free_zero(&state->meshes.buff[i].vertex_idxs.buff);
+		free_zero(&state->meshes.buff[i].vertices.buff);
+		i++;
+	}
+	free_zero(&state->meshes.buff);
+
+	free_zero(&state->planes.buff);
+	free_zero(&state->spheres.buff);
+	free_zero(&state->cylinders.buff);
+
+	free_zero(&state->s_colors);
+	free_zero(&state->spectrums.buff);
+	if (state->mlx)
+		mlx_terminate(state->mlx);
 }
 
 void render_multithread(t_state* state, int num_threads);
@@ -166,12 +181,7 @@ int main(int argc, char** argv) {
     calculatePDFs(&state.lights);
     create_alias_table(&state.lights);
 
-
-    int num_frames = -10;
-    // Main game loop
-    state.preview = true;
 	// TODO: Close hook
-        // Update
 	mlx_close_hook(state.mlx, exit_hook, &state);
 	mlx_loop_hook(state.mlx, loop_hook, &state);
 	mlx_loop(state.mlx);

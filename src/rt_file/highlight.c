@@ -1,7 +1,8 @@
 #include "rt_tokenizer.h"
-#include <stdio.h>
 #include "errors.h"
-#include "../libft/libft.h"
+#include "../libft/ft_printf/ft_printf.h"
+#include "../libft/utils/utils.h"
+#include "../error.h"
 
 void idx_to_row_col(char *buff, int idx,  int *row, int *col)
 {
@@ -65,6 +66,7 @@ char *warn_level_to_string(enum e_RT_WARN_LEVEL w)
 
 void print_warn_lvl(enum e_RT_WARN_LEVEL level)
 {
+	print_err();
 	ft_printf("\033[%im"ANSI_BOLD"[%s]: ", level, warn_level_to_string(level));
 }
 

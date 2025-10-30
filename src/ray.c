@@ -48,16 +48,38 @@ t_SampledSpectrum get_surface_color(t_state* state, t_SampledWavelengths lambdas
 	return sample_densely_sampled_spectrum(shape_spectrum(state, coll), lambdas);
 }
 
-t_SampledWavelengths get_values_pdf(t_state* state, t_fvec3 p)
+bool intersect_light(t_state *state, int light_idx, t_ray_isector *isector, float *intensity)
 {
-    t_SampledWavelengths l;
-    int i = -1;
-    while(++i < NUM_SPECTRUM_SAMPLES)
-    {
-        l.lambda[i] = 0.8f;
-        l.pdf[i] = 1.0f;
-    }
-    return l; 
+	t_light light;
+	t_collision light_coll;
+
+
+	if (light_idx == -1)
+		return false;
+	light = state->lights.lights.buff[light_idx]; 
+
+	float light_t = INFINITY;
+
+	t_fvec3 light_dir;
+
+	*intensity = light.intensity / state->lights.pdfs.buff[light_idx];
+	if (light.t == POINT_LIGHT) {
+		light_dir = fvec3_sub(light.position, isector->ray.pos);
+		light_t = sqrtf(fvec3_len_sq(light_dir));
+		*intensity *= 1.0 / light_t * light_t;
+	} else if (light.t == DISTANT_LIGHT) {
+		*intensity /= 10.0;
+		light_dir = light.position;
+	} else {
+		ft_assert("Unreachable" == 0);
+		return false;
+	}
+
+	isector->ray.dir = fvec3_norm(light_dir);
+	isector->t_max = light_t;
+
+	light_coll = collide_bvh(state, *isector);
+	return !light_coll.collided;
 }
 
 t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, 
@@ -65,11 +87,10 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
     t_SampledSpectrum L = {0};
     t_SampledSpectrum beta = {1.f};
 	t_collision coll;
-	t_collision coll2;
+	t_collision light_coll;
     int i;
     t_fvec3 p;
     t_fvec3 norm = {0};
-	t_SampledSpectrum light_spec;
 	void *ignored_shape = 0;
 
     //INIT BETA
@@ -87,8 +108,17 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
 		// 		L = sampled_spectrum_add(L, sampled_spectrum_scale(sample_densely_sampled_spectrum(&SPECTRUM_ONES, lambdas), 100));
 		// 	}
 		// }
-        if (!coll.collided)
-            break;
+
+	
+		//APPLY BSDF
+        if (!coll.collided) {
+			t_SampledSpectrum sky_spec = sample_densely_sampled_spectrum(&state->sky_spec, lambdas);
+			i = -1;
+			while (++i < NUM_SPECTRUM_SAMPLES)
+				L.values[i] += beta.values[i] * sky_spec.values[i];
+			break;
+		}
+
 		ignored_shape = coll.shape.ptr;
         //TO BE USED WHEN BSDF IMPLEMENTED:
 
@@ -102,7 +132,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
 
         //LIGHT INFORMATION
         float lu = random_generator();
-        t_light s_light;
+        t_light light;
 
 		t_SampledSpectrum color = {0};
 		color = get_surface_color(state, lambdas, coll);
@@ -110,26 +140,13 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
 		//SHADOW RAY
 		t_SampledSpectrum light_spec = {0};
         int index = sample_alias_table(&state->lights, lu);
+
 		if (index != -1) {
-			s_light = state->lights.lights.buff[index]; 
-			float intensity = s_light.intensity / state->lights.pdfs.buff[index];
-
-			t_fvec3 light = fvec3_sub(s_light.position, p);
-			float light_t = sqrtf(fvec3_len_sq(light));
-			t_fvec3 norm_light = fvec3_norm(light);
-
-			float dot = 0.f;
-
-			float distance_decrease = 0.f;
-
-			t_ray light_ray = (t_ray){.pos = p, .dir = norm_light};
-			coll = collide_bvh(state, (t_ray_isector){.ray = light_ray, .t_max = light_t, .t_min = 0.01, .ignore_shape = ignored_shape});
-			if (!coll.collided)
-			{
-				//HOW MUCH LIGHT INTENSITY (cos AND distance)
-				distance_decrease = 1.0f / (light_t * light_t);
-				dot = fmax(fvec3_dot(norm, norm_light), 0);
-				light_spec = sampled_spectrum_scale(sample_densely_sampled_spectrum(&state->spectrums.buff[s_light.spec_idx], lambdas), distance_decrease * intensity * dot);
+			float intensity;
+			t_ray_isector isector = {.ray = {.pos = p}, .t_min = 0.01, .ignore_shape = ignored_shape};
+			if (intersect_light(state, index, &isector, &intensity)) {
+				float dot = fmax(fvec3_dot(norm, isector.ray.dir), 0);
+				light_spec = sampled_spectrum_scale(sample_densely_sampled_spectrum(&state->spectrums.buff[light.spec_idx], lambdas), intensity * dot);
 			}
 		}
 

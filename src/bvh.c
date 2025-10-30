@@ -325,6 +325,8 @@ void flatten_bvh(t_linear_bvh_nd* linear, int* offset, t_bvh_build_node* tree) {
 }
 
 void build_bvh(t_state* state) {
+	if (state->shapes.len == 0)
+		return;
     t_bvh_primitive* bvh_primitives =
         malloc(sizeof(*bvh_primitives) * state->shapes.len);
 
@@ -417,7 +419,7 @@ t_collision collide_bvh(t_state* state, t_ray_isector isect) {
     int dir_is_neg[3] = {(int)(inv_dir.x > 0), (int)(inv_dir.y < 0),
                          (int)(inv_dir.z < 0)};
 
-    while (stack_offs >= 0) {
+    while (state->bvh && stack_offs >= 0) {
         int curr_nd_idx = stack[stack_offs--];
         t_linear_bvh_nd curr = state->bvh[curr_nd_idx];
 

@@ -51,6 +51,9 @@ enum RT_ERR_TYPE {
 	RT_ERR_ARR_TOO_SHORT,
 	RT_ERR_NOT_FOUND_DICT,
 	RT_ERR_OUT_OF_RANGE,
+
+	// Other
+	RT_ERR_FAILED_PROCESSING_KEY,
 };
 
 typedef struct t_file {

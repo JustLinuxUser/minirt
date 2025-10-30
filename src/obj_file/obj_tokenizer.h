@@ -20,9 +20,9 @@ enum OBJ_TT {
     OBJ_NONE = 0,
 
 	OBJ_IDENT,
-	OBJ_NUMBER,
+	OBJ_FLOAT,
     OBJ_COMMENT,
-    OBJ_TUPLE,
+    OBJ_I_TUPLE,
     OBJ_WHITESPACE,
     OBJ_NEWLINE,
 	OBJ_EOF,
@@ -34,6 +34,7 @@ typedef struct t_obj_token {
 	int len;
     float parsed_num;
     int vals[3];
+	int num_vals;
 } t_obj_token;
 
 #include "../libft/generated/vec_obj_token.h"
