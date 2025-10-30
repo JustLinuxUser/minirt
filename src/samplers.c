@@ -1,8 +1,10 @@
 #include "samplers.h"
 #include "minirt.h"
 
+#include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <math.h>
 
 t_fvec3 rand_direction() {
     t_fvec3 ret;
@@ -11,10 +13,8 @@ t_fvec3 rand_direction() {
         ret.x = (rand() / (float)RAND_MAX) * 2. - 1.;
         ret.y = (rand() / (float)RAND_MAX) * 2. - 1.;
         ret.z = (rand() / (float)RAND_MAX) * 2. - 1.;
-        // TODO: If rand is close to 0 we are fucked!!
-        // Make this value as close to 0 as possible
         float lensq = fvec3_len_sq(ret);
-        if (lensq > 0.00000001 && lensq < 1)
+        if (lensq > FLT_EPSILON && lensq < 1)
             break;
     }
     return (fvec3_norm(ret));

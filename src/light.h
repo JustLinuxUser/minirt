@@ -51,7 +51,7 @@ typedef struct t_lights {
     float total_power;
 
     t_vec_light lights;
-    t_vec_float pdfs; //TODO: Init to light[i].power/totalPower
+    t_vec_float pdfs;
 	t_vec_alias_bin bins;
 } t_lights;
 

@@ -17,25 +17,6 @@ const t_densely_sampled_spectrum SPECTRUM_ONES = {.samples = { 1, 1, 1, 1, 1, 1,
 
 const t_densely_sampled_spectrum SPECTRUM_ZEROS = {0};
 
-// t_SampledLight power_light_sample(t_lights *lights)
-// {
-//     t_SampledLight ret = {0};
-
-//     if (lights->n_lights == 0)
-//         return ret;
-//     float lightPower = 0;
-//     t_SampledWavelengths lambda = SampleUniform(0.125, 380, 780);
-//     int i = -1;
-//     while (++i < lights->n_lights)
-//     {
-        
-//     }
-    
-//     return ret;
-// }
-
-//#TODO: MORE LIGHTS
-
 //Calculate information for lights -> DenselySampledSpectrum
 t_densely_sampled_spectrum calculateDenselySampledSpectrum(float T)
 {

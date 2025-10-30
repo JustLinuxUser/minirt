@@ -67,23 +67,6 @@ t_fvec3 SpectrumToXYZ(t_SampledSpectrum s, t_SampledWavelengths lambda)
 
 t_8bcolor xyz_to_rgb(t_fvec3 t)
 {
-    //printf("%f, %f, %f", t.values[0], t.values[1], t.values[2]);
-    // return (Color){.a = 255,
-    //                .r = fmin(linear_to_gamma(t.values[0]) * 255, 255),
-    //                .g = fmin(linear_to_gamma(t.values[1]) * 255, 255),
-    //                .b = fmin(linear_to_gamma(t.values[2]) * 255, 255)};
-    // t_SampledWavelengths fixed_lambda = {
-    //     .lambda = { 430.f, 500.f, 680.f, 700.f },
-    //     .pdf    = { 0.3f, .1f, .25f, .4f }
-    // };
-    //#TODO: CHANGE O.5 FOR AUTOMATIC GENERATED U
-    // float lu = random_generator();
-    // //t_SampledWavelengths lambda = SampleUniform(lu, 360.f, 830.f);
-    // //RANGE
-    // t_SampledWavelengths lambda = SampleUniform(lu, 360, 830);
-    //t_ColorRGB rgb = spectrum_to_rgb(t, lambda);
-
-    //t_ColorRGB rgb = xyz_to_rgb(t);
     t_color rgb;
     rgb.x =  3.2406f * t.x - 1.5372f * t.y - 0.4986f * t.z;
     rgb.y = -0.9689f * t.x + 1.8758f * t.y + 0.0415f * t.z;

@@ -128,7 +128,6 @@ int main(int argc, char** argv) {
 		.samples_x = 5,
 		.samples_y = 5,
 		.fov = 90,
-        .light_pos = {.y = 0, .z = -100, .x = 0},
         .screen_dist = 1,
 		.rndr = {
 			.total_runs = 1,
@@ -150,7 +149,6 @@ int main(int argc, char** argv) {
     //     return 1;
     // return 0;
 
-	state.light_pos = fvec3_sub(state.cam.pos, (t_fvec3){.x = 0});
     load_shapes(&state);
 	build_bvh(&state);
 // 	printf("min: %f %f %f, max: %f %f %f\n", state.bvh->bounds.min.x, state.bvh->bounds.min.y, state.bvh->bounds.min.z,
@@ -181,7 +179,6 @@ int main(int argc, char** argv) {
     calculatePDFs(&state.lights);
     create_alias_table(&state.lights);
 
-	// TODO: Close hook
 	mlx_close_hook(state.mlx, exit_hook, &state);
 	mlx_loop_hook(state.mlx, loop_hook, &state);
 	mlx_loop(state.mlx);

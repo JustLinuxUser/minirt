@@ -14,7 +14,6 @@ struct s_state;
 enum obj_type {
     OBJ_SPHERE,
     OBJ_PLANE,
-    OBJ_CONE,
     OBJ_CYLINDER,
     OBJ_TRIANGLE,
 };

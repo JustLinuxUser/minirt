@@ -26,9 +26,6 @@ t_collision collide_ray_slow(t_state* state, t_ray_isector isect) {
 	return curr_coll;
 }
 
-/*NEW CAST REFLECTABLE RAY!!!*/
-//#TODO
-
 t_SampledSpectrum sample_densely_sampled_spectrum(const t_densely_sampled_spectrum *spec, t_SampledWavelengths lambdas) {
 	int	i;
 	t_SampledSpectrum	ret;
@@ -156,8 +153,6 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
 		i = -1;
 		while (++i < NUM_SPECTRUM_SAMPLES)
 		{
-			//printf("Update L[%d]: %f, %f, %f, %f\n", i, beta.values[i], color.values[i],  dot, distance_decrease);
-			//#TODO: CHANGE FOR LIGHT.VALUES[i]
 			L.values[i] += beta.values[i] * color.values[i] * (light_spec.values[i] + ambiant_spec.values[i] * fabs(fvec3_dot(norm, ray.dir)));
 		}
 

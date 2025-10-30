@@ -59,7 +59,7 @@ void* render_step(void* arg) {
                 curr_ray.dir = pt;
 
                 res_color =
-                    cast_reflectable_ray_new(t->state, curr_ray, lambdas, 4);
+                    cast_reflectable_ray_new(t->state, curr_ray, lambdas, 20);
                 xyz_color =
                     fvec3_add(SpectrumToXYZ(res_color, lambdas), xyz_color);
             }
@@ -91,14 +91,6 @@ void drawinator(t_state* state) {
 				 conv_8bcolor_to_uint32(xyz_to_rgb(fvec3_scale(
 				 state->s_colors[y * state->screen_width + x],
 				 1. / state->rndr.total_runs))));
-            // if (state.total_runs == 1 &&
-            //     y * state.screen_width + x >
-            //         state.last_y * state.screen_width + state.last_x) {
-            //     DrawPixel(x, y, WHITE);
-            // } else {
-            // TODO: actually draw
-
-            // }
 		}
     }
 }

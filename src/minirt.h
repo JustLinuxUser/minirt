@@ -29,7 +29,6 @@ typedef struct perspective_cam {
     float cam_dist;
 } perspective_cam;
 
-// TODO: Set allignment to 32
 typedef struct s_linear_bvh_nd {
     t_bounds3f bounds;
     union {
@@ -81,9 +80,6 @@ typedef struct s_state {
 
 	t_densely_sampled_spectrum		ambiant_light_spec;
 	t_densely_sampled_spectrum		sky_spec;
-
-	// TODO: Delete this
-    t_fvec3 light_pos;
 
     t_lights lights;
 

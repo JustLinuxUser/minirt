@@ -12,10 +12,6 @@ bool intersect_sphere(t_sphere s, t_ray r, float* t, bool* inside) {
     // if tc is less then 0, we are looking away from the center (mb we are
     // inside the sphere)
     float tc = fvec3_dot(L, fvec3_norm(r.dir));
-    // printf("tc: %f\n", tc);
-    // if (tc < 0.0) {
-    //     return false;
-    // }
 
     // TODO: Optimize the sqrt
     float d = fvec3_dot(L, L) - tc * tc;
@@ -244,7 +240,7 @@ t_bounds3f shape_bounds(t_state* state, t_shape shape) {
 		bounds = bounds_extend_pt(bounds, fvec3_add(cylinder.b, (t_fvec3){.x = cylinder.radius, .y = cylinder.radius, .z = cylinder.radius}));
 		bounds = bounds_extend_pt(bounds, fvec3_sub(cylinder.b, (t_fvec3){.x = cylinder.radius, .y = cylinder.radius, .z = cylinder.radius}));
     } else {
-        ft_assert("TODO" == 0);
+        ft_assert("Unreachable" == 0);
     }
     return (bounds);
 }

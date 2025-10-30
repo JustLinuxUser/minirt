@@ -54,8 +54,6 @@ typedef struct t_ColorRGB {
     float b;
 } t_ColorRGB;
 
-
-//#TODO: BLACKBODYEMITTERS
 float blackbody(float lambda, float T);
 
 t_densely_sampled_spectrum xyz_to_spectrum(t_fvec3 target_xyz, bool clamp, float *err);

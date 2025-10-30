@@ -149,7 +149,6 @@ bool process_camera(t_rt_consumer_tl* tl) {
 
 	tl->state->cam.pos = get_fvec3(nd.token);
 
-	// TODO: check if normalizable, or gracefully fallback
     if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 
@@ -266,7 +265,6 @@ bool process_plane(t_rt_consumer_tl* tl) {
 
 	pl.pos = get_fvec3(nd.token);
 
-	// TODO: check if normalizable, or gracefully fallback
     if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 
@@ -289,7 +287,6 @@ bool process_obj(t_rt_consumer_tl* tl) {
 
 	char *path = ft_strndup(tl->consumer->parser.tokenizer.file.contents.buff + nd.token.start_idx + 1, nd.token.len - 2);
 
-	// TODO: check if normalizable, or gracefully fallback
     if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 
@@ -329,7 +326,6 @@ bool process_cylinder(t_rt_consumer_tl* tl) {
 		return (false);
 	cylinder.a = get_fvec3(nd.token);
 
-	// TODO: check if normalizable, or gracefully fallback
     if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 	t_fvec3 dir = fvec3_norm(get_fvec3(nd.token));
@@ -351,16 +347,6 @@ bool process_cylinder(t_rt_consumer_tl* tl) {
 	vec_cylinder_push(&tl->state->cylinders, cylinder);
     return (true);
 }
-
-// what do we need in a tl get_type?
-// - ptr to idx, starts at 0
-// - kv / node
-// - target type
-// - target name (string)
-// return
-//
-// TODO: Make sure no duplicates in the dict
-//
 
 bool process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv) {
     char* buff;

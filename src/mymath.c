@@ -25,7 +25,9 @@ t_fvec3 fvec3_norm(t_fvec3 v) {
         result.x *= ilength;
         result.y *= ilength;
         result.z *= ilength;
-    }
+    } else {
+		result.x = 1;
+	}
     return result;
 }
 
