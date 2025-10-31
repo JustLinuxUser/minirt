@@ -13,8 +13,8 @@
 #ifndef SPECTRUM_H
 # define SPECTRUM_H
 
+#include "config.h"
 #include "light.h"
-#define NUM_SPECTRUM_SAMPLES 4
 
 /*SAMPLED SPECTRUM*/
 

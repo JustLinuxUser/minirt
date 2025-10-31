@@ -1,4 +1,6 @@
 #include <pthread.h>
+#include <threads.h>
+#include <unistd.h>
 #include "MLX42/MLX42.h"
 #include "minirt.h"
 #include "samplers.h"
@@ -59,7 +61,7 @@ void* render_step(void* arg) {
                 curr_ray.dir = pt;
 
                 res_color =
-                    cast_reflectable_ray_new(t->state, curr_ray, lambdas, 20);
+                    cast_reflectable_ray_new(t->state, curr_ray, lambdas, t->state->rndr.max_reflections);
                 xyz_color =
                     fvec3_add(SpectrumToXYZ(res_color, lambdas), xyz_color);
             }
@@ -78,7 +80,7 @@ void* render_step(void* arg) {
     return 0;
 }
 
-void drawinator(t_state* state) {
+void draw(t_state* state) {
     ft_printf("total_runs: %i\n", state->rndr.total_runs);
     // printf("curr_px: %i\n",
     //        state.last_y * state.screen_width + state.last_x);
@@ -86,11 +88,15 @@ void drawinator(t_state* state) {
 	ft_printf("%zu\n", state->rndr.curr_px);
 	for (int y = 0; y < state->screen_height; y++) {
 		for (int x = 0; x < state->screen_width; x++) {
+			int total_runs_px = state->rndr.total_runs;
+			if (coord_to_idx(state, x, y) <= state->rndr.curr_px) {
+				total_runs_px++;
+			}
 			mlx_put_pixel(state->mlx_image,
 				 x, y,
 				 conv_8bcolor_to_uint32(xyz_to_rgb(fvec3_scale(
 				 state->s_colors[y * state->screen_width + x],
-				 1. / state->rndr.total_runs))));
+				 1. / total_runs_px))));
 		}
     }
 }
@@ -113,43 +119,39 @@ int get_num_threads(t_state *state, int mask) {
 void render_single_thread(t_state* state) {
 	double start;
     uint8_t exit_flag;
-    int incr = 100;
 
+	if (state->rndr.curr_px == 0 && state->rndr.render_once && state->rndr.total_runs > 0) return;
 	start = mlx_get_time();
-	while (mlx_get_time() - start < 1.0 / 60) {
+	while (mlx_get_time() - start < 1.0 / SINGLE_THREAD_TARGET_FPS) {
 		if (state->rndr.curr_px < state->screen_width * state->screen_height) {
 			t_render_task render_task = {.state = state,
 										 .start_pixel = state->rndr.curr_px,
-										 .num_pixels = incr,
+										 .num_pixels = 1,
 										 .thrd_state = &exit_flag};
 			render_step(&render_task);
-			state->rndr.curr_px += incr;
+			state->rndr.curr_px++;
 		} else {
 			state->rndr.total_runs++;
 			state->rndr.curr_px = 0;
 		}
 	}
-    ft_printf("finished\n");
 }
 
 void render_multithread(t_state* state) {
-    // render_single_thread(state);
-    // return;
-
+	if (state->rndr.curr_px == 0 && state->rndr.render_once && state->rndr.total_runs > 0) return;
     if (state->rndr.curr_px < state->screen_width * state->screen_height) {
-		int i = 0;
+		int i = -1;
         int pos;
         while ((pos = thread_idx(state, THRD_NONE | THRD_FINISHED)) != -1
 			&& ++i < state->rndr.num_threads) {
             if (state->rndr.thrd_states[pos] == THRD_FINISHED)
                 pthread_join(state->rndr.threads[pos], NULL);
             state->rndr.thrd_states[pos] = THRD_RUNNING;
-            int incr = 1000;
             state->rndr.tasks[pos] = (t_render_task){.state = state,
                                          .start_pixel = state->rndr.curr_px,
-                                         .num_pixels = incr,
+                                         .num_pixels = state->rndr.chunk_size,
                                          .thrd_state = &state->rndr.thrd_states[pos]};
-            state->rndr.curr_px += incr;
+            state->rndr.curr_px += state->rndr.chunk_size;
 			ft_printf("creating thread...\n");
             pthread_create(&state->rndr.threads[pos], NULL, render_step, &state->rndr.tasks[pos]);
         }
@@ -180,6 +182,7 @@ void emergency_exit(t_state *state) {
 		state->rndr.thrd_states[curr] = THRD_NONE;
 	}
 }
+
 void exit_hook(void *state_arg) {
 	t_state *state = (t_state *)state_arg;
 	emergency_exit(state);
@@ -188,7 +191,8 @@ void exit_hook(void *state_arg) {
 void loop_hook(void* state_param) {
     t_state* state = (t_state*)state_param;
     printf("Loop hook: %lf\n", mlx_get_time());
-    // render_single_thread(state);
+
 	render_multithread(state);
-    drawinator(state);
+	// render_single_thread(state);
+    draw(state);
 }

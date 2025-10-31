@@ -9,7 +9,7 @@
 #include "obj_file/obj_parser.h"
 #include "libft/ft_printf/ft_printf.h"
 
-bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec2 rotation, int spectrum_idx) {
+bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec2 rotation, int spectrum_idx, bool forward_z) {
 
     t_mesh mesh = {.spectrum_idx = spectrum_idx};
 
@@ -33,8 +33,10 @@ bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec
 		vert = mesh.vertices.buff[i];
 		t_fvec3 tmp;
 		tmp = vert;
-		tmp.z = vert.y;
-		tmp.y = vert.z;
+		if (forward_z) {
+			tmp.z = vert.y;
+			tmp.y = vert.z;
+		}
 		mesh.vertices.buff[i] = tmp;
 		vert = tmp;
 		sum = fvec3_add(vert, sum);

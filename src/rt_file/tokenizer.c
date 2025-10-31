@@ -42,11 +42,23 @@ void skip_whitespace_and_comments(t_rt_tokenizer *tokenizer) {
 	}
 }
 
-void	tokenize_ident(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
+void	tokenize_ident_or_bool(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 	ft_assert(ft_isalpha(peek_char(tokenizer)));
 	while (ft_isalpha(peek_char(tokenizer)) || peek_char(tokenizer) == '_')
 		consume_char(tokenizer);
 	ret->t = RT_IDENT;
+	if (str_slice_eq_str(tokenizer->file.contents.buff + ret->start_idx,
+		tokenizer->i - ret->start_idx, "true"))
+	{
+		ret->vals_f[0] = 1;
+		ret->t = RT_BOOL;
+	}
+	if (str_slice_eq_str(tokenizer->file.contents.buff + ret->start_idx,
+		tokenizer->i - ret->start_idx, "false"))
+	{
+		ret->vals_f[0] = 0;
+		ret->t = RT_BOOL;
+	}
 }
 
 void tokenize_op(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
@@ -150,12 +162,13 @@ bool	tokenize_string(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 	return (true);
 }
 
+
 bool next_token(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 	skip_whitespace_and_comments(tokenizer);
 	ret->start_idx = tokenizer->i;
 	tokenizer->err_ref = tokenizer->i;
 	if (ft_isalpha(peek_char(tokenizer)))
-		tokenize_ident(tokenizer, ret);
+		tokenize_ident_or_bool(tokenizer, ret);
 	else if (ft_strchr("[]{}:", peek_char(tokenizer)))
 		tokenize_op(tokenizer, ret);
 	else if (ft_strchr("-0123456789", peek_char(tokenizer))) {

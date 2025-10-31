@@ -42,6 +42,7 @@ bool try_push_checked_dup(t_rt_parser* parser,
 bool is_rvalue(enum RT_TT tt) {
     switch (tt) {
         case RT_TUPLE:
+        case RT_BOOL:
         case RT_STRING:
         case RT_LBRACE:
         case RT_LBRACKET:
@@ -61,6 +62,7 @@ bool is_rvalue(enum RT_TT tt) {
 bool is_leaf(enum RT_TT tt) {
     switch (tt) {
         case RT_TUPLE:
+        case RT_BOOL:
         case RT_STRING:
             return true;
 
@@ -91,6 +93,8 @@ bool parse_leaf(t_rt_parser* parser, t_rt_node* ret) {
         ret->t = RT_ND_STRING;
     if (ret->token.t == RT_TUPLE)
         ret->t = tuple_token_type(ret->token);
+    if (ret->token.t == RT_BOOL)
+        ret->t = RT_ND_BOOL;
     return (true);
 }
 

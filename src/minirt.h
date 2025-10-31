@@ -2,6 +2,7 @@
 # define MINIRT_H
 #include "MLX42/MLX42.h"
 #include "MLX42/include/MLX42/MLX42.h"
+#include "config.h"
 #include "mymath.h"
 #include "spectrum.h"
 
@@ -57,11 +58,15 @@ enum e_THRD_STATE {
 
 typedef struct s_renderer_state {
 	int curr_px;
-    pthread_t threads[1000];
-    t_render_task tasks[1000];
-    uint8_t thrd_states[1000];
+    pthread_t threads[MAX_NUM_THREADS];
+    t_render_task tasks[MAX_NUM_THREADS];
+    uint8_t thrd_states[MAX_NUM_THREADS];
 	int total_runs;
 	int num_threads;
+	int chunk_size;
+	int max_reflections;
+	bool render_once;
+	bool exit_after_render;
 } t_renderer_state;
 
 typedef struct s_state {
@@ -139,7 +144,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
         t_SampledWavelengths lambdas, int iters_left);
 
 // tinyobj.c
-bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec2 rotation, int spectrum_idx);
+bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec2 rotation, int spectrum_idx, bool forward_z);
 
 // draw.c
 void loop_hook(void *state_param);

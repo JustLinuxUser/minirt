@@ -130,8 +130,11 @@ int main(int argc, char** argv) {
 		.fov = 90,
         .screen_dist = 1,
 		.rndr = {
-			.total_runs = 1,
+			.total_runs = 0,
 			.num_threads = 8,
+			.chunk_size = 1000,
+			.max_reflections = 4,
+			.render_once = false,
 		}
     };
 

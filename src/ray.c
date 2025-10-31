@@ -30,7 +30,7 @@ t_SampledSpectrum sample_densely_sampled_spectrum(const t_densely_sampled_spectr
 	int	i;
 	t_SampledSpectrum	ret;
 
-	i = 0;
+	i = -1;
 	ret = (t_SampledSpectrum){0};
 	while (++i < NUM_SPECTRUM_SAMPLES)
 	{

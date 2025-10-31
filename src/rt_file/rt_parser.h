@@ -15,10 +15,12 @@ enum RT_NODE_TYPE {
 	RT_ND_TUPLE_F2,
 	RT_ND_TUPLE_F3,
 
-	// int tuples (0-255)
+	// int tuples
 	RT_ND_TUPLE_I1,
 	RT_ND_TUPLE_I2,
 	RT_ND_TUPLE_I3,
+
+	RT_ND_BOOL,
 };
 
 

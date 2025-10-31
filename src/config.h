@@ -1,0 +1,8 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#define NUM_SPECTRUM_SAMPLES 4
+#define MAX_NUM_THREADS 200
+
+#define SINGLE_THREAD_TARGET_FPS 60
+#endif

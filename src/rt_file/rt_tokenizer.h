@@ -14,6 +14,7 @@ enum RT_TT {
 	RT_LBRACKET,	// [
 	RT_RBRACKET,	// ]
 	RT_COLON,		// :
+	RT_BOOL,		// true / false
 	RT_EOF,
 };
 

@@ -5,6 +5,7 @@
 #include "../libft/libft.h"
 #include "rt_types.h"
 #include "../cie.h"
+#include <limits.h>
 
 // 0 nothing
 // 1 ok
@@ -74,6 +75,11 @@ t_fvec3 get_fvec3(t_rt_token tk) {
 float get_float(t_rt_token tk) {
 	ft_assert(tk.tuple_len == 1);
 	return (tk.vals_f[0]);
+}
+
+bool get_bool(t_rt_token tk) {
+	ft_assert(tk.t == RT_BOOL);
+	return (tk.vals_f[0] != 0);
 }
 
 t_fvec2 get_fvec2(t_rt_token tk) {
@@ -176,6 +182,31 @@ bool process_camera(t_rt_consumer_tl* tl) {
 		t_fvec2 size = get_fvec2(nd.token);
 		tl->state->samples_x = size.x;
 		tl->state->samples_y = size.y;
+	}
+	ret = get_tl_typed(tl, "num_threads", RT_ND_TUPLE_I1, &nd);
+	if (ret != 0) {
+		if (ret != 1 || !check_range(tl->consumer, nd, 1, MAX_NUM_THREADS))
+			return (false);
+		tl->state->rndr.num_threads = get_float(nd.token);
+	}
+	ret = get_tl_typed(tl, "rndr_chunk_size", RT_ND_TUPLE_I1, &nd);
+	if (ret != 0) {
+		if (ret != 1 || !check_range(tl->consumer, nd, 1, 16777216))
+			return (false);
+		tl->state->rndr.chunk_size = get_float(nd.token);
+	}
+	ret = get_tl_typed(tl, "max_reflections", RT_ND_TUPLE_I1, &nd);
+	if (ret != 0) {
+		if (ret != 1 || !check_range(tl->consumer, nd, 1, 200))
+			return (false);
+		tl->state->rndr.max_reflections = get_float(nd.token);
+	}
+
+	ret = get_tl_typed(tl, "render_once", RT_ND_BOOL, &nd);
+	if (ret != 0) {
+		if (ret != 1)
+			return (false);
+		tl->state->rndr.render_once = get_bool(nd.token);
 	}
     return (true);
 }
@@ -307,14 +338,24 @@ bool process_obj(t_rt_consumer_tl* tl) {
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
 
+	bool forward_z = true;
+	ret = get_tl_typed(tl, "forward_z", RT_ND_BOOL, &nd);
+	if (ret != 0)
+	{
+		if (ret != 1)
+			return (false);
+		forward_z = get_bool(nd.token);
+	}
+
 	int color_idx = push_color(nd.token, tl->state, true);
-	if (!load_triangles(tl->state, path, pos, scale, rotation, color_idx)) {
+	if (!load_triangles(tl->state, path, pos, scale, rotation, color_idx, forward_z)) {
 		free(path);
 		tl->consumer->last_key = tl->kv->k;
 		tl->consumer->err = RT_ERR_FAILED_PROCESSING_KEY;
 		return (false);
 	}
 	free(path);
+
     return (true);
 }
 

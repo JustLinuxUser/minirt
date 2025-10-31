@@ -54,6 +54,8 @@ char* token_name(enum RT_TT tt) {
             return "RT_IDENT";
         case RT_TUPLE:
             return "RT_TUPLE";
+        case RT_BOOL:
+            return "RT_BOOL";
         case RT_STRING:
             return "RT_STRING";
         case RT_LBRACE:

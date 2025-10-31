@@ -40,6 +40,8 @@ char* type_to_str(enum RT_NODE_TYPE t)
             return "a tuple of 2 ints";
         case RT_ND_TUPLE_I3:
             return "a tuple of 3 ints";
+        case RT_ND_BOOL:
+            return "a boolean";
     }
     return (0);
 }
