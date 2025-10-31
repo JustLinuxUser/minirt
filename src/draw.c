@@ -133,6 +133,7 @@ void render_single_thread(t_state* state) {
 		} else {
 			state->rndr.total_runs++;
 			state->rndr.curr_px = 0;
+			if (state->rndr.exit_after_render) exit_app(state);
 		}
 	}
 }
@@ -168,6 +169,7 @@ void render_multithread(t_state* state) {
 			ft_memset(state->rndr.thrd_states, THRD_NONE, sizeof(state->rndr.thrd_states));
 			state->rndr.curr_px = 0;
 			state->rndr.total_runs++;
+			if (state->rndr.exit_after_render) exit_app(state);
 		}
 	}
 }

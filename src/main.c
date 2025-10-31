@@ -114,12 +114,18 @@ void free_state(t_state *state) {
 
 	free_zero(&state->s_colors);
 	free_zero(&state->spectrums.buff);
+
+	if (state->mlx_image)
+		mlx_delete_image(state->mlx, state->mlx_image);
 	if (state->mlx)
 		mlx_terminate(state->mlx);
 }
 
 void render_multithread(t_state* state, int num_threads);
 
+void exit_app(t_state *state) {
+	mlx_close_window(state->mlx);
+}
 
 int main(int argc, char** argv) {
     t_state state = {
@@ -130,11 +136,11 @@ int main(int argc, char** argv) {
 		.fov = 90,
         .screen_dist = 1,
 		.rndr = {
-			.total_runs = 0,
 			.num_threads = 8,
 			.chunk_size = 1000,
 			.max_reflections = 4,
 			.render_once = false,
+			.exit_after_render = false,
 		}
     };
 

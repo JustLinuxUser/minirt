@@ -150,4 +150,5 @@ bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec
 void loop_hook(void *state_param);
 void exit_hook(void *state_param);
 
+void exit_app(t_state *state);
 #endif

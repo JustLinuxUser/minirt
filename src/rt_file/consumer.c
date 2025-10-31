@@ -208,6 +208,12 @@ bool process_camera(t_rt_consumer_tl* tl) {
 			return (false);
 		tl->state->rndr.render_once = get_bool(nd.token);
 	}
+	ret = get_tl_typed(tl, "exit_after_render", RT_ND_BOOL, &nd);
+	if (ret != 0) {
+		if (ret != 1)
+			return (false);
+		tl->state->rndr.exit_after_render = get_bool(nd.token);
+	}
     return (true);
 }
 
