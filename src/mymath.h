@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <math.h>
 
+#define PI 3.1415
+
 typedef struct fvec2 {
 	float x;
 	float y;

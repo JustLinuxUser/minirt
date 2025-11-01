@@ -1,6 +1,5 @@
 #include "mymath.h"
 #include <math.h>
-#include <raymath.h>
 
 t_fvec3 fvec3_sub(t_fvec3 a, t_fvec3 b) {
     return (t_fvec3){
