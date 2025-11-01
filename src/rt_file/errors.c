@@ -142,7 +142,7 @@ void print_consumer_err(t_rt_consumer* consumer)
 				ANSI_RESET "List \"" ANSI_BOLD ANSI_YELLOW "%.*s"ANSI_RESET"\" too short, expected an item of type: \"" ANSI_BOLD  ANSI_YELLOW "%s"ANSI_RESET"\" at position "ANSI_BOLD  ANSI_GREEN"%i\n" ANSI_RESET,
 				consumer->last_key.len,
 				consumer->parser.tokenizer.file.contents.buff + consumer->last_key.start_idx,
-				type_to_str(consumer->expected), consumer->last_idx);
+				type_to_str(consumer->expected), consumer->curr_idx);
 
 			print_line_highlight_range_col(e);
 			break;

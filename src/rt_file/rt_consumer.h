@@ -20,10 +20,7 @@ typedef struct t_rt_consumer
 {
 	t_rt_parser			parser;
 
-	bool				got_cam;
-	bool				got_area;
-
-	int					last_idx;
+	int					curr_idx;
 
 	// error info
 	enum RT_ERR_TYPE	err;
@@ -42,7 +39,6 @@ typedef struct t_rt_consumer_tl
 	t_rt_kv			*kv;
 	t_rt_consumer	*consumer;
 	t_state			*state;
-	int				i;
 }	t_rt_consumer_tl;
 void	print_consumer_err(t_rt_consumer *consumer);
 bool	process_file(char *fpath, t_state *state);
