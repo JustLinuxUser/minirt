@@ -548,6 +548,28 @@ bool	process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv)
 	return (true);
 }
 
+bool	check_unused(t_rt_consumer *consumer, t_rt_node nd);
+
+bool	check_unused_dict(t_rt_consumer *consumer, t_vec_rt_kv dict)
+{
+	size_t	i;
+
+	i = 0;
+	while (i < dict.len)
+	{
+		if (!dict.buff[i].used)
+		{
+			consumer->err = RT_ERR_KEY_NOT_USED;
+			consumer->last_key = dict.buff[i].k;
+			return (false);
+		}
+		if (!check_unused(consumer, dict.buff[i].v))
+			return (false);
+		i++;
+	}
+	return (true);
+}
+
 bool	check_unused(t_rt_consumer *consumer, t_rt_node nd)
 {
 	size_t	i;
@@ -559,42 +581,37 @@ bool	check_unused(t_rt_consumer *consumer, t_rt_node nd)
 		return (false);
 	}
 	i = 0;
-	while (i < nd.dict.len)
-	{
-		if (!nd.dict.buff[i].used)
-		{
-			consumer->err = RT_ERR_KEY_NOT_USED;
-			consumer->last_key = nd.dict.buff[i].k;
-			return (false);
-		}
-		if (!check_unused(consumer, nd.dict.buff[i].v))
-			return (false);
-		i++;
-	}
-	i = 0;
 	while (i < nd.list.len)
 	{
 		if (!check_unused(consumer, nd.list.buff[i]))
 			return (false);
 		i++;
 	}
+	if (!check_unused_dict(consumer, nd.dict))
+		return (false);
 	return (true);
 }
 
-bool consume_parsed_nodes(t_rt_parser parser, t_state* state) {
-    t_rt_consumer consumer;
+bool	consume_parsed_nodes(t_rt_parser parser, t_state *state)
+{
+	t_rt_consumer	consumer;
+	size_t			i;
 
-    consumer = (t_rt_consumer){.parser = parser};
-    for (size_t i = 0; i < parser.statements.len; i++) {
-        if (!process_kv(&consumer, state, &parser.statements.buff[i]))
+	consumer = (t_rt_consumer){.parser = parser};
+	i = 0;
+	while (i < parser.statements.len)
+	{
+		if (!process_kv(&consumer, state, &parser.statements.buff[i]))
 		{
 			print_consumer_err(&consumer);
 			return (false);
 		}
-		if (!check_unused(&consumer, parser.statements.buff[i].v)) {
+		if (!check_unused(&consumer, parser.statements.buff[i].v))
+		{
 			print_consumer_err(&consumer);
-			return false;
+			return (false);
 		}
-    }
-    return (true);
+		i++;
+	}
+	return (true);
 }
