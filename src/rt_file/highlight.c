@@ -4,7 +4,7 @@
 #include "../libft/utils/utils.h"
 #include "../error.h"
 
-void idx_to_row_col(char *buff, int idx,  int *row, int *col)
+void	idx_to_row_col(char *buff, int idx,  int *row, int *col)
 {
 	int	r;
 	int i;
@@ -29,7 +29,7 @@ void idx_to_row_col(char *buff, int idx,  int *row, int *col)
 		*col = c;
 }
 
-int row_col_to_idx(char *buff, int row, int col)
+int	row_col_to_idx(char *buff, int row, int col)
 {
 	int	r;
 	int	c;
@@ -54,23 +54,28 @@ int row_col_to_idx(char *buff, int row, int col)
 	}
 	return (i);
 }
-char *warn_level_to_string(enum e_RT_WARN_LEVEL w)
+
+char	*warn_level_to_string(enum e_RT_WARN_LEVEL w)
 {
-	if (w == RT_HELP) return "HELP";
-	if (w == RT_INFO) return "INFO";
-	if (w == RT_WARN) return "WARN";
-	if (w == RT_ERROR) return "ERROR";
+	if (w == RT_HELP)
+		return ("HELP");
+	if (w == RT_INFO)
+		return ("INFO");
+	if (w == RT_WARN)
+		return ("WARN");
+	if (w == RT_ERROR)
+		return ("ERROR");
 	ft_assert("Unreachable" == 0);
-	return 0;
+	return (0);
 }
 
-void print_warn_lvl(enum e_RT_WARN_LEVEL level)
+void	print_warn_lvl(enum e_RT_WARN_LEVEL level)
 {
 	print_err();
 	ft_printf("\033[%im"ANSI_BOLD"[%s]: ", level, warn_level_to_string(level));
 }
 
-void print_line_highlight_range_col(t_error err)
+void	print_line_highlight_range_col(t_error err)
 {
 	int	row;
 	int	col;
@@ -80,16 +85,19 @@ void print_line_highlight_range_col(t_error err)
 
 	ft_printf(ANSI_RESET);
 	idx_to_row_col(err.file->contents.buff, err.start_idx, &row, &col);
-	ft_printf(ANSI_DIMM ANSI_ITALIC ANSI_UNDERLINE "%s:%i:%i:\033\n" ANSI_RESET, err.file->fname, row, col);
+	ft_printf(ANSI_DIMM ANSI_ITALIC ANSI_UNDERLINE "%s:%i:%i:\033\n" ANSI_RESET,
+		err.file->fname, row, col);
 	i = row_col_to_idx(err.file->contents.buff, row, 0);
 	start_idx = 0;
 	curr = ft_printf("%4i | ", row);
 	while (err.file->contents.buff && err.file->contents.buff[i]
-		&& err.file->contents.buff[i] != '\n') {
+		&& err.file->contents.buff[i] != '\n')
+	{
 		if (i <= err.start_idx)
 			start_idx = curr;
 		if (i >= err.start_idx && i - err.start_idx < err.len)
-			ft_printf("\033[%im"ANSI_BOLD ANSI_UNDERLINE ANSI_ITALIC, err.warn_level);
+			ft_printf("\033[%im"ANSI_BOLD ANSI_UNDERLINE ANSI_ITALIC,
+				err.warn_level);
 		if (err.file->contents.buff[i] == '\t')
 			curr += ft_printf("    ");
 		else
