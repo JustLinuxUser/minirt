@@ -454,86 +454,79 @@ bool process_obj(t_rt_consumer_tl *tl)
 		return (false);
 	}
 	free(path);
-
 	return (true);
 }
 
-bool process_cylinder(t_rt_consumer_tl* tl) {
-    t_rt_node nd;
-	t_cylinder cylinder = {0};
+bool	process_cylinder(t_rt_consumer_tl *tl)
+{
+	t_rt_node	nd;
+	t_cylinder	cylinder;
+	t_fvec3		dir;
+	float		height;
 
-    if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
+	cylinder = (t_cylinder){0};
+	if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 	cylinder.a = get_fvec3(nd.token);
-
-    if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
+	if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
-	t_fvec3 dir = fvec3_norm(get_fvec3(nd.token));
-
-    if (get_tl_typed(tl, "diameter", RT_ND_TUPLE_F1, &nd) != 1)
+	dir = fvec3_norm(get_fvec3(nd.token));
+	if (get_tl_typed(tl, "diameter", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
 	cylinder.radius = get_float(nd.token) / 2.0;
-
-    if (get_tl_typed(tl, "height", RT_ND_TUPLE_F1, &nd) != 1)
+	if (get_tl_typed(tl, "height", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
-	float height = get_float(nd.token);
-
-    if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
+	height = get_float(nd.token);
+	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
 	cylinder.spectrum_idx = push_color(nd.token, tl->state, true);
-
 	cylinder.b = fvec3_add(fvec3_scale(dir, height), cylinder.a);
 	vec_cylinder_push(&tl->state->cylinders, cylinder);
-    return (true);
+	return (true);
 }
 
-bool process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv) {
-    char* buff;
-    t_rt_consumer_tl tl = {.consumer = consumer, .kv = kv, .state = state};
-	tl.consumer->curr_idx = 0;
+bool	process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv)
+{
+	char	*buff;
 
-    buff = consumer->parser.tokenizer.file.contents.buff;
+	t_rt_consumer_tl tl = {.consumer = consumer, .kv = kv, .state = state};
+	tl.consumer->curr_idx = 0;
+	buff = consumer->parser.tokenizer.file.contents.buff;
 	kv->v.used = true;
 	kv->used = true;
-    // A
-    // C
-    // L
-    // sp
-    // pl
-    // cy
-    if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "A")) {
-        return process_ambiant(&tl);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "Sky")) {
-        return process_sky(&tl);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "C")) {
-        return process_camera(&tl);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "L")) {
-        return process_light(&tl, false);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "l")) {
-        return process_light(&tl, false);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "blackbody")) {
-        return process_light(&tl, true);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "distant")) {
-        return process_inf_light(&tl, false);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "distant_blackbody")) {
-        return process_inf_light(&tl, true);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "pl")) {
-        return process_plane(&tl);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "sp")) {
-        return process_sphere(&tl);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "cy")) {
-        return process_cylinder(&tl);
-    } else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "obj")) {
-        return process_obj(&tl);
-    } else {
+	if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "A")) {
+		return process_ambiant(&tl);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "Sky")) {
+		return process_sky(&tl);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "C")) {
+		return process_camera(&tl);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "L")) {
+		return process_light(&tl, false);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "l")) {
+		return process_light(&tl, false);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "blackbody")) {
+		return process_light(&tl, true);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "distant")) {
+		return process_inf_light(&tl, false);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "distant_blackbody")) {
+		return process_inf_light(&tl, true);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "pl")) {
+		return process_plane(&tl);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "sp")) {
+		return process_sphere(&tl);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "cy")) {
+		return process_cylinder(&tl);
+	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "obj")) {
+		return process_obj(&tl);
+	} else {
 		kv->v.used = false;
 		kv->used = false;
 		consumer->last_key = kv->k;
 		consumer->err = RT_ERR_KEY_NOT_USED;
 		return (false);
-    }
-    return (true);
+	}
+	return (true);
 }
 
 bool check_unused(t_rt_consumer *consumer, t_rt_node nd) {
