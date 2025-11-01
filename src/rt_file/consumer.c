@@ -282,7 +282,7 @@ bool	process_camera_general_settings(t_rt_consumer_tl *tl)
 			return (false);
 		tl->state->output_path = get_string(tl->consumer, nd.token);
 	}
-	return (false);
+	return (true);
 }
 
 bool	process_camera(t_rt_consumer_tl *tl)
@@ -371,26 +371,27 @@ bool	process_inf_light(t_rt_consumer_tl* tl, bool is_blackbody)
 	return (true);
 }
 
-bool process_sphere(t_rt_consumer_tl* tl) {
-	t_sphere sp;
+bool	process_sphere(t_rt_consumer_tl *tl)
+{
+	t_sphere	sp;
 
-    t_rt_node nd;
-    if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
+	t_rt_node	nd;
+	if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 	sp.p = get_fvec3(nd.token);
 
-    if (get_tl_typed(tl, "diameter", RT_ND_TUPLE_F1, &nd) != 1)
+	if (get_tl_typed(tl, "diameter", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
 
 	sp.r = get_float(nd.token);
 
 
-    if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
+	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
 	sp.spectrum_idx = push_color(nd.token, tl->state, true);
 	vec_sphere_push(&tl->state->spheres, sp);
-    return (true);
+	return (true);
 }
 
 bool process_plane(t_rt_consumer_tl* tl) {
