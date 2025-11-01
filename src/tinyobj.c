@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   tinyobj.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/01 16:17:28 by anddokhn          #+#    #+#             */
+/*   Updated: 2025/11/01 16:17:28 by anddokhn         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 #include <fcntl.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -10,8 +21,8 @@
 #include "libft/ft_printf/ft_printf.h"
 #include "obj_loader.h"
 
-
-void	mesh_forward_z(t_mesh *mesh) {
+void	mesh_forward_z(t_mesh *mesh)
+{
 	t_fvec3	vert;
 	t_fvec3	tmp;
 	size_t	i;
@@ -34,6 +45,7 @@ t_fvec3	mesh_avg(t_mesh *mesh)
 	size_t	i;
 
 	i = 0;
+	sum = (t_fvec3){0};
 	while (i < mesh->vertices.len)
 	{
 		sum = fvec3_add(mesh->vertices.buff[i], sum);

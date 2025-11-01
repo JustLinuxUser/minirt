@@ -1,5 +1,4 @@
 #include <pthread.h>
-#include <threads.h>
 #include <unistd.h>
 #include "MLX42/MLX42.h"
 #include "libft/libft.h"

@@ -410,47 +410,52 @@ bool	process_plane(t_rt_consumer_tl *tl)
 	return (true);
 }
 
-bool process_obj(t_rt_consumer_tl *tl)
+bool process_obj_opts(t_rt_consumer_tl *tl, t_obj_spec *s)
 {
 	t_rt_node	nd;
-	t_obj_spec	s;
-	char		*path;
 	int			ret;
 
-	s = (t_obj_spec){.forward_z = true};
 	if (get_tl_typed(tl, "path", RT_ND_STRING, &nd) != 1)
 		return (false);
-	path = get_string(tl->consumer, nd.token).buff;
+	s->path = get_string(tl->consumer, nd.token).buff;
 	if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
-	s.pos = get_fvec3(nd.token);
+	s->pos = get_fvec3(nd.token);
 	if (get_tl_typed(tl, "scale", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
-	s.scale = get_float(nd.token);
+	s->scale = get_float(nd.token);
 	ret = get_tl_typed(tl, "rotation_yaw_pitch", RT_ND_TUPLE_F2, &nd);
 	if (ret == 2)
 		return (false);
 	if (ret == 1)
-		s.rotation = get_fvec2(nd.token);
+		s->rotation = get_fvec2(nd.token);
+	ret = get_tl_typed(tl, "forward_z", RT_ND_BOOL, &nd);
+	if (ret == 2)
+		return (false);
+	if (ret == 1)
+		s->forward_z = get_bool(nd.token);
+}
+
+
+bool	process_obj(t_rt_consumer_tl *tl)
+{
+	t_rt_node	nd;
+	t_obj_spec	s;
+	int			ret;
+
+	s = (t_obj_spec){.forward_z = true};
 	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
-	ret = get_tl_typed(tl, "forward_z", RT_ND_BOOL, &nd);
-	if (ret != 0)
-	{
-		if (ret != 1)
-			return (false);
-		s.forward_z = get_bool(nd.token);
-	}
-
 	s.spectrum_idx = push_color(nd.token, tl->state, true);
-	if (!load_triangles(tl->state, s)) {
-		free(path);
+	if (!load_triangles(tl->state, s))
+	{
+		free(s.path);
 		tl->consumer->last_key = tl->kv->k;
 		tl->consumer->err = RT_ERR_FAILED_PROCESSING_KEY;
 		return (false);
 	}
-	free(path);
+	free(s.path);
 	return (true);
 }
 
