@@ -5,3 +5,4 @@ objs/
 **compile_commands.json
 **/*.a
 src/libft/generated
+src/MLX42/build
