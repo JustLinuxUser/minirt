@@ -5,6 +5,7 @@
 #include "config.h"
 #include "libft/dsa/dyn_str.h"
 #include "mymath.h"
+#include "obj_loader.h"
 #include "spectrum.h"
 
 #include "shapes.h"
@@ -150,7 +151,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
         t_SampledWavelengths lambdas, int iters_left, uint64_t *rand_state);
 
 // tinyobj.c
-bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec2 rotation, int spectrum_idx, bool forward_z);
+bool load_triangles(t_state* state, t_obj_spec s);
 
 // draw.c
 void loop_hook(void *state_param);

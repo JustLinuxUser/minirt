@@ -18,12 +18,14 @@ enum obj_type {
     OBJ_TRIANGLE,
 };
 
+
 typedef struct s_triangle {
 	int mesh_idx;
 	int triangle_idx;
 }	t_triangle;
 
 #include "libft/generated/vec_triangle.h"
+
 
 typedef struct t_sphere {
     t_fvec3 p;

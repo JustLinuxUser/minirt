@@ -40,6 +40,7 @@ typedef struct t_rt_consumer_tl
 	t_rt_consumer	*consumer;
 	t_state			*state;
 }	t_rt_consumer_tl;
+
 void	print_consumer_err(t_rt_consumer *consumer);
 bool	process_file(char *fpath, t_state *state);
 #endif

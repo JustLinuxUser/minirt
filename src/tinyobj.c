@@ -8,32 +8,27 @@
 #include "mymath.h"
 #include "obj_file/obj_parser.h"
 #include "libft/ft_printf/ft_printf.h"
+#include "obj_loader.h"
 
-bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec2 rotation, int spectrum_idx, bool forward_z) {
+bool	load_triangles(t_state *state, t_obj_spec s)
+{
+	t_mesh			mesh;
+	t_obj_parser	parser;
 
-    t_mesh mesh = {.spectrum_idx = spectrum_idx};
-
-	t_obj_parser parser;
-
-	if (!parse_obj(path, &parser)) {
-		ft_eprintf("Failed to parse the obj file: %s\n", path);
+	mesh = (t_mesh){.spectrum_idx = s.spectrum_idx};
+	if (!parse_obj(s.path, &parser)) {
+		ft_eprintf("Failed to parse the obj file: %s\n", s.path);
 		return (false);
 	}
-
 	mesh.vertex_idxs = parser.faces;
 	mesh.vertices = parser.vertices;
-
-	// printf("faces: %zu, buff: %p\n", parser.faces.len, parser.faces.buff);
-	// printf("vertices %zu, buff: %p\n", parser.vertices.len, parser.vertices.buff);
-
 	t_fvec3 sum = {0};
-	// printf("vertecies: \n");
 	for (size_t i = 0; i < mesh.vertices.len; i++) {
 		t_fvec3 vert;
 		vert = mesh.vertices.buff[i];
 		t_fvec3 tmp;
 		tmp = vert;
-		if (forward_z) {
+		if (s.forward_z) {
 			tmp.z = vert.y;
 			tmp.y = vert.z;
 		}
@@ -54,9 +49,9 @@ bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec
 		t_fvec3 vert;
 		vert = mesh.vertices.buff[i];
 		vert = fvec3_sub(vert, avg);
-		vert = vec3_rotate_yaw_pitch(vert, rotation.x, rotation.y);
-		vert = fvec3_scale(vert, scale);
-		vert = fvec3_add(vert, pos);
+		vert = vec3_rotate_yaw_pitch(vert, s.rotation.x, s.rotation.y);
+		vert = fvec3_scale(vert, s.scale);
+		vert = fvec3_add(vert, s.pos);
 		mesh.vertices.buff[i] = vert;
 	}
 	vec_mesh_push(&state->meshes, mesh);

@@ -413,41 +413,38 @@ bool	process_plane(t_rt_consumer_tl *tl)
 bool process_obj(t_rt_consumer_tl *tl)
 {
 	t_rt_node	nd;
+	t_obj_spec	s;
 	char		*path;
+	int			ret;
 
+	s = (t_obj_spec){.forward_z = true};
 	if (get_tl_typed(tl, "path", RT_ND_STRING, &nd) != 1)
 		return (false);
 	path = get_string(tl->consumer, nd.token).buff;
 	if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
-	t_fvec3 pos = get_fvec3(nd.token);
-
+	s.pos = get_fvec3(nd.token);
 	if (get_tl_typed(tl, "scale", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
-	float scale = get_float(nd.token);
-
-	t_fvec2 rotation = {0};
-	int ret = get_tl_typed(tl, "rotation_yaw_pitch", RT_ND_TUPLE_F2, &nd);
+	s.scale = get_float(nd.token);
+	ret = get_tl_typed(tl, "rotation_yaw_pitch", RT_ND_TUPLE_F2, &nd);
 	if (ret == 2)
 		return (false);
 	if (ret == 1)
-		rotation = get_fvec2(nd.token);
-
+		s.rotation = get_fvec2(nd.token);
 	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
-
-	bool forward_z = true;
 	ret = get_tl_typed(tl, "forward_z", RT_ND_BOOL, &nd);
 	if (ret != 0)
 	{
 		if (ret != 1)
 			return (false);
-		forward_z = get_bool(nd.token);
+		s.forward_z = get_bool(nd.token);
 	}
 
-	int color_idx = push_color(nd.token, tl->state, true);
-	if (!load_triangles(tl->state, path, pos, scale, rotation, color_idx, forward_z)) {
+	s.spectrum_idx = push_color(nd.token, tl->state, true);
+	if (!load_triangles(tl->state, s)) {
 		free(path);
 		tl->consumer->last_key = tl->kv->k;
 		tl->consumer->err = RT_ERR_FAILED_PROCESSING_KEY;
