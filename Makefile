@@ -1,5 +1,5 @@
 NAME := miniRT
-CC := cc
+CC := clang
 
 SRCS_DIR := src
 OUT_DIR := build
@@ -14,7 +14,7 @@ endif
 
 TAG_FILE := $(BUILD_DIR)/profile_$(PROFILE)
 NAME_PROFILE := $(BUILD_DIR)/$(PROFILE)_$(NAME)
-PROFILES := opt debug debug_mem debug_mem_sanitize
+PROFILES := opt debug debug_mem debug_mem_sanitize debug_mem_sanitize_mem
 
 CFLAGS := -fPIE -MMD -fPIE -Wall -Wextra -Wmaybe-uninitialized -Wmissing-field-initializers --std=c99 -pedantic -g3 $(FLAGS)
 
@@ -55,9 +55,16 @@ endif
 
 ifeq ($(PROFILE),debug_mem_sanitize)
 	ifeq ($(UNAME_S),Darwin)
-		CFLAGS += -DDEBUG_ALLOC -fsanitize=address
+		CFLAGS += -DDEBUG_ALLOC -fsanitize=address,undefined
 	else
 		CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak,undefined
+	endif
+endif
+ifeq ($(PROFILE),debug_mem_sanitize_mem)
+	ifeq ($(UNAME_S),Darwin)
+		CFLAGS += -DDEBUG_ALLOC -fsanitize-recover=all -fsanitize=undefined,memory -fsanitize-memory-track-origins -fPIE -fno-omit-frame-pointer
+	else
+		CFLAGS += -DDEBUG_ALLOC -fsanitize-recover=all -fsanitize=undefined,memory -fsanitize-memory-track-origins -fPIE -fno-omit-frame-pointer
 	endif
 endif
 
@@ -89,7 +96,7 @@ ${TAG_FILE}:
 	touch ${TAG_FILE}
 
 $(LIBFT): FORCE
-	$(MAKE) -j -C ${LIBFT_DIR}
+	CC=${CC} $(MAKE) -j -C ${LIBFT_DIR}
 
 $(LIBMLX):
 	mkdir -p ${MLX_DIR}

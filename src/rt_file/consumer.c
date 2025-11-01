@@ -439,12 +439,10 @@ bool process_obj_opts(t_rt_consumer_tl *tl, t_obj_spec *s)
 	return (true);
 }
 
-
 bool	process_obj(t_rt_consumer_tl *tl)
 {
 	t_rt_node	nd;
 	t_obj_spec	s;
-	int			ret;
 
 	s = (t_obj_spec){.forward_z = true};
 	if (!process_obj_opts(tl, &s))

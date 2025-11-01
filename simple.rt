@@ -1,9 +1,8 @@
 C: {
 	position: 0,0,0
-	fov: 70
-	direction: 1,1,1
+	fov: 90
+	direction: 0,1,1
 }
-
 
 sp: {
 	position: -20,-13,30
@@ -24,9 +23,20 @@ sp: {
 #}
 
 obj: {
-	position: 0,0,0
+	position: 0,0,20
 	scale: 10
 	path: "objs/sponza2/sponza.obj"
+	rotation_yaw_pitch: 0,0
+	color: 255,50,255
+}
+
+
+obj: {
+	position: 0,0,20
+	scale: 10
+	path: "objs/sponza22/sponza.obj"
+	rotation_pitch_yaw: 0,0
+	color: 255,50,255
 }
 
 # obj: {

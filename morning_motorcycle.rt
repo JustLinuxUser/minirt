@@ -41,8 +41,6 @@ distant: {
 # 	brightness: 5000
 # }
 
-
-
 obj: {
 	position: -1,49,4
 	scale: 10
