@@ -1,0 +1,71 @@
+C: {
+	position: 0,0,10
+	fov: 90
+	direction: 0,1,0
+
+	window_size: 900,500
+	samples: 1,1
+
+	# window_size: 1920,1080
+	#samples: 10,10
+	output_ppm: "moto.ppm"
+	exit_after_render: true
+	rndr_chunk_size: 10000
+}
+
+A 0.02 3,236,252
+Sky 0.05 200,236,252
+
+distant: {
+	brightness: 8,
+	color: 255,0,0
+	direction: -10,-1,3
+}
+
+ distant_blackbody: {
+ 	brightness: 1,
+ 	temperature: 3000,
+ 	direction: -10,-1,3
+ }
+
+# l: {
+# 	position: 0,0,0
+# 	color: 255,255,255
+# 	brightness: 1000
+# }
+#
+
+# blackbody: {
+# 	position: -30,0,30
+# 	temperature: 3000
+# 	brightness: 5000
+# }
+
+
+
+obj: {
+	position: -1,49,4
+	scale: 10
+	path: "objs/vrmovil/model.obj"
+	rotation_yaw_pitch: 0,0
+	color: 255,200,255
+}
+
+# sp: {
+# 	position: -16,49,20
+# 	diameter: 1
+# 	color: 255,255,255
+# }
+#
+l: {
+	position: -20,51,20
+	color: 10,10,255
+	brightness: 20
+}
+
+
+pl: {
+	position: 0,0,-10
+	direction: 0,0,1
+	color: 10,10,10
+}
