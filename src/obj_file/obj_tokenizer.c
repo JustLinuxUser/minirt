@@ -3,223 +3,69 @@
 /*                                                        :::      ::::::::   */
 /*   obj_tokenizer.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mhornero <mhornero@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: mhornero <mhornero@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/07 18:10:19 by mhornero          #+#    #+#             */
-/*   Updated: 2025/09/24 15:53:22 by mhornero         ###   ########.fr       */
+/*   Updated: 2025/11/01 19:44:14 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "obj_tokenizer.h"
 #include "../libft/libft.h"
 
-//CHECK CHARS LEFT
-int chars_left(t_obj_tokenizer* tokenizer)
+int	init_tokenizer(char *filename, t_obj_tokenizer *tokenizer, t_dyn_str *ret)
 {
-    if (tokenizer->curr_idx < tokenizer->str.len)
-        return 1;
-    return 0;
-}
-
-void init_tok(t_obj_token* tok, enum OBJ_TT t, int curr_idx)
-{
-	*tok = (t_obj_token){0};
-    tok->start_idx = curr_idx;
-    tok->t = t;
-    ft_memset(tok->vals, 0, sizeof(tok->vals));
-}
-
-char consume_obj_char(t_obj_tokenizer* tokenizer)
-{
-    char ret = tokenizer->str.buff[tokenizer->curr_idx];
-
-	tokenizer->curr_idx++;
-	return (ret);
-}
-
-char peek_obj_char(t_obj_tokenizer* tokenizer)
-{
-    if (tokenizer->str.len == 0)
+	*ret = (t_dyn_str){0};
+	*tokenizer = (t_obj_tokenizer){0};
+	if (!dyn_str_read_file(filename, ret))
 		return (0);
-    if (!chars_left(tokenizer))
-        return (0);
-	return (tokenizer->str.buff[tokenizer->curr_idx]);
+	tokenizer->str = *ret;
+	return (1);
 }
 
-void tokenize_comment(t_obj_tokenizer* tokenizer)
+void	tokenize_comm_ws_nl(t_obj_tokenizer *tokenizer)
 {
-    t_obj_token comm;
-    init_tok(&comm, OBJ_COMMENT, tokenizer->curr_idx);
-    while (consume_obj_char(tokenizer) != '\n')
-        comm.len++;
-	vec_obj_token_push(&tokenizer->tokens, comm);
-}
-
-bool tokenize_obj_number(t_obj_tokenizer* tokenizer, float *fret, bool *is_int, t_obj_token* tok)
-{
-    int whole_part;
-	int fract_part;
-	int num_fract;
-	int sign;
-
-	ft_assert(ft_strchr("-0123456789", peek_obj_char(tokenizer)) != 0);
-	*is_int = true;
-	whole_part = 0;
-	sign = 1;
-	if (peek_obj_char(tokenizer) == '-') {
-		sign = -1;
+	if (peek_obj_char(tokenizer) == '#')
+		tokenize_comment(tokenizer);
+	else if (peek_obj_char(tokenizer) == '\n'
+		|| peek_obj_char(tokenizer) == '\r')
+		tokenize_newline(tokenizer);
+	else if (peek_obj_char(tokenizer) == ' ')
 		consume_obj_char(tokenizer);
-        tok->len++;
-	}
-	while (ft_strchr("0123456789", peek_obj_char(tokenizer)))
-	{
-		whole_part *= 10;
-		whole_part += consume_obj_char(tokenizer) - '0';
-        tok->len++;
-	}
-	if (peek_obj_char(tokenizer) == '.')
-	{
-		consume_obj_char(tokenizer);
-        tok->len++;
-		*is_int = false;
-	}
-	fract_part = 0;
-	num_fract = 0;
-	while (ft_strchr("0123456789", peek_obj_char(tokenizer)))
-	{
-		fract_part *= 10;
-		fract_part += consume_obj_char(tokenizer) - '0';
-        tok->len++;
-		num_fract++;
-	}
-	*fret = whole_part * sign;
-	*fret += sign * fract_part / powf(10, num_fract);
-	return (true);
 }
 
-bool tokenize_obj_tuple(t_obj_tokenizer* tokenizer)
+void	tokenizer_tuple_error(t_obj_tokenizer *tokenizer)
 {
-    t_obj_token tok;
-    init_tok(&tok, OBJ_I_TUPLE, tokenizer->curr_idx);
-    bool is_int = true;
-    float ret = 0.f;
-
-    while (chars_left(tokenizer) && ft_strchr("-0123456789/", peek_obj_char(tokenizer)) != 0)
-    {
-		if (tok.num_vals >= 3) return false;
-        if (peek_obj_char(tokenizer) == '/'){
-            consume_obj_char(tokenizer);
-            tok.len++;
-		}
-		if (ft_strchr("-0123456789", peek_obj_char(tokenizer))) {
-			if (!tokenize_obj_number(tokenizer, &ret, &is_int, &tok))
-				return (false);
-			tok.parsed_num = ret;
-			tok.vals[tok.num_vals] = ret;
-			if (!is_int)
-			{
-				if (tok.num_vals != 0)
-					return (false);
-				tok.t = OBJ_FLOAT;
-				break;
-			}
-		}
-		tok.num_vals++;
-    }
-	vec_obj_token_push(&tokenizer->tokens, tok);
-    return (true);
-}
-
-bool tokenize_word(t_obj_tokenizer* tokenizer)
-{
-    t_obj_token tok;
-    init_tok(&tok, OBJ_IDENT, tokenizer->curr_idx);
-    while (peek_obj_char(tokenizer) != ' ' && peek_obj_char(tokenizer) != '\n' && chars_left(tokenizer))
-    {
-        tok.len++;
-        consume_obj_char(tokenizer);
-    }
-	vec_obj_token_push(&tokenizer->tokens, tok);
-    return (true);
-}
-
-void tokenize_newline(t_obj_tokenizer* tokenizer)
-{
-    t_obj_token tok;
-    init_tok(&tok, OBJ_NEWLINE, tokenizer->curr_idx);
-	while (peek_obj_char(tokenizer) == '\n' || peek_obj_char(tokenizer) == '\r') {
-		tok.len++;
-		tokenizer->curr_idx++;
-	}
-	vec_obj_token_push(&tokenizer->tokens, tok);
-}
-
-char* obj_type_conversion(unsigned int t)
-{
-    if (t == OBJ_NONE)
-        return ("none");
-    else if (t == OBJ_IDENT)
-        return ("ident");
-    else if (t == OBJ_FLOAT)
-        return ("number");
-    else if (t == OBJ_COMMENT)
-        return ("comment");
-    else if (t == OBJ_WHITESPACE)
-        return ("whitespace");
-    else if (t == OBJ_NEWLINE)
-        return ("newline");
-    else if (t == OBJ_I_TUPLE)
-        return ("tuple");
-    else
-        return ("eof");
+	free(tokenizer->tokens.buff);
+	free(tokenizer->str.buff);
+	*tokenizer = (t_obj_tokenizer){0};
 }
 
 //add token array to function signature
-int tokenize_obj(char* filename, t_obj_tokenizer* tokenizer)
+int	tokenize_obj(char *filename, t_obj_tokenizer *tokenizer)
 {
-    t_dyn_str ret = {0};
+	t_dyn_str	ret;
 
-	*tokenizer = (t_obj_tokenizer){0};
-    if (!dyn_str_read_file(filename, &ret))
-        return 0;
-    tokenizer->str = ret;
-
-    while (chars_left(tokenizer))
-    {
-        if (peek_obj_char(tokenizer) == '#')
-            tokenize_comment(tokenizer);
-        else if (peek_obj_char(tokenizer) == '\n' || peek_obj_char(tokenizer) == '\r')
-            tokenize_newline(tokenizer); 
-        else if (peek_obj_char(tokenizer) == ' ')
-            consume_obj_char(tokenizer);
-        else if (peek_obj_char(tokenizer) == '-' || peek_obj_char(tokenizer) == '/' || ft_strchr("0123456789", peek_obj_char(tokenizer)))
-        {
-            if (!tokenize_obj_tuple(tokenizer))
+	if (!init_tokenizer(filename, tokenizer, &ret))
+		return (0);
+	while (chars_left(tokenizer))
+	{
+		if (peek_obj_char(tokenizer) == '#' || peek_obj_char(tokenizer) == '\n'
+			|| peek_obj_char(tokenizer) == '\r'
+			|| peek_obj_char(tokenizer) == ' ')
+			tokenize_comm_ws_nl(tokenizer);
+		else if (peek_obj_char(tokenizer) == '-'
+			|| peek_obj_char(tokenizer) == '/'
+			|| ft_strchr("0123456789", peek_obj_char(tokenizer)))
+		{
+			if (!tokenize_obj_tuple(tokenizer))
 			{
-				free(tokenizer->tokens.buff);
-				free(tokenizer->str.buff);
-				*tokenizer = (t_obj_tokenizer){0};
-                return (0);
+				tokenizer_tuple_error(tokenizer);
+				return (0);
 			}
-        }
-        else
-            tokenize_word(tokenizer);
-    }
-
-    //PRINT STUFF
-    // printf("num tokens: %d\n", tokenizer->num_tokens);
-    // int i = -1;
-    // while (++i < tokenizer->num_tokens)
-    // {
-    //     printf("[type: %s; %.*s]\n", obj_type_conversion(tokenizer->tokens[i].t), tokenizer->tokens[i].len, tokenizer->str.buff + tokenizer->tokens[i].start_idx);
-    //     if (tokenizer->tokens[i].parsed_num != -99999.f)
-    //        printf("num: %f\n", tokenizer->tokens[i].parsed_num);
-    //     if (tokenizer->tokens[i].vals[0] != 0)
-    //     {
-    //         printf("vals: %d\n", tokenizer->tokens[i].vals[0]); 
-    //         printf("vals: %d\n", tokenizer->tokens[i].vals[1]); 
-    //         printf("vals: %d\n", tokenizer->tokens[i].vals[2]);
-    //     }
-    // }
-    return 1;
+		}
+		else
+			tokenize_word(tokenizer);
+	}
+	return (1);
 }
