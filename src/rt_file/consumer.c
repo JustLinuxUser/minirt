@@ -77,6 +77,15 @@ float get_float(t_rt_token tk) {
 	return (tk.vals_f[0]);
 }
 
+t_dyn_str	get_string(t_rt_consumer *consumer, t_rt_token tk) {
+	t_dyn_str ret;
+
+	ret = (t_dyn_str){0};
+	ft_assert(tk.t == RT_STRING);
+	dyn_str_pushnstr(&ret, tk.start_idx + consumer->parser.tokenizer.file.contents.buff + 1, tk.len - 2);
+	return (ret);
+}
+
 bool get_bool(t_rt_token tk) {
 	ft_assert(tk.t == RT_BOOL);
 	return (tk.vals_f[0] != 0);
@@ -127,23 +136,21 @@ bool process_ambiant(t_rt_consumer_tl* tl) {
 
 bool process_sky(t_rt_consumer_tl* tl) {
     t_rt_node nd;
+	t_light l;
 
     if (get_tl_typed(tl, "lighting_ratio", RT_ND_TUPLE_F1, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, INFINITY))
 		return (false);
-	float scale = get_float(nd.token);
+	l.intensity = get_float(nd.token);
 
     if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
+	l.t = AMBIANT_LIGHT;
 
-	t_fvec3 color = get_fvec3(nd.token);
-	t_fvec3 xyz = rgb_to_xyz((t_8bcolor){color.x, color.y, color.z});
-
-	tl->state->sky_spec = xyz_to_spectrum(xyz, false, 0);
-	for (int i = 0; i < CIE_SAMPLES; i++) {
-		tl->state->sky_spec.samples[i] *= scale;
-	}
+	l.spec_idx = push_color(nd.token, tl->state, false);
+	tl->state->sky_light_idx = tl->state->lights.lights.len;
+	add_light(&tl->state->lights, l);
     return (true);
 }
 
@@ -213,6 +220,13 @@ bool process_camera(t_rt_consumer_tl* tl) {
 		if (ret != 1)
 			return (false);
 		tl->state->rndr.exit_after_render = get_bool(nd.token);
+	}
+
+	ret = get_tl_typed(tl, "output_ppm", RT_ND_STRING, &nd);
+	if (ret != 0) {
+		if (ret != 1)
+			return (false);
+		tl->state->output_path = get_string(tl->consumer, nd.token);
 	}
     return (true);
 }

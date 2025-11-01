@@ -6,13 +6,14 @@
 #include <stdlib.h>
 #include <math.h>
 
-t_fvec3 rand_direction() {
+t_fvec3 rand_direction(uint64_t *rand_state)
+{
     t_fvec3 ret;
 
     while (1) {
-        ret.x = (rand() / (float)RAND_MAX) * 2. - 1.;
-        ret.y = (rand() / (float)RAND_MAX) * 2. - 1.;
-        ret.z = (rand() / (float)RAND_MAX) * 2. - 1.;
+        ret.x = rand_float(rand_state) * 2. - 1.;
+        ret.y = rand_float(rand_state) * 2. - 1.;
+        ret.z = rand_float(rand_state) * 2. - 1.;
         float lensq = fvec3_len_sq(ret);
         if (lensq > FLT_EPSILON && lensq < 1)
             break;
@@ -20,8 +21,8 @@ t_fvec3 rand_direction() {
     return (fvec3_norm(ret));
 }
 
-t_fvec3 rand_halfsphere(t_fvec3 norm) {
-    t_fvec3 ret = rand_direction();
+t_fvec3 rand_halfsphere(t_fvec3 norm, uint64_t *rand_state) {
+    t_fvec3 ret = rand_direction(rand_state);
 
     if (fvec3_dot(ret, norm) < 0) {
         ret = fvec3_invert(ret);

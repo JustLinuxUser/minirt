@@ -22,7 +22,6 @@ typedef struct t_SampledSpectrum {
     float values[NUM_SPECTRUM_SAMPLES];
 } t_SampledSpectrum;
 
-t_SampledSpectrum create_sample_spectrum(float span[NUM_SPECTRUM_SAMPLES]);
 t_SampledSpectrum sampled_spectrum_add(t_SampledSpectrum ret, t_SampledSpectrum to_add);
 t_SampledSpectrum sampled_spectrum_scale(t_SampledSpectrum ret, float scalar);
 

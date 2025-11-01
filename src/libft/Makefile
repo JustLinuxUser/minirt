@@ -1,5 +1,4 @@
 NAME := libft.a
-CC := cc
 
 UNAME_S := $(shell uname -s)
 SOURCES := src/ft_atoi.c        \
@@ -84,6 +83,7 @@ SOURCES +=	dsa/dyn_str.c\
 			dsa/deque_char.c\
 			dsa/deque_char2.c\
 			dsa/prng.c\
+			dsa/xorshift.c\
 			dsa/vec_dyn_str.c\
 			dsa/smoothsort.c\
 			dsa/smoothsort2.c\
@@ -144,7 +144,7 @@ endif
 
 TAG_FILE := $(BUILD_DIR)/profile_$(PROFILE)
 NAME_PROFILE := $(BUILD_DIR)/$(PROFILE)_$(NAME)
-PROFILES := opt debug debug_mem debug_mem_sanitize
+PROFILES := opt debug debug_mem debug_mem_sanitize debug_mem_sanitize_mem
 
 CFLAGS := -MMD -fPIE -Wall -Wextra -Werror --std=c99 -pedantic -g3 $(FLAGS)
 
@@ -165,6 +165,13 @@ ifeq ($(PROFILE),debug_mem_sanitize)
 		CFLAGS += -DDEBUG_ALLOC -fsanitize=address
 	else
 		CFLAGS += -DDEBUG_ALLOC -fsanitize=address,leak,undefined
+	endif
+endif
+ifeq ($(PROFILE),debug_mem_sanitize_mem)
+	ifeq ($(UNAME_S),Darwin)
+		CFLAGS += -DDEBUG_ALLOC -fsanitize-recover=all -fsanitize=undefined,memory -fsanitize-memory-track-origins -fPIE -fno-omit-frame-pointer
+	else
+		CFLAGS += -DDEBUG_ALLOC -fsanitize-recover=all -fsanitize=undefined,memory -fsanitize-memory-track-origins -fPIE -fno-omit-frame-pointer
 	endif
 endif
 

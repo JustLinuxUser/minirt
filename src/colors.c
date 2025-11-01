@@ -1,3 +1,4 @@
+#include "libft/libft.h"
 #include "minirt.h"
 #include <math.h>
 #include "cie.h"
@@ -24,8 +25,10 @@ t_8bcolor ColortoRGB(t_color c) {
 //         return 1.055f * powf(x, 1.0f/2.4f) - 0.055f;
 // }
 
-float random_generator(){
-    return (float)rand()/RAND_MAX;
+float rand_float(uint64_t *rand_state) {
+    // return (float) rand() / RAND_MAX;
+	// return random_uint32((t_prng_state *)rand_state) / (float) UINT32_MAX;
+    return (float) xorshift64(rand_state) / (float)UINT64_MAX;
 }
 
 t_fvec3 SpectrumToXYZ(t_SampledSpectrum s, t_SampledWavelengths lambda)

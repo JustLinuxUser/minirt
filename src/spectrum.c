@@ -17,16 +17,6 @@
 
 /*SAMPLED SPECTRUM*/
 
-t_SampledSpectrum create_sample_spectrum(float span[NUM_SPECTRUM_SAMPLES])
-{
-    t_SampledSpectrum spec;
-    int i = -1;
-    
-    while (++i < NUM_SPECTRUM_SAMPLES)
-        spec.values[i] = span[i];
-    return spec;
-}
-
 t_SampledSpectrum sampled_spectrum_add(t_SampledSpectrum ret, t_SampledSpectrum to_add)
 {
     int i = -1;

@@ -65,3 +65,22 @@ int	dyn_str_idx(t_dyn_str *v, size_t idx)
 	ft_assert(idx < v->len);
 	return (v->buff[idx]);
 }
+
+int		dyn_str_pushnbr(t_dyn_str *v, int nbr)
+{
+	long	n;
+
+	n = nbr;
+	if (n < 0)
+	{
+		if (dyn_str_push(v, '-'))
+			return (1);
+		n = -n;
+	}
+	if (n >= 10)
+		if (dyn_str_pushnbr(v, n / 10))
+			return (1);
+	if (dyn_str_push(v, "0123456789"[n % 10]))
+		return (1);
+	return (0);
+}

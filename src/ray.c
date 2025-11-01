@@ -45,47 +45,71 @@ t_SampledSpectrum get_surface_color(t_state* state, t_SampledWavelengths lambdas
 	return sample_densely_sampled_spectrum(shape_spectrum(state, coll), lambdas);
 }
 
-bool intersect_light(t_state *state, int light_idx, t_ray_isector *isector, float *intensity)
+t_SampledSpectrum sample_sky(t_state *state, t_SampledWavelengths lambdas) {
+	t_SampledSpectrum	spec;
+	t_light l;
+	spec = (t_SampledSpectrum){0};
+
+	l = state->lights.lights.buff[state->sky_light_idx];
+	if (state->sky_light_idx != -1)
+	{
+		spec = sample_densely_sampled_spectrum(state->spectrums.buff + l.spec_idx, lambdas);
+		spec = sampled_spectrum_scale(spec, l.intensity / 10);
+	}
+	return (spec);
+}
+
+t_light sample_effective_light(t_state *state, t_ray_isector *isector, uint64_t *rand_state, t_fvec3 norm)
 {
 	t_light light;
 	t_collision light_coll;
+	int light_idx;
 
 
+	light = (t_light){0};
+	light_idx = sample_alias_table(&state->lights, rand_float(rand_state));
 	if (light_idx == -1)
-		return false;
+		return light;
 	light = state->lights.lights.buff[light_idx]; 
 
 	float light_t = INFINITY;
 
 	t_fvec3 light_dir;
 
-	*intensity = light.intensity / state->lights.pdfs.buff[light_idx];
+	light.intensity = light.intensity / state->lights.pdfs.buff[light_idx];
 	if (light.t == POINT_LIGHT) {
 		light_dir = fvec3_sub(light.position, isector->ray.pos);
 		light_t = sqrtf(fvec3_len_sq(light_dir));
-		*intensity *= 1.0 / light_t * light_t;
+		light.intensity /= light_t * light_t;
 	} else if (light.t == DISTANT_LIGHT) {
-		*intensity /= 10.0;
+		light.intensity /= 10.0;
 		light_dir = light.position;
+	} else if (light.t == AMBIANT_LIGHT) {
+		light.intensity /= 10.0;
+		light.intensity /= 2.0; // because a halfsphere
+		light_dir = rand_halfsphere(norm, rand_state);
 	} else {
 		ft_assert("Unreachable" == 0);
-		return false;
+		return light.t = LIGHT_NONE, light;
 	}
 
 	isector->ray.dir = fvec3_norm(light_dir);
 	isector->t_max = light_t;
 
 	light_coll = collide_bvh(state, *isector);
-	return !light_coll.collided;
+	if (light_coll.collided)
+		light.t = LIGHT_NONE;
+	return light;
 }
 
 t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, 
-										   t_SampledWavelengths lambdas, int iters_left) {
+										   t_SampledWavelengths lambdas, int iters_left, uint64_t *rand_state) {
     t_SampledSpectrum L = {0};
     t_SampledSpectrum beta = {1.f};
 	t_collision coll;
 	t_collision light_coll;
     int i;
+    int iter = -1;
     t_fvec3 p;
     t_fvec3 norm = {0};
 	void *ignored_shape = 0;
@@ -98,6 +122,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
 
     while (iters_left-- > 0)
     {
+		iter++;
         coll = collide_bvh(state, (t_ray_isector){.ray = ray, .t_max = INFINITY, .t_min = 0.01, .ignore_shape = ignored_shape});
 		// if (rand() % 100 == 0) {
 		// 	coll2 = collide_ray_slow(state, (t_ray_isector){.ray = ray, .t_max = INFINITY, .t_min = 0.01, .ignore_shape = ignored_shape});
@@ -109,10 +134,12 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
 	
 		//APPLY BSDF
         if (!coll.collided) {
-			t_SampledSpectrum sky_spec = sample_densely_sampled_spectrum(&state->sky_spec, lambdas);
-			i = -1;
-			while (++i < NUM_SPECTRUM_SAMPLES)
-				L.values[i] += beta.values[i] * sky_spec.values[i];
+			if (iter == 0) {
+				t_SampledSpectrum sky_spec = sample_sky(state, lambdas);
+				i = -1;
+				while (++i < NUM_SPECTRUM_SAMPLES)
+					L.values[i] += beta.values[i] * sky_spec.values[i];
+			}
 			break;
 		}
 
@@ -128,23 +155,19 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
         /*LIGHT THING*/
 
         //LIGHT INFORMATION
-        float lu = random_generator();
-        t_light light;
+        float lu = rand_float(rand_state);
 
 		t_SampledSpectrum color = {0};
 		color = get_surface_color(state, lambdas, coll);
 
 		//SHADOW RAY
 		t_SampledSpectrum light_spec = {0};
-        int index = sample_alias_table(&state->lights, lu);
+		t_ray_isector isector = {.ray = {.pos = p}, .t_min = 0.01, .ignore_shape = ignored_shape};
+        t_light light = sample_effective_light(state, &isector, rand_state, norm);
 
-		if (index != -1) {
-			float intensity;
-			t_ray_isector isector = {.ray = {.pos = p}, .t_min = 0.01, .ignore_shape = ignored_shape};
-			if (intersect_light(state, index, &isector, &intensity)) {
-				float dot = fmax(fvec3_dot(norm, isector.ray.dir), 0);
-				light_spec = sampled_spectrum_scale(sample_densely_sampled_spectrum(&state->spectrums.buff[light.spec_idx], lambdas), intensity * dot);
-			}
+		if (light.t != LIGHT_NONE) {
+			float dot = fmax(fvec3_dot(norm, isector.ray.dir), 0);
+			light_spec = sampled_spectrum_scale(sample_densely_sampled_spectrum(&state->spectrums.buff[light.spec_idx], lambdas), light.intensity * dot);
 		}
 
 		t_SampledSpectrum ambiant_spec = sample_densely_sampled_spectrum(&state->ambiant_light_spec, lambdas);
@@ -157,7 +180,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray,
 		}
 
         /*LAMBERTIAN SURFACE (BASE CASE)*/
-        t_ray new_ray = (t_ray){.pos = p, .dir = rand_halfsphere(norm)};
+        t_ray new_ray = (t_ray){.pos = p, .dir = rand_halfsphere(norm, rand_state)};
         ray = new_ray;
         // ray.pos = p;
         // ray.dir = rand_halfsphere(norm);

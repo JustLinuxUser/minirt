@@ -89,6 +89,7 @@ void print_parser_err(t_rt_parser *parser);
 
 void free_node(t_rt_node nd);
 bool dyn_str_read_file(char* file, t_dyn_str* ret);
+bool dyn_str_write_file(t_dyn_str buff, char *fname);
 void pprint_node(t_rt_parser parser, t_rt_node nd, int indent);
 bool parse_statement(t_rt_parser* parser, t_rt_kv* stmt);
 bool parse_file(t_rt_parser *parser);

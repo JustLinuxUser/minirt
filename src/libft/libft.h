@@ -108,4 +108,5 @@ typedef struct s_prng_state
 
 void		prng_initialize_state(t_prng_state *state, uint32_t seed);
 uint32_t	random_uint32(t_prng_state *state);
+uint64_t	xorshift64(uint64_t *state);
 #endif

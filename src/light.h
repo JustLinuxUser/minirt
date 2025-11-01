@@ -23,16 +23,15 @@ typedef struct {
 #include "libft/generated/vec_alias_bin.h"
 
 enum LIGHT_TYPE {
-    POINT_LIGHT, //PHI = 4 * PI * INTENSITY * SPEC->SAMPLE(LAMBDA)
-    DISTANT_LIGHT
+	LIGHT_NONE,
+    POINT_LIGHT, //TODO: Look into this: PHI = 4 * PI * INTENSITY * SPEC->SAMPLE(LAMBDA)
+    DISTANT_LIGHT,
+    AMBIANT_LIGHT,
 };
 
 typedef struct t_densely_sampled_spectrum {
     float samples[471];
 } t_densely_sampled_spectrum;
-
-extern const t_densely_sampled_spectrum SPECTRUM_ONES;
-extern const t_densely_sampled_spectrum SPECTRUM_ZEROS;
 
 #include "libft/generated/vec_densely_sampled_spectrum.h"
 

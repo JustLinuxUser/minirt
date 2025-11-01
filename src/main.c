@@ -119,6 +119,7 @@ void free_state(t_state *state) {
 		mlx_delete_image(state->mlx, state->mlx_image);
 	if (state->mlx)
 		mlx_terminate(state->mlx);
+	free_zero(&state->output_path.buff);
 }
 
 void render_multithread(t_state* state, int num_threads);
@@ -135,12 +136,14 @@ int main(int argc, char** argv) {
 		.samples_y = 5,
 		.fov = 90,
         .screen_dist = 1,
+		.sky_light_idx = -1,
 		.rndr = {
 			.num_threads = 8,
 			.chunk_size = 1000,
 			.max_reflections = 4,
 			.render_once = false,
 			.exit_after_render = false,
+			.rand_state = 1,
 		}
     };
 

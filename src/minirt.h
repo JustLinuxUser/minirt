@@ -3,6 +3,7 @@
 #include "MLX42/MLX42.h"
 #include "MLX42/include/MLX42/MLX42.h"
 #include "config.h"
+#include "libft/dsa/dyn_str.h"
 #include "mymath.h"
 #include "spectrum.h"
 
@@ -48,6 +49,7 @@ typedef struct {
     int num_pixels;
     uint8_t* thrd_state;
 	int exit_immediatelly;
+	uint64_t prng_state;
 } t_render_task;
 
 enum e_THRD_STATE {
@@ -67,6 +69,9 @@ typedef struct s_renderer_state {
 	int max_reflections;
 	bool render_once;
 	bool exit_after_render;
+
+	uint64_t rand_state;
+	int rand_px;
 } t_renderer_state;
 
 typedef struct s_state {
@@ -84,7 +89,7 @@ typedef struct s_state {
     float cam_yaw;
 
 	t_densely_sampled_spectrum		ambiant_light_spec;
-	t_densely_sampled_spectrum		sky_spec;
+	int		sky_light_idx;
 
     t_lights lights;
 
@@ -106,6 +111,7 @@ typedef struct s_state {
 
 	t_linear_bvh_nd *bvh;
 
+	t_dyn_str		output_path;
 	mlx_t *mlx;
 	mlx_image_t *mlx_image;
 	t_renderer_state rndr;
@@ -134,14 +140,14 @@ uint32_t conv_8bcolor_to_uint32(t_8bcolor c);
 t_fvec3 densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum s);
 t_color clamp_rgb(t_color c);
 
-float random_generator();
+float rand_float(uint64_t *rand_state);
 
 /*END NEW*/
 t_fvec3 perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c
 t_SampledSpectrum cast_reflectable_ray_new(t_state* state, t_ray ray, 
-        t_SampledWavelengths lambdas, int iters_left);
+        t_SampledWavelengths lambdas, int iters_left, uint64_t *rand_state);
 
 // tinyobj.c
 bool load_triangles(t_state* state, char* path, t_fvec3 pos, float scale, t_fvec2 rotation, int spectrum_idx, bool forward_z);
