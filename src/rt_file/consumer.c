@@ -486,40 +486,59 @@ bool	process_cylinder(t_rt_consumer_tl *tl)
 	return (true);
 }
 
-bool	process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv)
+bool	process_kv_items(t_rt_consumer_tl *tl)
 {
 	char	*buff;
 
-	t_rt_consumer_tl tl = {.consumer = consumer, .kv = kv, .state = state};
+	buff = tl->consumer->parser.tokenizer.file.contents.buff;
+	if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "A"))
+		return (process_ambiant(tl));
+	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "Sky"))
+		return (process_sky(tl));
+	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "C"))
+		return (process_camera(tl));
+	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "L"))
+		return (process_light(tl, false));
+	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "l"))
+		return (process_light(tl, false));
+	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len,
+			"blackbody"))
+		return (process_light(tl, true));
+	else
+		return (false);
+}
+
+bool	process_kv_items2(t_rt_consumer_tl *tl)
+{
+	char	*buff;
+
+	buff = tl->consumer->parser.tokenizer.file.contents.buff;
+	if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "distant"))
+		return (process_inf_light(tl, false));
+	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len,
+			"distant_blackbody"))
+		return (process_inf_light(tl, true));
+	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "pl"))
+		return (process_plane(tl));
+	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "sp"))
+		return (process_sphere(tl));
+	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "cy"))
+		return (process_cylinder(tl));
+	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "obj"))
+		return (process_obj(tl));
+	return (false);
+}
+
+bool	process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv)
+{
+	t_rt_consumer_tl	tl;
+
+	tl = (t_rt_consumer_tl){.consumer = consumer, .kv = kv, .state = state};
 	tl.consumer->curr_idx = 0;
-	buff = consumer->parser.tokenizer.file.contents.buff;
 	kv->v.used = true;
 	kv->used = true;
-	if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "A")) {
-		return process_ambiant(&tl);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "Sky")) {
-		return process_sky(&tl);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "C")) {
-		return process_camera(&tl);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "L")) {
-		return process_light(&tl, false);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "l")) {
-		return process_light(&tl, false);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "blackbody")) {
-		return process_light(&tl, true);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "distant")) {
-		return process_inf_light(&tl, false);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "distant_blackbody")) {
-		return process_inf_light(&tl, true);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "pl")) {
-		return process_plane(&tl);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "sp")) {
-		return process_sphere(&tl);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "cy")) {
-		return process_cylinder(&tl);
-	} else if (str_slice_eq_str(buff + kv->k.start_idx, kv->k.len, "obj")) {
-		return process_obj(&tl);
-	} else {
+	if (!process_kv_items(&tl) && !process_kv_items2(&tl))
+	{
 		kv->v.used = false;
 		kv->used = false;
 		consumer->last_key = kv->k;
@@ -529,14 +548,19 @@ bool	process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv)
 	return (true);
 }
 
-bool check_unused(t_rt_consumer *consumer, t_rt_node nd) {
+bool	check_unused(t_rt_consumer *consumer, t_rt_node nd)
+{
+	size_t	i;
+
 	if (!nd.used)
 	{
 		consumer->err = RT_ERR_NODE_NOT_USED;
 		consumer->last_node = nd;
 		return (false);
 	}
-	for (size_t i = 0; i < nd.dict.len; i++) {
+	i = 0;
+	while (i < nd.dict.len)
+	{
 		if (!nd.dict.buff[i].used)
 		{
 			consumer->err = RT_ERR_KEY_NOT_USED;
@@ -545,10 +569,14 @@ bool check_unused(t_rt_consumer *consumer, t_rt_node nd) {
 		}
 		if (!check_unused(consumer, nd.dict.buff[i].v))
 			return (false);
+		i++;
 	}
-	for (size_t i = 0; i < nd.list.len; i++) {
+	i = 0;
+	while (i < nd.list.len)
+	{
 		if (!check_unused(consumer, nd.list.buff[i]))
 			return (false);
+		i++;
 	}
 	return (true);
 }
