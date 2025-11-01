@@ -312,7 +312,7 @@ bool	process_camera(t_rt_consumer_tl *tl)
 	return (true);
 }
 
-bool process_light_color(t_rt_consumer_tl *tl, bool is_blackbody, t_light *l)
+bool	process_light_color(t_rt_consumer_tl *tl, bool is_blackbody, t_light *l)
 {
 	t_rt_node	nd;
 
@@ -374,18 +374,14 @@ bool	process_inf_light(t_rt_consumer_tl* tl, bool is_blackbody)
 bool	process_sphere(t_rt_consumer_tl *tl)
 {
 	t_sphere	sp;
-
 	t_rt_node	nd;
+
 	if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 	sp.p = get_fvec3(nd.token);
-
 	if (get_tl_typed(tl, "diameter", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
-
 	sp.r = get_float(nd.token);
-
-
 	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
@@ -394,54 +390,50 @@ bool	process_sphere(t_rt_consumer_tl *tl)
 	return (true);
 }
 
-bool process_plane(t_rt_consumer_tl* tl) {
-    t_rt_node nd;
-	t_plane pl = {0};
+bool	process_plane(t_rt_consumer_tl *tl)
+{
+	t_rt_node	nd;
+	t_plane		pl;
 
-    if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
+	pl = (t_plane){0};
+	if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
-
 	pl.pos = get_fvec3(nd.token);
-
-    if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
+	if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
-
 	pl.dir = fvec3_norm(get_fvec3(nd.token));
-
-    if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
+	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
-
 	pl.spectrum_idx = push_color(nd.token, tl->state, true);
 	vec_plane_push(&tl->state->planes, pl);
-    return (true);
+	return (true);
 }
 
-bool process_obj(t_rt_consumer_tl* tl) {
-    t_rt_node nd;
+bool process_obj(t_rt_consumer_tl *tl)
+{
+	t_rt_node	nd;
+	char		*path;
 
-    if (get_tl_typed(tl, "path", RT_ND_STRING, &nd) != 1)
+	if (get_tl_typed(tl, "path", RT_ND_STRING, &nd) != 1)
 		return (false);
-
-	char *path = ft_strndup(tl->consumer->parser.tokenizer.file.contents.buff + nd.token.start_idx + 1, nd.token.len - 2);
-
-    if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
+	path = get_string(tl->consumer, nd.token).buff;
+	if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
-
 	t_fvec3 pos = get_fvec3(nd.token);
 
-    if (get_tl_typed(tl, "scale", RT_ND_TUPLE_F1, &nd) != 1)
+	if (get_tl_typed(tl, "scale", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
 	float scale = get_float(nd.token);
 
 	t_fvec2 rotation = {0};
 	int ret = get_tl_typed(tl, "rotation_yaw_pitch", RT_ND_TUPLE_F2, &nd);
-    if (ret == 2)
+	if (ret == 2)
 		return (false);
 	if (ret == 1)
 		rotation = get_fvec2(nd.token);
 
-    if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
+	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
 
@@ -463,7 +455,7 @@ bool process_obj(t_rt_consumer_tl* tl) {
 	}
 	free(path);
 
-    return (true);
+	return (true);
 }
 
 bool process_cylinder(t_rt_consumer_tl* tl) {
