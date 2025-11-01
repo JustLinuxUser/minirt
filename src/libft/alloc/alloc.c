@@ -94,7 +94,11 @@ void	*__bump_alloc_aligned(t_bump_allocator *alloc, size_t size,
 		if (bump_add_arena(alloc,
 				ft_max(alloc->arena_size, size + (alignment & ~(16 - 1)))))
 			return (0);
-		ft_assert(try_alloc_arena(alloc->last, size, alignment, &ret));
+		if (!try_alloc_arena(alloc->last, size, alignment, &ret))
+		{
+			ft_assert("Unreachable" == 0);
+			return 0;
+		}
 		return (ret);
 	}
 	return (ret);
