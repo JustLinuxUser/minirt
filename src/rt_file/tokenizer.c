@@ -1,9 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   tokenizer.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/01 19:29:40 by anddokhn          #+#    #+#             */
+/*   Updated: 2025/11/01 19:29:40 by anddokhn         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "rt_tokenizer.h"
 #include <math.h>
 #include <stdbool.h>
 #include "../libft/libft.h"
 
-char	consume_char(t_rt_tokenizer *tokenizer) {
+char	consume_char(t_rt_tokenizer *tokenizer)
+{
 	char ret = tokenizer->file.contents.buff[tokenizer->i];
 
 	ft_assert(ret);
@@ -11,29 +24,35 @@ char	consume_char(t_rt_tokenizer *tokenizer) {
 	return (ret);
 }
 
-char peek_char(t_rt_tokenizer *tokenizer) {
+char	peek_char(t_rt_tokenizer *tokenizer)
+{
 	if (tokenizer->file.contents.len == 0)
 		return (0);
 	return (tokenizer->file.contents.buff[tokenizer->i]);
 }
 
-void skip_whitespace(t_rt_tokenizer *tokenizer) {
-	char c;
+void	skip_whitespace(t_rt_tokenizer *tokenizer)
+{
+	char	c;
 
-	while (1) {
+	while (1)
+	{
 		c = peek_char(tokenizer);
 		if (c != ' ' && c != '\t' && c != '\n')
-			break;
+			break ;
 		consume_char(tokenizer);
 	}
 }
 
-void	skip_comment(t_rt_tokenizer *tokenizer) {
+void	skip_comment(t_rt_tokenizer *tokenizer)
+{
 	ft_assert(consume_char(tokenizer) == '#');
 	while (peek_char(tokenizer) != '\n')
 		consume_char(tokenizer);
 }
-void skip_whitespace_and_comments(t_rt_tokenizer *tokenizer) {
+
+void	skip_whitespace_and_comments(t_rt_tokenizer *tokenizer)
+{
 	skip_whitespace(tokenizer);
 	while (peek_char(tokenizer) == '#')
 	{
@@ -42,26 +61,28 @@ void skip_whitespace_and_comments(t_rt_tokenizer *tokenizer) {
 	}
 }
 
-void	tokenize_ident_or_bool(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
+void	tokenize_ident_or_bool(t_rt_tokenizer *tokenizer, t_rt_token *ret)
+{
 	ft_assert(ft_isalpha(peek_char(tokenizer)));
 	while (ft_isalpha(peek_char(tokenizer)) || peek_char(tokenizer) == '_')
 		consume_char(tokenizer);
 	ret->t = RT_IDENT;
 	if (str_slice_eq_str(tokenizer->file.contents.buff + ret->start_idx,
-		tokenizer->i - ret->start_idx, "true"))
+			tokenizer->i - ret->start_idx, "true"))
 	{
 		ret->vals_f[0] = 1;
 		ret->t = RT_BOOL;
 	}
 	if (str_slice_eq_str(tokenizer->file.contents.buff + ret->start_idx,
-		tokenizer->i - ret->start_idx, "false"))
+			tokenizer->i - ret->start_idx, "false"))
 	{
 		ret->vals_f[0] = 0;
 		ret->t = RT_BOOL;
 	}
 }
 
-void tokenize_op(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
+void	tokenize_op(t_rt_tokenizer *tokenizer, t_rt_token *ret)
+{
 	ret->start_idx = tokenizer->i;
 	if (peek_char(tokenizer) == '[')
 		ret->t = RT_LBRACKET;
@@ -78,16 +99,18 @@ void tokenize_op(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 	consume_char(tokenizer);
 }
 
-bool tokenize_number(t_rt_tokenizer *tokenizer, float *fret, bool *is_int) {
-	int whole_part;
-	int fract_part;
-	int num_fract;
-	int sign;
+bool	tokenize_number(t_rt_tokenizer *tokenizer, float *fret, bool *is_int)
+{
+	int	whole_part;
+	int	fract_part;
+	int	num_fract;
+	int	sign;
 
 	*is_int = true;
 	whole_part = 0;
 	sign = 1;
-	if (peek_char(tokenizer) == '-') {
+	if (peek_char(tokenizer) == '-')
+	{
 		sign = -1;
 		consume_char(tokenizer);
 	}
@@ -119,16 +142,18 @@ bool tokenize_number(t_rt_tokenizer *tokenizer, float *fret, bool *is_int) {
 	return (true);
 }
 
-bool tokenize_tuple(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
+bool	tokenize_tuple(t_rt_tokenizer *tokenizer, t_rt_token *ret)
+{
 	bool	is_int;
 
 	ret->is_int = 1;
 	ret->t = RT_TUPLE;
 	ret->tuple_len = 0;
-
 	ft_assert(ft_strchr("-0123456789", peek_char(tokenizer)) != 0);
-	while (ft_strchr("\t\n ", peek_char(tokenizer)) == 0) {
-		if (!tokenize_number(tokenizer, ret->vals_f + ret->tuple_len, &is_int)) {
+	while (ft_strchr("\t\n ", peek_char(tokenizer)) == 0)
+	{
+		if (!tokenize_number(tokenizer, ret->vals_f + ret->tuple_len, &is_int))
+		{
 			return (false);
 		}
 		ret->is_int = ret->is_int && is_int;
@@ -146,7 +171,8 @@ bool tokenize_tuple(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 	return (true);
 }
 
-bool	tokenize_string(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
+bool	tokenize_string(t_rt_tokenizer *tokenizer, t_rt_token *ret)
+{
 	ft_assert(consume_char(tokenizer) == '"');
 	ret->t = RT_STRING;
 	while (peek_char(tokenizer)
@@ -162,8 +188,8 @@ bool	tokenize_string(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 	return (true);
 }
 
-
-bool next_token(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
+bool	next_token(t_rt_tokenizer *tokenizer, t_rt_token *ret)
+{
 	skip_whitespace_and_comments(tokenizer);
 	ret->start_idx = tokenizer->i;
 	tokenizer->err_ref = tokenizer->i;
@@ -171,23 +197,25 @@ bool next_token(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 		tokenize_ident_or_bool(tokenizer, ret);
 	else if (ft_strchr("[]{}:", peek_char(tokenizer)))
 		tokenize_op(tokenizer, ret);
-	else if (ft_strchr("-0123456789", peek_char(tokenizer))) {
+	else if (ft_strchr("-0123456789", peek_char(tokenizer)))
+	{
 		if (!tokenize_tuple(tokenizer, ret))
 			return (false);
-	} else if (peek_char(tokenizer) == '"') {
+	}
+	else if (peek_char(tokenizer) == '"')
+	{
 		if (!tokenize_string(tokenizer, ret))
 			return (false);
-	} else if (peek_char(tokenizer) == 0) {
-		ret->t = RT_EOF;
-	} else {
-		tokenizer->err = RT_ERR_UNKNOWN_CHAR;
-		return false;
 	}
+	else if (peek_char(tokenizer) == 0)
+		ret->t = RT_EOF;
+	else
+		return (tokenizer->err = RT_ERR_UNKNOWN_CHAR, false);
 	ret->len = tokenizer->i - ret->start_idx;
-	return true;
+	return (true);
 }
 
-bool consume_token(t_rt_tokenizer *tokenizer, t_rt_token *ret)
+bool	consume_token(t_rt_tokenizer *tokenizer, t_rt_token *ret)
 {
 	if (tokenizer->has_token)
 	{
@@ -202,7 +230,7 @@ bool consume_token(t_rt_tokenizer *tokenizer, t_rt_token *ret)
 	return (false);
 }
 
-t_rt_token consume_token_panic(t_rt_tokenizer *tokenizer)
+t_rt_token	consume_token_panic(t_rt_tokenizer *tokenizer)
 {
 	t_rt_token	ret;
 
@@ -210,7 +238,8 @@ t_rt_token consume_token_panic(t_rt_tokenizer *tokenizer)
 	return (ret);
 }
 
-bool peek_token(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
+bool	peek_token(t_rt_tokenizer *tokenizer, t_rt_token *ret)
+{
 	if (tokenizer->err != RT_ERR_NONE)
 		return (RT_NONE);
 	if (tokenizer->has_token)
@@ -227,7 +256,7 @@ bool peek_token(t_rt_tokenizer *tokenizer, t_rt_token *ret) {
 	return (false);
 }
 
-enum RT_TT peek_token_type(t_rt_tokenizer *tokenizer)
+enum e_RT_TT	peek_token_type(t_rt_tokenizer *tokenizer)
 {
 	if (tokenizer->err != RT_ERR_NONE)
 		return (RT_NONE);

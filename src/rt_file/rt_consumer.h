@@ -23,11 +23,11 @@ typedef struct t_rt_consumer
 	int					curr_idx;
 
 	// error info
-	enum RT_ERR_TYPE	err;
+	enum e_RT_ERR_TYPE	err;
 	t_rt_node			last_node;
 	t_rt_token			last_key;
 
-	enum RT_NODE_TYPE	expected;
+	enum e_RT_NODE_TYPE	expected;
 	float				range_start;
 	float				range_end;
 

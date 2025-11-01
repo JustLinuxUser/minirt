@@ -2,22 +2,20 @@
 #include <stdio.h>
 #include "../libft/libft.h"
 
-bool is_tuple(enum RT_NODE_TYPE t) {
-	switch (t) {
-        case RT_ND_TUPLE_F1:
-        case RT_ND_TUPLE_F2:
-        case RT_ND_TUPLE_F3:
-        case RT_ND_TUPLE_I1:
-        case RT_ND_TUPLE_I2:
-        case RT_ND_TUPLE_I3:
-			return (true);
-		default:
-			return (false);
-	}
+bool	is_tuple(enum e_RT_NODE_TYPE t)
+{
+	if (t == RT_ND_TUPLE_F1
+		|| t == RT_ND_TUPLE_F2
+		|| t == RT_ND_TUPLE_F3
+		|| t == RT_ND_TUPLE_I1
+		|| t == RT_ND_TUPLE_I2
+		|| t == RT_ND_TUPLE_I3)
+		return (true);
 	return (false);
 }
 
-void pprint_node(t_rt_parser parser, t_rt_node nd, int indent) {
+void	pprint_node(t_rt_parser parser, t_rt_node nd, int indent)
+{
 	for (int i = 0; i < indent; i++) {
 		ft_printf("    ");
 	}
@@ -55,4 +53,3 @@ void pprint_node(t_rt_parser parser, t_rt_node nd, int indent) {
 	if (nd.t == RT_ND_DICT)
 		ft_printf("}\n");
 }
-

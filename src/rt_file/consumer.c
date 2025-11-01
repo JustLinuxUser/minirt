@@ -24,7 +24,7 @@
 // 2 diff type
 int	get_tl_typed(t_rt_consumer_tl *tl,
 				char *name,
-				enum RT_NODE_TYPE t,
+				enum e_RT_NODE_TYPE t,
 				t_rt_node *ret)
 {
 	t_rt_kv	*kv;

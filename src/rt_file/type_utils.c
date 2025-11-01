@@ -1,21 +1,21 @@
 #include "rt_parser.h"
 #include "../libft/libft.h"
 
-enum RT_NODE_TYPE effective_type(enum RT_NODE_TYPE target,
-                                 enum RT_NODE_TYPE got) {
+enum e_RT_NODE_TYPE effective_type(enum e_RT_NODE_TYPE target,
+                                 enum e_RT_NODE_TYPE got) {
     if (target >= RT_ND_TUPLE_F1 && target <= RT_ND_TUPLE_F3 &&
         got >= RT_ND_TUPLE_I1 && got <= RT_ND_TUPLE_I3)
         return ((RT_ND_TUPLE_F1 - RT_ND_TUPLE_I1) + got);
     return (got);
 }
 
-bool rt_type_cmp(enum RT_NODE_TYPE target, enum RT_NODE_TYPE got) {
+bool rt_type_cmp(enum e_RT_NODE_TYPE target, enum e_RT_NODE_TYPE got) {
     if (effective_type(target, got) == target)
         return (true);
     return (false);
 }
 
-char* type_to_str(enum RT_NODE_TYPE t)
+char* type_to_str(enum e_RT_NODE_TYPE t)
 {
     switch (t) {
         case RT_NONE:

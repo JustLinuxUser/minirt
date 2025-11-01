@@ -76,7 +76,7 @@ bool dyn_str_write_file(t_dyn_str buff, char *fname)
 	return (true);
 }
 
-char* token_name(enum RT_TT tt) {
+char* token_name(enum e_RT_TT tt) {
     switch (tt) {
         case RT_NONE:
             return "RT_NONE";
