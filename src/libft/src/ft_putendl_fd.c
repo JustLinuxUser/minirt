@@ -6,7 +6,7 @@
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 17:49:43 by anddokhn          #+#    #+#             */
-/*   Updated: 2024/09/18 17:49:49 by anddokhn         ###   ########.fr       */
+/*   Updated: 2025/11/01 17:03:42 by anddokhn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,10 @@ void	ft_putendl_fd(char *s, int fd)
 	i = 0;
 	while (s[i])
 	{
-		write(fd, s + i, 1);
+		if (write(fd, s + i, 1) < 0)
+			return ;
 		i++;
 	}
-	write(fd, "\n", 1);
+	if (write(fd, "\n", 1))
+		return;
 }

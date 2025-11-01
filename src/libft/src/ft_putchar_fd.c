@@ -6,7 +6,7 @@
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 17:49:39 by anddokhn          #+#    #+#             */
-/*   Updated: 2024/09/18 17:49:41 by anddokhn         ###   ########.fr       */
+/*   Updated: 2025/11/01 17:03:14 by anddokhn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,5 +14,6 @@
 
 void	ft_putchar_fd(char c, int fd)
 {
-	write(fd, &c, 1);
+	if (write(fd, &c, 1) < 0)
+		return ;
 }

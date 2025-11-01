@@ -6,7 +6,7 @@
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/27 12:16:43 by anddokhn          #+#    #+#             */
-/*   Updated: 2024/10/22 04:07:07 by anddokhn         ###   ########.fr       */
+/*   Updated: 2025/11/01 17:04:56 by anddokhn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,8 @@ void	writer_char(t_buffer *buffer, char c)
 		buffer->buff[buffer->len] = 0;
 	}
 	else if (!buffer->no_write)
-		write(buffer->out_fd, &c, 1);
+		if (write(buffer->out_fd, &c, 1))
+			return ;
 }
 
 void	writer_padn(t_buffer *buff, char padding, int n)

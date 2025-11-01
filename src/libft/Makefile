@@ -1,6 +1,9 @@
 NAME := libft.a
 
 UNAME_S := $(shell uname -s)
+SHELL := bash
+
+CC := cc
 SOURCES := src/ft_atoi.c        \
 		   src/ft_checked_atoi.c\
 		   src/ft_bzero.c       \
@@ -149,7 +152,7 @@ PROFILES := opt debug debug_mem debug_mem_sanitize debug_mem_sanitize_mem
 CFLAGS := -MMD -fPIE -Wall -Wextra -Werror --std=c99 -pedantic -g3 $(FLAGS)
 
 ifeq ($(PROFILE),opt)
-	CFLAGS += -O3 -flto
+	CFLAGS += -O3
 endif
 
 ifeq ($(PROFILE),debug)
@@ -200,8 +203,9 @@ all: $(NAME)
 $(NAME): $(NAME_PROFILE) ${TAG_FILE}
 	cp $(NAME_PROFILE) $(NAME)
 
+generate: $(GEN_HEADERS)
 
-$(NAME_PROFILE): $(OBJS) $(GEN_HEADERS)
+$(NAME_PROFILE): $(OBJS)
 	ar -rsc $(NAME_PROFILE) $(OBJS)
 
 ${CODEGEN_DIR}/vec_%.h: templates/vec_template.hpp Makefile
@@ -234,9 +238,9 @@ ${CODEGEN_DIR}/vec_%.h: templates/vec_template.hpp Makefile
 	&& cd templates/ && expand -i $(abspath $<) |\
 		gcc -E - -DAUTOGENERATING -DGEN_TYPE=$(GEN_TYPES_$(@:$(CODEGEN_DIR)/vec_%.h=%)) -DGEN_SHORT_TYPE=$(@:$(CODEGEN_DIR)/vec_%.h=%) |\
 		unexpand | sed '1,/START/d' |\
-		sed "s/\s*SIZE_T_TAB\s*/$$size_t_tabs/g" | \
-		sed "s/\s*TYPE_TAB\s*/\t\t/g" | \
-		sed "s/\s*TAB\s*/\t/g" >> $(abspath $@)
+		sed -E "s/\s*SIZE_T_TAB\s*/$$size_t_tabs/g" | \
+		sed -E "s/\s*TYPE_TAB\s*/\t\t/g" | \
+		sed -E "s/\s*TAB\s*/\t/g" >> $(abspath $@)
 
 	echo '#endif' >> $(abspath $@)
 	cat $(abspath $@)
@@ -254,7 +258,6 @@ $(BUILD_DIR)/$(PROFILE)/%.o: %.c Makefile
 
 clean:
 	rm -rf $(BUILD_DIR)
-	rm -rf $(CODEGEN_DIR)
 
 fclean: clean
 	rm -rf $(NAME)
@@ -262,5 +265,5 @@ fclean: clean
 re::fclean
 re::all
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re generate
 -include $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.d)

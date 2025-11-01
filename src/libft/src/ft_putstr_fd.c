@@ -6,7 +6,7 @@
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/18 17:53:31 by anddokhn          #+#    #+#             */
-/*   Updated: 2024/09/18 17:53:36 by anddokhn         ###   ########.fr       */
+/*   Updated: 2025/11/01 17:02:54 by anddokhn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,8 @@ void	ft_putstr_fd(char *s, int fd)
 	i = 0;
 	while (s[i])
 	{
-		write(fd, s + i, 1);
+		if (write(fd, s + i, 1) < 0)
+			return ;
 		i++;
 	}
 }

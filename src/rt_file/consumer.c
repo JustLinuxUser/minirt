@@ -6,7 +6,7 @@
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/01 12:44:16 by anddokhn          #+#    #+#             */
-/*   Updated: 2025/11/01 12:44:16 by anddokhn         ###   ########.fr       */
+/*   Updated: 2025/11/01 17:17:29 by anddokhn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,6 +108,7 @@ t_dyn_str	get_string(t_rt_consumer *consumer, t_rt_token tk)
 	ft_assert(tk.t == RT_STRING);
 	dyn_str_pushnstr(&ret, tk.start_idx
 		+ consumer->parser.tokenizer.file.contents.buff + 1, tk.len - 2);
+	ft_printf("buf: %s\n", ret.buff);
 	return (ret);
 }
 
@@ -418,6 +419,7 @@ bool process_obj_opts(t_rt_consumer_tl *tl, t_obj_spec *s)
 	if (get_tl_typed(tl, "path", RT_ND_STRING, &nd) != 1)
 		return (false);
 	s->path = get_string(tl->consumer, nd.token).buff;
+	printf("path: %s\n", s->path);
 	if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
 	s->pos = get_fvec3(nd.token);
@@ -434,6 +436,7 @@ bool process_obj_opts(t_rt_consumer_tl *tl, t_obj_spec *s)
 		return (false);
 	if (ret == 1)
 		s->forward_z = get_bool(nd.token);
+	return (true);
 }
 
 
@@ -444,6 +447,8 @@ bool	process_obj(t_rt_consumer_tl *tl)
 	int			ret;
 
 	s = (t_obj_spec){.forward_z = true};
+	if (!process_obj_opts(tl, &s))
+		return (false);
 	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
@@ -528,7 +533,7 @@ bool	process_kv_items2(t_rt_consumer_tl *tl)
 		return (process_cylinder(tl));
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "obj"))
 		return (process_obj(tl));
-	return (false);
+	return (true);
 }
 
 bool	process_kv(t_rt_consumer* consumer, t_state* state, t_rt_kv *kv)

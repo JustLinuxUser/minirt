@@ -16,7 +16,7 @@ TAG_FILE := $(BUILD_DIR)/profile_$(PROFILE)
 NAME_PROFILE := $(BUILD_DIR)/$(PROFILE)_$(NAME)
 PROFILES := opt debug debug_mem debug_mem_sanitize
 
-CFLAGS := -MMD -fPIE -Wall -Wextra -Wmaybe-uninitialized -Wmissing-field-initializers --std=c99 -pedantic -g3 $(FLAGS)
+CFLAGS := -fPIE -MMD -fPIE -Wall -Wextra -Wmaybe-uninitialized -Wmissing-field-initializers --std=c99 -pedantic -g3 $(FLAGS)
 
 # TODO: Add this before entering the project
 # CFLAGS += -Werror
