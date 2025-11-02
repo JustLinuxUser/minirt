@@ -1,5 +1,5 @@
 NAME := miniRT
-CC := clang
+CC := cc
 
 SRCS_DIR := src
 OUT_DIR := build

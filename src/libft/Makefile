@@ -81,6 +81,7 @@ SOURCES +=	dsa/dyn_str.c\
 			dsa/vec_gen.c\
 			dsa/dyn_str.c\
 			dsa/dyn_str2.c\
+			dsa/dyn_str3.c\
 			dsa/deque_int2.c\
 			dsa/deque_int.c\
 			dsa/deque_char.c\
