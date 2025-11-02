@@ -50,9 +50,9 @@ t_SampledSpectrum sample_sky(t_state *state, t_SampledWavelengths lambdas) {
 	t_light l;
 	spec = (t_SampledSpectrum){0};
 
-	l = state->lights.lights.buff[state->sky_light_idx];
 	if (state->sky_light_idx != -1)
 	{
+		l = state->lights.lights.buff[state->sky_light_idx];
 		spec = sample_densely_sampled_spectrum(state->spectrums.buff + l.spec_idx, lambdas);
 		spec = sampled_spectrum_scale(spec, l.intensity / 10);
 	}

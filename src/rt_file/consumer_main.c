@@ -12,67 +12,73 @@
 
 #include "rt_consumer.h"
 #include "rt_parser.h"
+#include <stdbool.h>
 
-bool	process_kv_items(t_rt_consumer_tl *tl)
+bool	process_kv_items(t_rt_consumer_tl *tl, bool *succ)
 {
 	char	*buff;
 
 	buff = tl->consumer->parser.tokenizer.file.contents.buff;
 	if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "A"))
-		return (process_ambiant(tl));
+		*succ = process_ambiant(tl);
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "Sky"))
-		return (process_sky(tl));
+		*succ = (process_sky(tl));
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "C"))
-		return (process_camera(tl));
+		*succ = (process_camera(tl));
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "L"))
-		return (process_light(tl, false));
+		*succ = (process_light(tl, false));
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "l"))
-		return (process_light(tl, false));
+		*succ = (process_light(tl, false));
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len,
 			"blackbody"))
-		return (process_light(tl, true));
+		*succ = (process_light(tl, true));
 	else
 		return (false);
+	return (true);
 }
 
-bool	process_kv_items2(t_rt_consumer_tl *tl)
+bool	process_kv_items2(t_rt_consumer_tl *tl, bool *succ)
 {
 	char	*buff;
 
 	buff = tl->consumer->parser.tokenizer.file.contents.buff;
 	if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "distant"))
-		return (process_inf_light(tl, false));
+		*succ = (process_inf_light(tl, false));
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len,
 			"distant_blackbody"))
-		return (process_inf_light(tl, true));
+		*succ = (process_inf_light(tl, true));
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "pl"))
-		return (process_plane(tl));
+		*succ = (process_plane(tl));
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "sp"))
-		return (process_sphere(tl));
+		*succ = (process_sphere(tl));
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "cy"))
-		return (process_cylinder(tl));
+		*succ = (process_cylinder(tl));
 	else if (str_slice_eq_str(buff + tl->kv->k.start_idx, tl->kv->k.len, "obj"))
-		return (process_obj(tl));
+		*succ = (process_obj(tl));
+	else
+		return (false);
 	return (true);
 }
 
 bool	process_kv(t_rt_consumer *consumer, t_state *state, t_rt_kv *kv)
 {
 	t_rt_consumer_tl	tl;
+	bool				succ;
 
 	tl = (t_rt_consumer_tl){.consumer = consumer, .kv = kv, .state = state};
 	tl.consumer->curr_idx = 0;
 	kv->v.used = true;
 	kv->used = true;
-	if (!process_kv_items(&tl) && !process_kv_items2(&tl))
-	{
-		kv->v.used = false;
-		kv->used = false;
-		consumer->last_key = kv->k;
-		consumer->err = RT_ERR_KEY_NOT_USED;
-		return (false);
-	}
-	return (true);
+	succ = true;
+	if (process_kv_items(&tl, &succ))
+		return (succ);
+	if (process_kv_items2(&tl, &succ))
+		return (succ);
+	kv->v.used = false;
+	kv->used = false;
+	consumer->last_key = kv->k;
+	consumer->err = RT_ERR_KEY_NOT_USED;
+	return (false);
 }
 
 bool	consume_parsed_nodes(t_rt_parser parser, t_state *state)

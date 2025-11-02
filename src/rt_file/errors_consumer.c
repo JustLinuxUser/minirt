@@ -81,8 +81,8 @@ bool	print_consumer_err_3(t_rt_consumer *consumer)
 		e.len = consumer->last_node.token.len;
 		print_warn_lvl(ANSI_NUM_RED);
 		ft_printf(
-			"Unused node: " ANSI_BOLD ANSI_RED "%.*s\n" ANSI_RESET,
-			consumer->last_node.token.len,
+			ANSI_RESET"Unused node: \"" ANSI_BOLD ANSI_RED "%.*s"
+			ANSI_RESET"\"\n", consumer->last_node.token.len,
 			consumer->parser.tokenizer.file.contents.buff
 			+ consumer->last_node.token.start_idx);
 		print_line_highlight_range_col(e);

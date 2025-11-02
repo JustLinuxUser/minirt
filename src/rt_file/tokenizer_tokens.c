@@ -63,6 +63,7 @@ bool	tokenize_tuple(t_rt_tokenizer *tokenizer, t_rt_token *ret)
 	{
 		if (!tokenize_number(tokenizer, ret->vals_f + ret->tuple_len, &is_int))
 		{
+			tokenizer->err = RT_ERR_INVALID_NUM;
 			return (false);
 		}
 		ret->is_int = ret->is_int && is_int;

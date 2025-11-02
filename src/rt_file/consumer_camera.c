@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "rt_consumer.h"
+#include <stdio.h>
 
 bool	process_camera_renderer_settings(t_rt_consumer_tl *tl)
 {

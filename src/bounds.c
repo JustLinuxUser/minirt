@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   bounds.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/02 10:16:51 by anddokhn          #+#    #+#             */
+/*   Updated: 2025/11/02 10:16:51 by anddokhn         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "bounds.h"
 #include <math.h>
 #include <stdint.h>
@@ -20,34 +32,16 @@ t_bounds3f	bounds_extend_bounds(t_bounds3f b1, t_bounds3f b2)
 	return (b1);
 }
 
-t_fvec3 bounds_centroid(t_bounds3f bounds)
+t_fvec3	bounds_centroid(t_bounds3f bounds)
 {
-	return (fvec3_add(bounds.min, fvec3_scale(fvec3_sub(bounds.max, bounds.min), 0.5)));
+	return (fvec3_add(bounds.min,
+			fvec3_scale(fvec3_sub(bounds.max, bounds.min), 0.5)));
 }
 
-float bounds_surphace_area(t_bounds3f bounds)
+float	bounds_surphace_area(t_bounds3f bounds)
 {
-	t_fvec3 diag = fvec3_sub(bounds.max, bounds.min);
+	t_fvec3	diag;
+
+	diag = fvec3_sub(bounds.max, bounds.min);
 	return (2 * (diag.x * diag.y + diag.x * diag.z + diag.y * diag.z));
-}
-
-uint8_t bounds_max_dim(t_bounds3f bounds)
-{
-	t_fvec3 diag = fvec3_sub(bounds.max, bounds.min);
-	if (diag.x >= diag.y && diag.x >= diag.z)
-		return (0);
-	if (diag.y >= diag.x && diag.y >= diag.z)
-		return (1);
-	if (diag.z >= diag.x && diag.z >= diag.y)
-		return (2);
-	return (2);
-}
-
-t_fvec3 bounds_offset(t_bounds3f bounds, t_fvec3 p)
-{
-	return ((t_fvec3) {
-		.x = fmax((p.x - bounds.min.x) / (bounds.max.x - bounds.min.x), 0),
-		.y = fmax((p.y - bounds.min.y) / (bounds.max.y - bounds.min.y), 0),
-		.z = fmax((p.z - bounds.min.z) / (bounds.max.z - bounds.min.z), 0),
-	});
 }

@@ -56,7 +56,8 @@ bool	tokenize_number(t_rt_tokenizer *tokenizer,
 	int	num_fract;
 	int	sign;
 
-	ft_assert(ft_strchr("-0123456789", peek_char(tokenizer)) != 0);
+	if (ft_strchr("-0123456789", peek_char(tokenizer)) == 0)
+		return (false);
 	*is_int = true;
 	sign = 1;
 	if (peek_char(tokenizer) == '-')

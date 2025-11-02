@@ -81,7 +81,10 @@ void	print_parser_err(t_rt_parser *parser)
 	else if (parser->err == RT_ERR_NEW_SYNTAX_IN_OLD_CONTEXT)
 		ft_printf("Can't use v2 syntax in a v1 list\n");
 	else if (parser->err == RT_ERR_DUPLICATE_KEY)
+	{
 		print_pareser_dup_key_error(parser);
+		return ;
+	}
 	else
 		ft_assert("Should not be here!" == 0);
 	ft_assert(peek_token_type(&parser->tokenizer) != RT_NONE);
