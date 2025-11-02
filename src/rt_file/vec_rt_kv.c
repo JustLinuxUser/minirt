@@ -46,7 +46,6 @@ int	vec_rt_kv_push(t_vec_rt_kv *v, t_rt_kv el)
 	return (0);
 }
 
-
 t_rt_kv	vec_rt_kv_pop(t_vec_rt_kv *v)
 {
 	ft_assert(v->len > 0);
@@ -59,21 +58,24 @@ t_rt_kv	vec_rt_kv_idx(t_vec_rt_kv *v, size_t idx)
 	return (v->buff[idx]);
 }
 
-t_rt_kv *vec_rt_kv_get(t_vec_rt_kv *v, char *buff, t_rt_token t) {
+t_rt_kv	*vec_rt_kv_get(t_vec_rt_kv *v, char *buff, t_rt_token t)
+{
 	size_t	i;
 
 	i = 0;
 	while (i < v->len)
 	{
 		if (t.len && t.len == v->buff[i].k.len
-			&& ft_strncmp(t.start_idx + buff, v->buff[i].k.start_idx + buff, t.len) == 0)
+			&& ft_strncmp(t.start_idx + buff,
+				v->buff[i].k.start_idx + buff, t.len) == 0)
 			return (v->buff + i);
 		i++;
 	}
 	return (0);
 }
 
-t_rt_kv *vec_rt_kv_get_str(t_vec_rt_kv *v, char *buff, char *str) {
+t_rt_kv	*vec_rt_kv_get_str(t_vec_rt_kv *v, char *buff, char *str)
+{
 	size_t	i;
 	int		len;
 

@@ -12,6 +12,7 @@
 
 #ifndef ERRORS_H
 # define ERRORS_H
+# include "rt_consumer.h"
 # include "rt_tokenizer.h"
 
 # define ANSI_NUM_RED 		31
@@ -48,4 +49,13 @@ typedef struct t_error
 
 void	print_warn_lvl(enum e_RT_WARN_LEVEL level);
 void	print_line_highlight_range_col(t_error err);
+
+bool	print_consumer_err_1(t_rt_consumer *consumer);
+bool	print_consumer_err_2(t_rt_consumer *consumer);
+bool	print_consumer_err_3(t_rt_consumer *consumer);
+bool	print_consumer_err_4(t_rt_consumer *consumer);
+bool	print_consumer_err_5(t_rt_consumer *consumer);
+char	*warn_level_to_string(enum e_RT_WARN_LEVEL w);
+int		row_col_to_idx(char *buff, int row, int col);
+void	idx_to_row_col(char *buff, int idx, int *row, int *col);
 #endif

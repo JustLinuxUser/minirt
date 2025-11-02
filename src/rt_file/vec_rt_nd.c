@@ -23,7 +23,7 @@ int	vec_rt_nd_init(t_vec_rt_nd *ret)
 int	vec_rt_nd_double(t_vec_rt_nd *v)
 {
 	t_rt_node	*temp;
-	size_t	i;
+	size_t		i;
 
 	v->cap = v->cap * 2 + 1;
 	temp = malloc(sizeof(t_rt_node) * v->cap);
