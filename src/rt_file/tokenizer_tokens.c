@@ -62,10 +62,7 @@ bool	tokenize_tuple(t_rt_tokenizer *tokenizer, t_rt_token *ret)
 	while (ft_strchr("\t\n ", peek_char(tokenizer)) == 0)
 	{
 		if (!tokenize_number(tokenizer, ret->vals_f + ret->tuple_len, &is_int))
-		{
-			tokenizer->err = RT_ERR_INVALID_NUM;
-			return (false);
-		}
+			return (tokenizer->err = RT_ERR_INVALID_NUM, false);
 		ret->is_int = ret->is_int && is_int;
 		ret->tuple_len++;
 		if (peek_char(tokenizer) == ',')
