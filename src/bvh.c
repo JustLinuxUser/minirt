@@ -30,7 +30,7 @@ typedef struct s_bvh_build_node
 typedef struct bvh_build_state
 {
 	t_state				state;
-	t_vec_shape			*ordered_shapes;
+	t_vec_shape			ordered_shapes;
 	int					total_nodes;
 	t_bump_allocator	allocator;
 }	t_bvh_build_state;
@@ -66,7 +66,7 @@ void	bvh_create_leaf_node(t_bvh_build_state *state,
 	t_shape		shape;
 	t_bounds3f	bounds;
 
-	ret->first_prim_offset = state->ordered_shapes->len;
+	ret->first_prim_offset = state->ordered_shapes.len;
 	i = 0;
 	while (i < prims.len)
 	{
@@ -79,7 +79,7 @@ void	bvh_create_leaf_node(t_bvh_build_state *state,
 			ft_printf("Got different bounds\n");
 		}
 		i++;
-		vec_shape_push(state->ordered_shapes, shape);
+		vec_shape_push(&state->ordered_shapes, shape);
 	}
 	ret->n_primitives = prims.len;
 	state->total_nodes++;
@@ -242,45 +242,48 @@ t_sah_buckets	init_centroid_buckets(t_bvh_prim_slice prims,
 void	sah_bucket_splits(t_sah_buckets *buckets)
 {
 	t_bounds3f	bound_below;
-	int			count_below;
+	int			bl;
 	t_bounds3f	bound_above;
-	int			count_above;
+	int			ab;
 	size_t		i;
 
 	bound_below = BOUNDS_DEGENERATE;
-	count_below = 0;
+	bl = 0;
 	i = 0;
 	while (i < SAH_BUCKETS - 1)
 	{
 		bound_below = bounds_extend_bounds(bound_below, buckets->bounds[i]);
-		count_below += buckets->counts[i];
-		buckets->split_counts[i] += count_below;
-		buckets->split_costs[i++] += bounds_surphace_area(bound_below)
-			* count_below;
+		bl += buckets->counts[i];
+		buckets->split_counts[i] += bl;
+		buckets->split_costs[i++] += bounds_surphace_area(bound_below) * bl;
 	}
 	bound_above = BOUNDS_DEGENERATE;
-	count_above = 0;
+	ab = 0;
 	i = SAH_BUCKETS - 1;
 	while (i > 0)
 	{
 		bound_above = bounds_extend_bounds(bound_above, buckets->bounds[i]);
-		count_above += buckets->counts[i];
-		buckets->split_costs[i-- - 1] += bounds_surphace_area(bound_above)
-			* count_above;
+		ab += buckets->counts[i];
+		buckets->split_costs[i-- - 1] += bounds_surphace_area(bound_above) * ab;
 	}
 }
 
-void	sah_bucket_min_cost(t_sah_buckets *buckets, float *min_cost, int *min_split_idx, t_bvh_build_node *ret_node)
+void	sah_bucket_min_cost(t_sah_buckets *buckets, float *min_cost,
+		int *min_split_idx, t_bvh_build_node *ret_node)
 {
+	int	i;
+
 	*min_cost = INFINITY;
 	*min_split_idx = 0;
-	for (int i = 0; i < SAH_BUCKETS - 1; i++)
+	i = 0;
+	while (i < SAH_BUCKETS - 1)
 	{
 		if (buckets->split_costs[i] < *min_cost)
 		{
 			*min_cost = buckets->split_costs[i];
 			*min_split_idx = i;
 		}
+		i++;
 	}
 	*min_cost = 1.f / 2.f + *min_cost / bounds_surphace_area(ret_node->bounds);
 }
@@ -307,7 +310,7 @@ void	bvh_sah(t_bvh_build_state *state,
 }
 
 t_bvh_build_node	*bvh_build_recursive(t_bvh_build_state* state,
-									  t_bvh_prim_slice slice)
+						t_bvh_prim_slice slice)
 {
 	size_t				i;
 	t_bvh_build_node	*ret;
@@ -334,7 +337,11 @@ void	flatten_bvh(t_linear_bvh_nd *linear,
 			int *offset, t_bvh_build_node *tree)
 {
 	int	curr_offset;
+	int	start_offset;
 
+	start_offset = 0;
+	if (!offset)
+		offset = &start_offset;
 	curr_offset = (*offset)++;
 	linear[curr_offset].bounds = tree->bounds;
 	linear[curr_offset].axis = tree->split_axis;
@@ -349,69 +356,58 @@ void	flatten_bvh(t_linear_bvh_nd *linear,
 	}
 }
 
-void	build_bvh(t_state *state)
+t_bvh_primitive *init_bvh_primitives(t_state *state)
 {
 	t_bvh_primitive	*bvh_primitives;
-	if (state->shapes.len == 0)
-		return ;
-	bvh_primitives =
-		mmalloc(sizeof(*bvh_primitives) * state->shapes.len,
-		  "Allocating a buffer for the bvh primitives");
-	for (size_t i = 0; i < state->shapes.len; i++) {
+	size_t			i;
+
+	bvh_primitives = mmalloc(sizeof(*bvh_primitives) * state->shapes.len,
+			"Allocating a buffer for the bvh primitives");
+	i = 0;
+	while (i < state->shapes.len)
+	{
 		bvh_primitives[i] = (t_bvh_primitive){
 			.bounds = shape_bounds(state, state->shapes.buff[i]),
 			.shape_idx = i,
 		};
+		i++;
 	}
-
-	t_vec_shape	ordered_shapes;
-	vec_shape_init(&ordered_shapes, state->shapes.len);
-	t_bvh_build_state bstate = {.state = *state,
-		.ordered_shapes = &ordered_shapes,
-		.allocator = {.arena_size = 20000000}
-	};
-
-	ft_printf("starting build\n");
-	t_bvh_build_node* tree =
-		bvh_build_recursive(&bstate, (t_bvh_prim_slice){bvh_primitives, state->shapes.len});
-
-	ft_printf("tree built\n");
-	ft_printf("verifying tree\n");
-
-	ft_printf("tree built\n");
-	free(bvh_primitives);
-	// exit(0);
-
-	ft_printf("tree_size: %i\n", bstate.total_nodes);
-
-	t_linear_bvh_nd* linear_bvh =
-		malloc(sizeof(t_linear_bvh_nd) * bstate.total_nodes);
-
-	int offset = 0;
-	flatten_bvh(linear_bvh, &offset, tree);
-	// printf("addler: %u\n", adler32((unsigned char *)linear_bvh, sizeof(t_linear_bvh_nd) * bstate.total_nodes));
-	bump_alloc_free(&bstate.allocator);
-	state->shapes = ordered_shapes;
-	state->bvh = linear_bvh;
+	return (bvh_primitives);
 }
 
-// t_collision intersect_bvh() {
-// 	t_collision ret = {0};
-//
-//
-// }
+void	build_bvh(t_state *state)
+{
+	t_bvh_primitive		*bvh_primitives;
+	t_bvh_build_state	bstate;
+	t_bvh_build_node	*tree;
 
-bool intersect_bounds(t_bounds3f bounds,
-					  t_ray r,
-					  float tMax,
-					  float* hitt0,
-					  float* hitt1) {
+	if (state->shapes.len == 0)
+		return ;
+	bvh_primitives = init_bvh_primitives(state);
+	bstate = (t_bvh_build_state){.state = *state,
+		.ordered_shapes = {0},
+		.allocator = {.arena_size = 20000000}
+	};
+	vec_shape_init(&bstate.ordered_shapes, state->shapes.len);
+	tree = bvh_build_recursive(&bstate,
+			(t_bvh_prim_slice){bvh_primitives, state->shapes.len});
+	free(bvh_primitives);
+	state->bvh = mmalloc(sizeof(t_linear_bvh_nd) * bstate.total_nodes,
+			"Allocating a buffer for the linear bvh");
+	flatten_bvh(state->bvh, 0, tree);
+	bump_alloc_free(&bstate.allocator);
+	state->shapes = bstate.ordered_shapes;
+}
+
+bool	intersect_bounds(t_bounds3f bounds,
+			t_ray r,
+			float tMax,
+			float *hitt0)
+{
 	float t0 = 0, t1 = tMax;
-	for (int i = 0; i < 3; ++i) {
-		// Update interval for ith bounding box slab
-		float invRayDir = 1 / fvec3_idx(r.dir, i);
 
-		// float tNear = (pMin[i] - o[i]) * invRayDir;
+	for (int i = 0; i < 3; ++i) {
+		float invRayDir = 1 / fvec3_idx(r.dir, i);
 		float tNear =
 			(fvec3_idx(bounds.min, i) - fvec3_idx(r.pos, i)) * invRayDir;
 		float tFar =
@@ -430,32 +426,32 @@ bool intersect_bounds(t_bounds3f bounds,
 	}
 	if (hitt0)
 		*hitt0 = t0;
-	if (hitt1)
-		*hitt1 = t1;
-	return true;
+	return (true);
 }
 
 t_collision	collide_bvh(t_state* state, t_ray_isector isect)
 {
-	int stack_offs = 0;
-	int stack[64];
-	stack[0] = 0;
-	t_collision curr_best = {.collided = false};
+	int			stack_offs;
+	int			stack[64];
+	t_collision	curr_best;
 
+	stack_offs = 0;
+	stack[0] = 0;
+	curr_best = (t_collision){.collided = false};
 	t_fvec3 inv_dir = {
 		.x = 1 / isect.ray.dir.x, .y = 1 / isect.ray.dir.y, .z = 1 / isect.ray.dir.z};
 	int dir_is_neg[3] = {(int)(inv_dir.x > 0), (int)(inv_dir.y < 0),
 		(int)(inv_dir.z < 0)};
 
-	while (state->bvh && stack_offs >= 0) {
+	while (state->bvh && stack_offs >= 0)
+	{
 		int curr_nd_idx = stack[stack_offs--];
 		t_linear_bvh_nd curr = state->bvh[curr_nd_idx];
 
 		float hit0;
 
-		if (!intersect_bounds(curr.bounds, isect.ray, isect.t_max, &hit0, 0)) {
+		if (!intersect_bounds(curr.bounds, isect.ray, isect.t_max, &hit0))
 			continue;
-		}
 		if (curr.n_primitives > 0) {
 			for (int i = 0; i < curr.n_primitives; i++) {
 				int prim_offs = curr._union.primitives_offset;
@@ -476,7 +472,6 @@ t_collision	collide_bvh(t_state* state, t_ray_isector isect)
 			}
 		}
 	}
-
 	for (size_t i = 0; i < state->unbounded_shapes.len; i++) {
 		t_collision coll = collide_shape(
 			state, state->unbounded_shapes.buff[i], isect);
