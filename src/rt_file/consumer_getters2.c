@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   consumer_getters2.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
+/*   By: mhornero <mhornero@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/02 08:32:51 by anddokhn          #+#    #+#             */
-/*   Updated: 2025/11/02 08:32:51 by anddokhn         ###   ########.fr       */
+/*   Updated: 2025/11/02 18:41:28 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,6 @@ int	push_blackbody(t_rt_token tk, t_state *state)
 
 	temperature = get_float(tk);
 	vec_densely_sampled_spectrum_push(&state->spectrums,
-		calculateDenselySampledSpectrum(temperature));
+		calculate_densely_sampled_spectrum(temperature));
 	return (state->spectrums.len - 1);
 }

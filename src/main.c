@@ -172,22 +172,22 @@ int main(int argc, char** argv) {
     /*LIGHTS*/
 
     // t_light light1 = {.t = POINT_LIGHT, .intensity = 100.f, .position = {.x = -30, .y = -50}};
-    // light1.spec = calculateDenselySampledSpectrum(9000);
+    // light1.spec = calculate_densely_sampled_spectrum(9000);
     // 
     // t_light light2 = {.t = POINT_LIGHT, .intensity = 1000.f, .position = fvec3_add(state.light_pos, (t_fvec3){.y = 20})};
-    // light2.spec = calculateDenselySampledSpectrum(6200);
+    // light2.spec = calculate_densely_sampled_spectrum(6200);
     //
     // t_light light3 = {.t = POINT_LIGHT, .intensity = 1000.f, .position = fvec3_add(state.light_pos, (t_fvec3){.z = 40, .y = 50})};
-    // light3.spec = calculateDenselySampledSpectrum(3000);
+    // light3.spec = calculate_densely_sampled_spectrum(3000);
     // add_light(&lights, light3);
     //
     // t_light light4 = {.t = POINT_LIGHT, .intensity = 1000.f, .position = fvec3_add(state.light_pos, (t_fvec3){.z = 10, .y = 0})};
-    // light4.spec = calculateDenselySampledSpectrum(6000);
+    // light4.spec = calculate_densely_sampled_spectrum(6000);
     // add_light(&lights, light4);
 
     // add_light(&lights, light1);
     // add_light(&lights, light2);
-    calculatePDFs(&state.lights);
+    calculate_pdfs(&state.lights);
     create_alias_table(&state.lights);
 
 	mlx_close_hook(state.mlx, exit_hook, &state);

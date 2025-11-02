@@ -6,7 +6,7 @@
 /*   By: mhornero <mhornero@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/07 19:04:29 by mhornero          #+#    #+#             */
-/*   Updated: 2025/11/01 19:43:00 by mhornero         ###   ########.fr       */
+/*   Updated: 2025/11/02 18:48:01 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,29 +14,7 @@
 
 #include "../rt_file/rt_parser.h"
 #include <stdio.h>
-
-enum e_OBJ_TT
-{
-	OBJ_NONE = 0,
-	OBJ_IDENT,
-	OBJ_FLOAT,
-	OBJ_COMMENT,
-	OBJ_I_TUPLE,
-	OBJ_WHITESPACE,
-	OBJ_NEWLINE,
-	OBJ_EOF,
-};
-
-typedef struct t_obj_token
-{
-	enum e_OBJ_TT	t;
-	int				start_idx;
-	int				len;
-	float			parsed_num;
-	int				vals[3];
-	int				num_vals;
-}	t_obj_token;
-
+#include "obj_structs.h"
 #include "../libft/generated/vec_obj_token.h"
 
 typedef struct t_obj_tokenizer

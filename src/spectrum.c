@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   spectrum.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mhornero <mhornero@student.42madrid.com    +#+  +:+       +#+        */
+/*   By: mhornero <mhornero@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/21 20:20:37 by mhornero          #+#    #+#             */
-/*   Updated: 2025/08/18 21:20:26 by mhornero         ###   ########.fr       */
+/*   Updated: 2025/11/02 18:41:28 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -224,7 +224,7 @@ float blackbody(float lambda, float t)
 // }
 //
 // t_fvec3 sigm_to_xyz(t_sigmoid sig) {
-// 	t_densely_sampled_spectrum spec = {0}; //calculateDenselySampledSpectrum(6200);
+// 	t_densely_sampled_spectrum spec = {0}; //calculate_densely_sampled_spectrum(6200);
 // 	sample_sigmoid(sig, &spec);
 //
 // 	print_spec_color(&spec);
