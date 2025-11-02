@@ -12,8 +12,9 @@
 
 void	ft_assert(int cond)
 {
-	volatile char	*ft_nullptr = 0;
+	volatile char	*ft_nullptr;
 
+	ft_nullptr = 0;
 	if (!cond)
 	{
 		*ft_nullptr = 42;
