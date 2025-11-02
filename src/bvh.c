@@ -34,6 +34,11 @@ typedef struct bvh_build_state
 	t_bump_allocator	allocator;
 }	t_bvh_build_state;
 
+typedef struct bvh_prim_slice {
+	t_bvh_primitive	*buff;
+	size_t	len;
+} t_bvh_prim_slice;
+
 bool	bounds_check_enclosed(t_bounds3f big, t_bounds3f small)
 {
 	if (big.min.x > small.min.x || big.min.y > small.min.y
@@ -44,23 +49,22 @@ bool	bounds_check_enclosed(t_bounds3f big, t_bounds3f small)
 }
 
 void	bvh_create_leaf_node(t_bvh_build_state *state,
-						t_bvh_primitive *bvh_primitives,
-						size_t bvh_prim_len,
+						t_bvh_prim_slice prims,
 						t_bvh_build_node *ret)
 {
 	ret->first_prim_offset = state->ordered_shapes->len;
-	for (size_t i = 0; i < bvh_prim_len; i++) {
-		t_shape shape = state->state.shapes.buff[bvh_primitives[i].shape_idx];
+	for (size_t i = 0; i < prims.len; i++) {
+		t_shape shape = state->state.shapes.buff[prims.buff[i].shape_idx];
 		t_bounds3f bounds = shape_bounds(&state->state, shape);
 		if (!bounds_check_enclosed(ret->bounds, bounds))
 			ft_printf("Failing in bvh leaf node\n");
-		if (ft_memcmp(&bounds, &bvh_primitives[i].bounds, sizeof(bounds)))
+		if (ft_memcmp(&bounds, &prims.buff[i].bounds, sizeof(bounds)))
 		{
 			ft_printf("Got different bounds\n");
 		}
 		vec_shape_push(state->ordered_shapes, shape);
 	}
-	ret->n_primitives = bvh_prim_len;
+	ret->n_primitives = prims.len;
 	state->total_nodes++;
 }
 
@@ -91,52 +95,6 @@ int cmp_bvh_primitives(const void *av, const void *bv, void *arg) {
 	return (centroid_cmp_dim(a_c, b_c, dim));
 }
 
-// void sort_bvh_primitives_dim(t_bvh_primitive* bvh_primitives,
-//                              size_t len,
-//                              uint8_t dim) {
-//     t_bvh_primitive temp;
-//
-//     for (size_t i = 0; i < len - 1; i++) {
-//         for (size_t j = i + 1; j < len; j++) {
-//             t_fvec3 a = bounds_centroid(bvh_primitives[i].bounds);
-//             t_fvec3 b = bounds_centroid(bvh_primitives[j].bounds);
-//             bool swap = centroid_cmp_dim(a, b, dim) > 0;
-//             if (swap) {
-// 				printf("swapping, %zu, %zu\n", i, j);
-// 				exit(1);
-//                 temp = bvh_primitives[i];
-//                 bvh_primitives[i] = bvh_primitives[j];
-//                 bvh_primitives[j] = temp;
-//             }
-//         }
-//     }
-// }
-//
-//
-// void sort_bvh_primitives_dim2(t_bvh_primitive* bvh_primitives,
-//                              size_t len,
-//                              uint8_t dim) {
-//     t_bvh_primitive temp;
-//
-//     for (size_t i = 1; i < len; i++) {
-//         for (size_t j = i; j > 0; j--) {
-//             t_fvec3 a = bounds_centroid(bvh_primitives[j].bounds);
-//             t_fvec3 b = bounds_centroid(bvh_primitives[j - 1].bounds);
-//
-//             if (centroid_cmp_dim(a, b, dim) < 0) {
-// 				// printf("swapping\n");
-//                 temp = bvh_primitives[j];
-//                 bvh_primitives[j] = bvh_primitives[j - 1];
-//                 bvh_primitives[j - 1] = temp;
-//             } else  {
-// 				break;
-// 			}
-//         }
-//     }
-// }
-
-#define SAH_BUCKETS 50
-
 typedef struct s_sah_splitfn_arg
 {
 	int			best_split;
@@ -158,7 +116,31 @@ void print_bounds(t_bounds3f bounds) {
 	print_pt(bounds.max);
 }
 
-bool split_fn(void *ptr, void *arg_v) {
+t_bvh_build_node	*bvh_build_recursive(t_bvh_build_state *state,
+			t_bvh_prim_slice prims);
+
+void	bvh_midpoint_split(t_bvh_build_state *state,
+							t_bvh_prim_slice slice, t_bvh_build_node *ret)
+{
+	int	mid;
+	int	dim;
+
+	mid = slice.len / 2;
+	dim = bounds_max_dim(ret->bounds);
+	my_smoothsort((t_sort_args){.arr = slice.buff,
+		.arg = &dim,
+		.arr_len = slice.len,
+		.el_size = sizeof(*slice.buff),
+		.cmp = cmp_bvh_primitives});
+	ret->children[0] = bvh_build_recursive(state, (t_bvh_prim_slice){slice.buff, mid});
+	ret->children[1] = bvh_build_recursive(state, (t_bvh_prim_slice){slice.buff + mid, slice.len - mid});
+	ret->n_primitives = 0;
+	ret->split_axis = dim;
+	state->total_nodes++;
+}
+
+bool split_fn(void *ptr, void *arg_v)
+{
 
 	t_bvh_primitive *prim = ptr;
 	t_sah_splitfn_arg *arg = arg_v;
@@ -167,144 +149,120 @@ bool split_fn(void *ptr, void *arg_v) {
 	return arg->best_split >= b;
 }
 
+
+void bvh_sah_split(t_bvh_build_state *state,
+							t_bvh_prim_slice prims, t_bvh_build_node *ret)
+{
+	int	dim;
+	t_bounds3f centroid_bounds = BOUNDS_DEGENERATE;
+
+	size_t bucket_counts[SAH_BUCKETS] = {0};
+	float split_costs[SAH_BUCKETS - 1] = {0};
+
+	int split_counts[SAH_BUCKETS - 1] = {0};
+	t_bounds3f bucket_bounds[SAH_BUCKETS];
+
+	for (int i = 0; i < SAH_BUCKETS; i++) {
+		bucket_bounds[i] = BOUNDS_DEGENERATE;
+	}
+
+	state->total_nodes++;
+	dim = bounds_max_dim(ret->bounds);
+	for (size_t i = 0; i < prims.len; i++)
+	{
+		centroid_bounds = bounds_extend_pt(
+			centroid_bounds,
+			bounds_centroid(prims.buff[i].bounds));
+	}
+
+
+	for (size_t i = 0; i < prims.len; i++)
+	{
+		t_bounds3f curr_bound = prims.buff[i].bounds;
+		int bucket = fvec3_idx(bounds_offset(centroid_bounds, bounds_centroid(curr_bound)), dim) * SAH_BUCKETS;
+		ft_assert(bucket >= 0);
+		if (bucket == SAH_BUCKETS)
+			bucket--;
+		bucket_counts[bucket]++;
+		bucket_bounds[bucket] = bounds_extend_bounds(bucket_bounds[bucket], curr_bound);
+	}
+
+	t_bounds3f bound_below = BOUNDS_DEGENERATE;
+	int count_below = 0;
+
+	for (size_t i = 0; i < SAH_BUCKETS - 1; i++)
+	{
+		bound_below = bounds_extend_bounds(bound_below, bucket_bounds[i]);
+		count_below += bucket_counts[i];
+		split_counts[i] += count_below;
+		split_costs[i] += bounds_surphace_area(bound_below) * count_below;
+	}
+
+	t_bounds3f bound_above = BOUNDS_DEGENERATE;
+	int count_above = 0;
+
+	for (size_t i = SAH_BUCKETS - 1; i > 0; i--)
+	{
+		bound_above = bounds_extend_bounds(bound_above, bucket_bounds[i]);
+		count_above += bucket_counts[i];
+		split_costs[i - 1] += bounds_surphace_area(bound_above) * count_above;
+	}
+	float min_cost = INFINITY;
+	int min_split_idx = 0;
+	for (int i = 0; i < SAH_BUCKETS - 1; i++)
+	{
+		if (split_costs[i] < min_cost)
+		{
+			min_cost = split_costs[i];
+			min_split_idx = i;
+		}
+	}
+	min_cost = 1.f / 2.f + min_cost / bounds_surphace_area(ret->bounds);
+	float leaf_cost = prims.len;
+	if (leaf_cost < min_cost || prims.len < BVH_SAH_MIN_NUM_NODES)
+		bvh_create_leaf_node(state, prims, ret);
+	else
+	{
+		t_sah_splitfn_arg splitfn_args = {.bounds = centroid_bounds, .dim = dim, .best_split = min_split_idx};
+		t_partition_args pargs = {.arg = &splitfn_args, .data = prims.buff, .len = prims.len, .el_size = sizeof(*prims.buff), .sep = split_fn};
+		t_bvh_primitive *p2 = partition(pargs);
+
+		size_t mid = p2 - prims.buff;
+
+		if (mid == 0 || mid == prims.len)
+			bvh_create_leaf_node(state, prims, ret);
+		else
+		{
+			ret->children[0] = bvh_build_recursive(state, (t_bvh_prim_slice){prims.buff, mid});
+			ret->children[1] =
+				bvh_build_recursive(state, (t_bvh_prim_slice){p2, prims.len - mid});
+			ret->n_primitives = 0;
+			ret->split_axis = dim;
+		}
+	}
+}
+
 t_bvh_build_node* bvh_build_recursive(t_bvh_build_state* state,
-									  t_bvh_primitive* bvh_primitives,
-									  size_t bvh_prim_len) {
-	assert(bvh_prim_len > 0);
+									  t_bvh_prim_slice slice) {
+	assert(slice.len > 0);
 	t_bvh_build_node* ret = bump_alloc(&state->allocator, sizeof(*ret));
 	*ret = (t_bvh_build_node){.bounds = BOUNDS_DEGENERATE};
 
-	for (size_t i = 0; i < bvh_prim_len; i++) {
+	for (size_t i = 0; i < slice.len; i++) {
 		ret->bounds =
-			bounds_extend_bounds(ret->bounds, bvh_primitives[i].bounds);
+			bounds_extend_bounds(ret->bounds, slice.buff[i].bounds);
 	}
 
-	if (bounds_surphace_area(ret->bounds) == 0 || bvh_prim_len == 1) {
+	if (bounds_surphace_area(ret->bounds) == 0 || slice.len == 1) {
 		// Crate leaf node
-		bvh_create_leaf_node(state, bvh_primitives, bvh_prim_len, ret);
+		bvh_create_leaf_node(state, slice, ret);
 		return ret;
 	}
 
-	int dim = bounds_max_dim(ret->bounds);
-	if (0) {
-		int mid = bvh_prim_len / 2;
-
-		// sort_bvh_primitives_dim2(bvh_primitives, bvh_prim_len, dim);
-		my_smoothsort((t_sort_args){.arr = bvh_primitives,
-			.arg = &dim,
-			.arr_len = bvh_prim_len,
-			.el_size = sizeof(*bvh_primitives),
-			.cmp = cmp_bvh_primitives});
-		// sort_bvh_primitives_dim(bvh_primitives, bvh_prim_len, dim);
-
-		ret->children[0] = bvh_build_recursive(state, bvh_primitives, mid);
-		ret->children[1] =
-			bvh_build_recursive(state, bvh_primitives + mid, bvh_prim_len - mid);
-		ret->n_primitives = 0;
-		ret->split_axis = dim;
-		state->total_nodes++;
-	} else {
-		state->total_nodes++;
-
-		t_bounds3f centroid_bounds = BOUNDS_DEGENERATE;
-		for (size_t i = 0; i < bvh_prim_len; i++) {
-			centroid_bounds = bounds_extend_pt(
-				centroid_bounds,
-				bounds_centroid(bvh_primitives[i].bounds));
-		}
-		// 2
-		// 10
-		//
-		// 5 - 5
-		// (2 * 4) / 5
-		t_bounds3f bucket_bounds[SAH_BUCKETS];
-		for (int i = 0; i < SAH_BUCKETS; i++) {
-			bucket_bounds[i] = BOUNDS_DEGENERATE;
-		}
-		size_t bucket_counts[SAH_BUCKETS] = {0};
-
-
-		for (size_t i = 0; i < bvh_prim_len; i++)
-		{
-			t_bounds3f curr_bound = bvh_primitives[i].bounds;
-			int bucket = fvec3_idx(bounds_offset(centroid_bounds, bounds_centroid(curr_bound)), dim) * SAH_BUCKETS;
-			if (bucket < 0) {
-				// ft_printf("bucket: %i\n", bucket);
-				// ft_printf("dim: %i\n", dim);
-				// ft_printf("num_primitives: %zu\n", bvh_prim_len);
-				// ft_printf("float: %f\n", fvec3_idx(bounds_offset(centroid_bounds, bounds_centroid(curr_bound)), dim));
-
-				// print_bounds(curr_bound);
-				// ft_printf("\n");
-				// print_bounds(centroid_bounds);
-			}
-
-			if (bucket == SAH_BUCKETS)
-				bucket--;
-			bucket_counts[bucket]++;
-			bucket_bounds[bucket] = bounds_extend_bounds(bucket_bounds[bucket], curr_bound);
-		}
-
-		float split_costs[SAH_BUCKETS - 1] = {0};
-		int split_counts[SAH_BUCKETS - 1] = {0};
-
-		t_bounds3f bound_below = BOUNDS_DEGENERATE;
-		int count_below = 0;
-
-		for (size_t i = 0; i < SAH_BUCKETS - 1; i++) {
-			bound_below = bounds_extend_bounds(bound_below, bucket_bounds[i]);
-			count_below += bucket_counts[i];
-			split_counts[i] += count_below;
-			split_costs[i] += bounds_surphace_area(bound_below) * count_below;
-		}
-
-		t_bounds3f bound_above = BOUNDS_DEGENERATE;
-		int count_above = 0;
-
-		for (size_t i = SAH_BUCKETS - 1; i > 0; i--) {
-			bound_above = bounds_extend_bounds(bound_above, bucket_bounds[i]);
-			count_above += bucket_counts[i];
-			split_costs[i - 1] += bounds_surphace_area(bound_above) * count_above;
-		}
-		float min_cost = INFINITY;
-		int min_split_idx = 0;
-		for (int i = 0; i < SAH_BUCKETS - 1; i++) {
-			if (split_costs[i] < min_cost) {
-				min_cost = split_costs[i];
-				min_split_idx = i;
-			}
-		}
-
-		min_cost = 1.f / 4.f + min_cost / bounds_surphace_area(ret->bounds);
-		// min_cost = 1;
-		// min_split_idx = (SAH_BUCKETS - 1) / 2;
-		float leaf_cost = bvh_prim_len;
-		// printf("leaf_cost: %f, min_cost: %f\n", leaf_cost, min_cost);
-		if ((leaf_cost < min_cost || bvh_prim_len < 3)) {
-			// ft_printf("child: %zu\n", bvh_prim_len);
-			// ft_printf("child: len: %zu, min_split_idx: %i, split_cost: %f, split_count: %i\n", bvh_prim_len, min_split_idx, min_cost, split_counts[min_split_idx]);
-			// Crate leaf node
-			bvh_create_leaf_node(state, bvh_primitives, bvh_prim_len, ret);
-			return ret;
-		} else {
-			t_sah_splitfn_arg splitfn_args = {.bounds = centroid_bounds, .dim = dim, .best_split = min_split_idx};
-			t_partition_args pargs = {.arg = &splitfn_args, .data = bvh_primitives, .len = bvh_prim_len, .el_size = sizeof(*bvh_primitives), .sep = split_fn};
-			t_bvh_primitive *p2 = partition(pargs);
-
-			size_t mid = p2 - bvh_primitives;
-
-			if (mid == 0 || mid == bvh_prim_len) {
-				bvh_create_leaf_node(state, bvh_primitives, bvh_prim_len, ret);
-			} else {
-				// ft_printf("mid: %zu, len: %zu, min_split_idx: %i, split_cost: %f, split_count: %i\n", mid, bvh_prim_len, min_split_idx, min_cost, split_counts[min_split_idx]);
-				ret->children[0] = bvh_build_recursive(state, bvh_primitives, mid);
-				ret->children[1] =
-					bvh_build_recursive(state, p2, bvh_prim_len - mid);
-				ret->n_primitives = 0;
-				ret->split_axis = dim;
-			}
-		}
-	}
+	if (0)
+		bvh_midpoint_split(state, slice, ret);
+	else
+		bvh_sah_split(state, slice, ret);
 
 	return ret;
 }
@@ -346,7 +304,7 @@ void build_bvh(t_state* state) {
 
 	ft_printf("starting build\n");
 	t_bvh_build_node* tree =
-		bvh_build_recursive(&bstate, bvh_primitives, state->shapes.len);
+		bvh_build_recursive(&bstate, (t_bvh_prim_slice){bvh_primitives, state->shapes.len});
 
 	ft_printf("tree built\n");
 	ft_printf("verifying tree\n");
