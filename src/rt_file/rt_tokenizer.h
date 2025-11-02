@@ -94,4 +94,16 @@ bool			peek_token(t_rt_tokenizer *tokenizer, t_rt_token *ret);
 bool			consume_token(t_rt_tokenizer *tokenizer, t_rt_token *ret);
 t_rt_token		consume_token_panic(t_rt_tokenizer *tokenizer);
 void			print_tokenizer_err(t_rt_tokenizer *tokenizer);
+bool			next_token(t_rt_tokenizer *tokenizer, t_rt_token *ret);
+
+// utils
+char			consume_char(t_rt_tokenizer *tokenizer);
+char			peek_char(t_rt_tokenizer *tokenizer);
+void			skip_whitespace(t_rt_tokenizer *tokenizer);
+void			skip_comment(t_rt_tokenizer *tokenizer);
+void			skip_whitespace_and_comments(t_rt_tokenizer *tokenizer);
+
+// tokenize types
+bool			tokenize_number(t_rt_tokenizer *tokenizer,
+					float *fret, bool *is_int);
 #endif

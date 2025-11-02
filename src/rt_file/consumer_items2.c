@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   consumer_items2.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/02 10:12:33 by anddokhn          #+#    #+#             */
+/*   Updated: 2025/11/02 10:12:33 by anddokhn         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "rt_consumer.h"
 #include "../cie.h"
 
@@ -28,7 +40,8 @@ bool	process_ambiant(t_rt_consumer_tl *tl)
 	return (true);
 }
 
-static bool	process_light_color(t_rt_consumer_tl *tl, bool is_blackbody, t_light *l)
+static bool	process_light_color(t_rt_consumer_tl *tl,
+				bool is_blackbody, t_light *l)
 {
 	t_rt_node	nd;
 

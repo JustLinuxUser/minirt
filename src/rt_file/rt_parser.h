@@ -64,11 +64,11 @@ typedef struct s_rt_node
 	t_vec_rt_kv			dict;
 }	t_rt_node;
 
-int			vec_rt_nd_init(t_vec_rt_nd *ret);
-int			vec_rt_nd_double(t_vec_rt_nd *v);
-int			vec_rt_nd_push(t_vec_rt_nd *v, t_rt_node el);
-t_rt_node	vec_rt_nd_pop(t_vec_rt_nd *v);
-t_rt_node	vec_rt_nd_idx(t_vec_rt_nd *v, size_t idx);
+int					vec_rt_nd_init(t_vec_rt_nd *ret);
+int					vec_rt_nd_double(t_vec_rt_nd *v);
+int					vec_rt_nd_push(t_vec_rt_nd *v, t_rt_node el);
+t_rt_node			vec_rt_nd_pop(t_vec_rt_nd *v);
+t_rt_node			vec_rt_nd_idx(t_vec_rt_nd *v, size_t idx);
 
 typedef struct s_rt_kv
 {
@@ -78,13 +78,13 @@ typedef struct s_rt_kv
 	bool		used;
 }	t_rt_kv;
 
-int			vec_rt_kv_init(t_vec_rt_kv *ret);
-int			vec_rt_kv_double(t_vec_rt_kv *v);
-int			vec_rt_kv_push(t_vec_rt_kv *v, t_rt_kv el);
-t_rt_kv		vec_rt_kv_pop(t_vec_rt_kv *v);
-t_rt_kv		vec_rt_kv_idx(t_vec_rt_kv *v, size_t idx);
-t_rt_kv		*vec_rt_kv_get(t_vec_rt_kv *v, char *buff, t_rt_token t);
-t_rt_kv		*vec_rt_kv_get_str(t_vec_rt_kv *v, char *buff, char *str);
+int					vec_rt_kv_init(t_vec_rt_kv *ret);
+int					vec_rt_kv_double(t_vec_rt_kv *v);
+int					vec_rt_kv_push(t_vec_rt_kv *v, t_rt_kv el);
+t_rt_kv				vec_rt_kv_pop(t_vec_rt_kv *v);
+t_rt_kv				vec_rt_kv_idx(t_vec_rt_kv *v, size_t idx);
+t_rt_kv				*vec_rt_kv_get(t_vec_rt_kv *v, char *buff, t_rt_token t);
+t_rt_kv				*vec_rt_kv_get_str(t_vec_rt_kv *v, char *buff, char *str);
 
 typedef struct s_rt_parser
 {
@@ -95,16 +95,27 @@ typedef struct s_rt_parser
 	t_vec_rt_kv			statements;
 }	t_rt_parser;
 
-bool		consume_parsed_nodes(t_rt_parser parser, t_state *state);
-void		print_parser_err(t_rt_parser *parser);
+bool				consume_parsed_nodes(t_rt_parser parser, t_state *state);
+void				print_parser_err(t_rt_parser *parser);
 
-void		free_node(t_rt_node nd);
-bool		dyn_str_read_file(char *file, t_dyn_str *ret);
-bool		dyn_str_write_file(t_dyn_str buff, char *fname);
-void		pprint_node(t_rt_parser parser, t_rt_node nd, int indent);
-bool		parse_statement(t_rt_parser *parser, t_rt_kv *stmt);
-bool		parse_file(t_rt_parser *parser);
+void				free_node(t_rt_node nd);
+bool				dyn_str_read_file(char *file, t_dyn_str *ret);
+bool				dyn_str_write_file(t_dyn_str buff, char *fname);
+void				pprint_node(t_rt_parser parser,
+						t_rt_node nd, size_t indent);
+bool				parse_statement(t_rt_parser *parser, t_rt_kv *stmt);
+bool				parse_file(t_rt_parser *parser);
 
-bool		parse_dict(t_rt_parser *parser, t_rt_node *ret);
-bool		parse_list(t_rt_parser *parser, t_rt_node *ret);
+bool				parse_dict(t_rt_parser *parser, t_rt_node *ret);
+bool				parse_list(t_rt_parser *parser, t_rt_node *ret);
+bool				parse_node(t_rt_parser *parser, t_rt_node *ret);
+
+// utils
+bool				is_rvalue(enum e_RT_TT tt);
+bool				is_leaf(enum e_RT_TT tt);
+enum e_RT_NODE_TYPE	tuple_token_type(t_rt_token t);
+bool				unexpected_err(t_rt_parser *parser);
+bool				duplicate_key_err(t_rt_parser *parser,
+						t_rt_token prev_key,
+						t_rt_token curr);
 #endif

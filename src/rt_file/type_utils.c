@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "rt_parser.h"
-#include "../libft/libft.h"
 
 enum e_RT_NODE_TYPE	effective_type(enum e_RT_NODE_TYPE target,
 						enum e_RT_NODE_TYPE got)

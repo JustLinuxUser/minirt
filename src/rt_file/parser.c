@@ -1,25 +1,21 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/02 09:12:17 by anddokhn          #+#    #+#             */
+/*   Updated: 2025/11/02 09:12:17 by anddokhn         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <fcntl.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include "../libft/dsa/dyn_str.h"
-#include "../libft/utils/utils.h"
 #include "rt_parser.h"
 #include "rt_tokenizer.h"
-
-bool	unexpected_err(t_rt_parser *parser)
-{
-	parser->err = RT_ERR_UNEXPECTED_TOKEN;
-	return (false);
-}
-
-bool	duplicate_key_err(t_rt_parser *parser,
-						t_rt_token prev_key,
-						t_rt_token curr) {
-	parser->err = RT_ERR_DUPLICATE_KEY;
-	parser->err_ref_tok = curr;
-	parser->err_ref_tok2 = prev_key;
-	return (false);
-}
 
 bool	try_push_checked_dup(t_rt_parser *parser,
 							t_vec_rt_kv *v,
@@ -40,61 +36,6 @@ bool	try_push_checked_dup(t_rt_parser *parser,
 	}
 	vec_rt_kv_push(v, kv);
 	return (true);
-}
-
-bool	is_rvalue(enum e_RT_TT tt)
-{
-	if (tt == RT_TUPLE
-		|| tt == RT_BOOL
-		|| tt == RT_STRING
-		|| tt == RT_LBRACE
-		|| tt == RT_LBRACKET)
-		return (true);
-	else
-		return (false);
-}
-
-bool	is_leaf(enum e_RT_TT tt)
-{
-	if (tt == RT_TUPLE
-		|| tt == RT_BOOL
-		|| tt == RT_STRING)
-		return (true);
-	return (false);
-}
-
-enum e_RT_NODE_TYPE	tuple_token_type(t_rt_token t)
-{
-	ft_assert(t.t == RT_TUPLE);
-	if (t.is_int)
-		return (RT_ND_TUPLE_I1 + t.tuple_len - 1);
-	return (RT_ND_TUPLE_F1 + t.tuple_len - 1);
-}
-
-bool	parse_leaf(t_rt_parser *parser, t_rt_node *ret)
-{
-	ft_assert(is_leaf(peek_token_type(&parser->tokenizer)));
-	*ret = (t_rt_node){.token = consume_token_panic(&parser->tokenizer)};
-	if (ret->token.t == RT_STRING)
-		ret->t = RT_ND_STRING;
-	if (ret->token.t == RT_TUPLE)
-		ret->t = tuple_token_type(ret->token);
-	if (ret->token.t == RT_BOOL)
-		ret->t = RT_ND_BOOL;
-	return (true);
-}
-
-bool	parse_node(t_rt_parser *parser, t_rt_node *ret)
-{
-	if (!is_rvalue(peek_token_type(&parser->tokenizer)))
-		return (unexpected_err(parser));
-	if (is_leaf(peek_token_type(&parser->tokenizer)))
-		return (parse_leaf(parser, ret));
-	if (peek_token_type(&parser->tokenizer) == RT_LBRACE)
-		return (parse_dict(parser, ret));
-	if (peek_token_type(&parser->tokenizer) == RT_LBRACKET)
-		return (parse_list(parser, ret));
-	return (unexpected_err(parser));
 }
 
 bool	parse_dict(t_rt_parser *parser, t_rt_node *ret)
@@ -126,67 +67,28 @@ bool	parse_dict(t_rt_parser *parser, t_rt_node *ret)
 	return (true);
 }
 
-bool	parse_list(t_rt_parser *parser, t_rt_node *ret)
+static bool	process_token(t_rt_parser *parser, t_rt_kv *stmt, bool *ret)
 {
-	t_rt_node	nd;
-
-	*ret = (t_rt_node){.t = RT_ND_LIST};
-	ft_assert(peek_token_type(&parser->tokenizer) == RT_LBRACKET);
-	ret->token = consume_token_panic(&parser->tokenizer);
-	while (is_rvalue(peek_token_type(&parser->tokenizer)))
+	if (peek_token_type(&parser->tokenizer) == RT_EOF)
 	{
-		if (!parse_node(parser, &nd))
-		{
-			vec_rt_nd_push(&ret->list, nd);
-			return (false);
-		}
-		vec_rt_nd_push(&ret->list, nd);
+		*ret = true;
+		return (false);
 	}
-	if (peek_token_type(&parser->tokenizer) != RT_RBRACKET)
-		return (unexpected_err(parser));
-	consume_token_panic(&parser->tokenizer);
-	return (true);
-}
-
-// until the next top level ident
-bool	parse_old_array(t_rt_parser *parser, t_rt_node *ret)
-{
-	t_rt_token	t;
-
-	*ret = (t_rt_node){.t = RT_ND_LIST};
-	while (is_rvalue(peek_token_type(&parser->tokenizer)))
+	if (!parse_statement(parser, stmt))
 	{
-		if (peek_token_type(&parser->tokenizer) == RT_NONE)
-			return (false);
-		if (peek_token_type(&parser->tokenizer) != RT_TUPLE)
-		{
-			parser->err = RT_ERR_NEW_SYNTAX_IN_OLD_CONTEXT;
-			return (false);
-		}
-		t = consume_token_panic(&parser->tokenizer);
-		vec_rt_nd_push(&ret->list,
-			(t_rt_node){.t = tuple_token_type(t), .token = t});
+		if (parser->tokenizer.err)
+			print_tokenizer_err(&parser->tokenizer);
+		else
+			print_parser_err(parser);
+		free_node(stmt->v);
+		return (false);
 	}
-	return (true);
-}
-
-bool	parse_statement(t_rt_parser *parser, t_rt_kv *stmt)
-{
-	t_rt_token	tk;
-
-	*stmt = (t_rt_kv){0};
-	if (peek_token_type(&parser->tokenizer) != RT_IDENT)
-		return (unexpected_err(parser));
-	consume_token(&parser->tokenizer, &stmt->k);
-	if (peek_token_type(&parser->tokenizer) == RT_COLON)
+	pprint_node(*parser, stmt->v, 0);
+	if (!try_push_checked_dup(parser, &parser->statements, *stmt, true))
 	{
-		consume_token(&parser->tokenizer, &tk);
-		if (peek_token_type(&parser->tokenizer) != RT_LBRACE)
-			return (unexpected_err(parser));
-		return (parse_dict(parser, &stmt->v));
+		print_parser_err(parser);
+		return (false);
 	}
-	else
-		return (parse_old_array(parser, &stmt->v));
 	return (true);
 }
 
@@ -198,25 +100,8 @@ bool	parse_file(t_rt_parser *parser)
 	ret = false;
 	while (1)
 	{
-		if (peek_token_type(&parser->tokenizer) == RT_EOF)
-			ret = true;
-		if (peek_token_type(&parser->tokenizer) == RT_EOF)
+		if (!process_token(parser, &stmt, &ret))
 			break ;
-		if (!parse_statement(parser, &stmt))
-		{
-			if (parser->tokenizer.err)
-				print_tokenizer_err(&parser->tokenizer);
-			else
-				print_parser_err(parser);
-			free_node(stmt.v);
-			break ;
-		}
-		pprint_node(*parser, stmt.v, 0);
-		if (!try_push_checked_dup(parser, &parser->statements, stmt, true))
-		{
-			print_parser_err(parser);
-			break ;
-		}
 	}
 	return (ret);
 }

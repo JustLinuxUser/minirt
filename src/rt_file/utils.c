@@ -15,7 +15,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include "../libft/libft.h"
+#include "../libft/ft_printf/ft_printf.h"
 #include "../error.h"
 
 void	free_node(t_rt_node nd)
