@@ -441,50 +441,64 @@ bool	intersect_bounds(t_bounds3f bounds,
 	return (true);
 }
 
+void	negative_dirs(t_ray_isector isect, bool dir_is_neg[3])
+{
+	t_fvec3		inv_dir;
+
+	inv_dir = (t_fvec3){.x = 1 / isect.ray.dir.x,
+		.y = 1 / isect.ray.dir.y, .z = 1 / isect.ray.dir.z};
+	dir_is_neg[0] = inv_dir.x > 0;
+	dir_is_neg[1] = inv_dir.y < 0;
+	dir_is_neg[2] = inv_dir.z < 0;
+}
+
 t_collision	collide_bvh(t_state* state, t_ray_isector isect)
 {
 	int			stack_offs;
 	int			stack[64];
 	t_collision	curr_best;
+	bool		dir_is_neg[3];
+	int			curr_nd_idx;
 
 	stack_offs = 0;
 	stack[0] = 0;
 	curr_best = (t_collision){.collided = false};
-	t_fvec3 inv_dir = {
-		.x = 1 / isect.ray.dir.x, .y = 1 / isect.ray.dir.y, .z = 1 / isect.ray.dir.z};
-	int dir_is_neg[3] = {(int)(inv_dir.x > 0), (int)(inv_dir.y < 0),
-		(int)(inv_dir.z < 0)};
+	negative_dirs(isect, dir_is_neg);
 
 	while (state->bvh && stack_offs >= 0)
 	{
-		int curr_nd_idx = stack[stack_offs--];
+		curr_nd_idx = stack[stack_offs--];
 		t_linear_bvh_nd curr = state->bvh[curr_nd_idx];
-
 		float hit0;
-
 		if (!intersect_bounds(curr.bounds, isect.ray, isect.t_max, &hit0))
 			continue;
-		if (curr.n_primitives > 0) {
+		if (curr.n_primitives > 0)
+		{
 			for (int i = 0; i < curr.n_primitives; i++) {
 				int prim_offs = curr._union.primitives_offset;
 				t_collision coll = collide_shape(
 					state, state->shapes.buff[prim_offs + i], isect);
 				if (coll.collided &&
-					(coll.t < curr_best.t || !curr_best.collided)) {
+					(coll.t < curr_best.t || !curr_best.collided))
 					curr_best = coll;
-				}
 			}
-		} else {
-			if (dir_is_neg[curr.axis]) {
+		}
+		else
+		{
+			if (dir_is_neg[curr.axis])
+			{
 				stack[++stack_offs] = curr_nd_idx + 1;
 				stack[++stack_offs] = curr._union.second_child_offset;
-			} else {
+			}
+			else
+			{
 				stack[++stack_offs] = curr._union.second_child_offset;
 				stack[++stack_offs] = curr_nd_idx + 1;
 			}
 		}
 	}
-	for (size_t i = 0; i < state->unbounded_shapes.len; i++) {
+	for (size_t i = 0; i < state->unbounded_shapes.len; i++)
+	{
 		t_collision coll = collide_shape(
 			state, state->unbounded_shapes.buff[i], isect);
 		if (coll.collided && (coll.t < curr_best.t || !curr_best.collided)) {
