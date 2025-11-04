@@ -10,6 +10,11 @@ typedef struct fvec2 {
 	float y;
 } t_fvec2;
 
+typedef struct ivec2 {
+	int x;
+	int y;
+} t_ivec2;
+
 typedef struct t_fvec3 {
 	float x;
 	float y;

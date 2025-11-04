@@ -82,10 +82,7 @@ int	sample_alias_table(t_lights *lights, float lu)
 		offset = lu * lights->lights.len;
 	else
 		offset = lights->lights.len - 1;
-	if (lu * lights->lights.len - offset < 0.9999f)
-		up = lu * lights->lights.len - offset;
-	else
-		up = 0.9999f;
+	up = lu * lights->lights.len - offset;
 	if (up < lights->bins.buff[offset].prob)
 		return (offset);
 	else

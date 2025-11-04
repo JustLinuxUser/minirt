@@ -399,33 +399,45 @@ void	build_bvh(t_state *state)
 	state->shapes = bstate.ordered_shapes;
 }
 
+void	sort2f(float *a, float *b)
+{
+	float	temp;
+
+	if (*a <= *b)
+		return ;
+	temp = *a;
+	*a = *b;
+	*b = temp;
+}
+
 bool	intersect_bounds(t_bounds3f bounds,
 			t_ray r,
-			float tMax,
+			float t_max,
 			float *hitt0)
 {
-	float t0 = 0, t1 = tMax;
+	t_fvec2	ts;
+	float	inv_ray_dir;
+	float	t_near;
+	float	t_far;
+	int		i;
 
-	for (int i = 0; i < 3; ++i) {
-		float invRayDir = 1 / fvec3_idx(r.dir, i);
-		float tNear =
-			(fvec3_idx(bounds.min, i) - fvec3_idx(r.pos, i)) * invRayDir;
-		float tFar =
-			(fvec3_idx(bounds.max, i) - fvec3_idx(r.pos, i)) * invRayDir;
-
-		if (tNear > tFar) {
-			float temp = tNear;
-			tNear = tFar;
-			tFar = temp;
-		}
-		tFar *= 1 + 2 * f32_gamma(3);
-		t0 = tNear > t0 ? tNear : t0;
-		t1 = tFar < t1 ? tFar : t1;
-		if (t0 > t1)
-			return false;
+	ts.x = 0;
+	ts.y = t_max;
+	i = -1;
+	while (++i < 3)
+	{
+		inv_ray_dir = 1 / fvec3_idx(r.dir, i);
+		t_near = (fvec3_idx(bounds.min, i) - fvec3_idx(r.pos, i)) * inv_ray_dir;
+		t_far = (fvec3_idx(bounds.max, i) - fvec3_idx(r.pos, i)) * inv_ray_dir;
+		sort2f(&t_near, &t_far);
+		t_far *= 1 + 2 * f32_gamma(3);
+		ts.x = fmax(t_near, ts.x);
+		ts.y = fmin(t_far, ts.y);
+		if (ts.x > ts.y)
+			return (false);
 	}
 	if (hitt0)
-		*hitt0 = t0;
+		*hitt0 = ts.x;
 	return (true);
 }
 
