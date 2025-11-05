@@ -39,6 +39,9 @@ t_fvec3 fvec3_reflect(t_fvec3 v, t_fvec3 norm);
 t_fvec3 fvec3_lerp(t_fvec3 v1, t_fvec3 v2, float prop);
 t_fvec3 vec3_rotate_yaw_pitch(t_fvec3 v, float pitch, float yaw);
 t_fvec3 fvec3_cross(t_fvec3 v1, t_fvec3 v2);
+float	fvec3_idx(t_fvec3 v, int idx);
+
+void	sort2f(float *a, float *b);
 
 inline static float eval_poly_2(float x, float c1, float c2, float c3) {
 	float f1 = x * x * c1 + x * c2 + c3;
@@ -54,5 +57,4 @@ inline static float signf(float f) {
 	return 0;
 }
 
-float fvec3_idx(t_fvec3 v, int idx);
 #endif

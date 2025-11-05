@@ -120,7 +120,6 @@ typedef struct s_state {
 
 t_collision collide_bvh(t_state* state, t_ray_isector isector);
 
-
 typedef struct output_config {
     int width;
     int height;

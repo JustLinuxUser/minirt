@@ -21,7 +21,7 @@
 #include "libft/ft_printf/ft_printf.h"
 #include "obj_loader.h"
 
-void	mesh_forward_z(t_mesh *mesh)
+void	mesh_swap_yz(t_mesh *mesh)
 {
 	t_fvec3	vert;
 	t_fvec3	tmp;
@@ -61,7 +61,7 @@ void	mesh_transform(t_mesh *mesh, t_obj_spec s)
 	t_fvec3	vert;
 
 	if (s.forward_z)
-		mesh_forward_z(mesh);
+		mesh_swap_yz(mesh);
 	avg = mesh_avg(mesh);
 	i = 0;
 	while (i < mesh->vertices.len)

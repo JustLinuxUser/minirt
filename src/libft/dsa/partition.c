@@ -26,7 +26,7 @@ void	*partition(t_partition_args args)
 	ft_assert(args.el_size != 0);
 	if (!args.data || args.len < 2)
 		return (first);
-	while (first != last && last > first)
+	while (last > first)
 	{
 		while (args.sep(first, args.arg) == true && last > first)
 		{

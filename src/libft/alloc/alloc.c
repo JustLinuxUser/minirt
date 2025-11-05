@@ -17,7 +17,6 @@
 #include <string.h>
 #include "../utils/utils.h"
 #include "mmalloc.h"
-#include "../ft_printf/ft_printf.h"
 
 static int	bump_add_arena(t_bump_allocator *alloc, size_t size)
 {
@@ -26,7 +25,6 @@ static int	bump_add_arena(t_bump_allocator *alloc, size_t size)
 	if (alloc->arena_size == 0)
 		size = ft_max(size, 1024);
 	size = ft_max(size, alloc->arena_size);
-	ft_printf("Allocating a new arena, of size: %zu\n", size);
 	new = mmalloc(size + sizeof(t_bump_arena),
 			"adding a new arena to a bump allocator");
 	new->next = 0;

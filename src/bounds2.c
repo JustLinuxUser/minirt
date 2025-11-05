@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "bounds.h"
+#include "float.h"
 
 uint8_t	bounds_max_dim(t_bounds3f bounds)
 {
@@ -33,4 +34,44 @@ t_fvec3	bounds_offset(t_bounds3f bounds, t_fvec3 p)
 		.y = fmax((p.y - bounds.min.y) / (bounds.max.y - bounds.min.y), 0),
 		.z = fmax((p.z - bounds.min.z) / (bounds.max.z - bounds.min.z), 0),
 	});
+}
+
+bool	bounds_check_enclosed(t_bounds3f big, t_bounds3f small)
+{
+	if (big.min.x > small.min.x || big.min.y > small.min.y
+		|| big.min.z > small.min.z || big.max.x < small.max.x
+		|| big.max.y < small.max.y || big.max.z < small.max.z)
+		return (false);
+	return (true);
+}
+
+bool	intersect_bounds(t_bounds3f bounds,
+			t_ray r,
+			float t_max,
+			float *hitt0)
+{
+	t_fvec2	ts;
+	float	inv_ray_dir;
+	float	t_near;
+	float	t_far;
+	int		i;
+
+	ts.x = 0;
+	ts.y = t_max;
+	i = -1;
+	while (++i < 3)
+	{
+		inv_ray_dir = 1 / fvec3_idx(r.dir, i);
+		t_near = (fvec3_idx(bounds.min, i) - fvec3_idx(r.pos, i)) * inv_ray_dir;
+		t_far = (fvec3_idx(bounds.max, i) - fvec3_idx(r.pos, i)) * inv_ray_dir;
+		sort2f(&t_near, &t_far);
+		t_far *= 1 + 2 * f32_gamma(3);
+		ts.x = fmax(t_near, ts.x);
+		ts.y = fmin(t_far, ts.y);
+		if (ts.x > ts.y)
+			return (false);
+	}
+	if (hitt0)
+		*hitt0 = ts.x;
+	return (true);
 }

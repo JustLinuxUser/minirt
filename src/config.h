@@ -20,4 +20,6 @@
 
 # define BVH_SAH_MIN_NUM_NODES 3
 # define SAH_BUCKETS 50
+
+# define USE_SAH 1
 #endif
