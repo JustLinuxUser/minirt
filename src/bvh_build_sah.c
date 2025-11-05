@@ -21,7 +21,7 @@ void	sah_bucket_splits(t_sah_buckets *buckets)
 	int			ab;
 	size_t		i;
 
-	bound_below = BOUNDS_DEGENERATE;
+	bound_below = bounds_degenerate();
 	bl = 0;
 	i = 0;
 	while (i < SAH_BUCKETS - 1)
@@ -31,7 +31,7 @@ void	sah_bucket_splits(t_sah_buckets *buckets)
 		buckets->split_counts[i] += bl;
 		buckets->split_costs[i++] += bounds_surphace_area(bound_below) * bl;
 	}
-	bound_above = BOUNDS_DEGENERATE;
+	bound_above = bounds_degenerate();
 	ab = 0;
 	i = SAH_BUCKETS - 1;
 	while (i > 0)

@@ -233,7 +233,7 @@ t_densely_sampled_spectrum *shape_spectrum(t_state *state, t_collision collision
 }
 
 t_bounds3f shape_bounds(t_state* state, t_shape shape) {
-    t_bounds3f bounds = BOUNDS_DEGENERATE;
+    t_bounds3f bounds = bounds_degenerate();
     if (shape.type == OBJ_TRIANGLE) {
         t_triangle_pts pts = triangle_points(state, *(t_triangle*)shape.ptr);
         bounds = bounds_extend_pt(bounds, pts.a);

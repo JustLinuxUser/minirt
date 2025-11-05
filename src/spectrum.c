@@ -88,15 +88,15 @@ float clamp(float x, float minVal, float maxVal)
 void cie_xyz(float lambda, float *x, float *y, float *z)
 {
     if (lambda <= CIE_MIN_LAMBDA) {
-        *x = CIE_X[0];
-        *y = CIE_Y[0];
-        *z = CIE_Z[0];
+        *x = g_cie_x[0];
+        *y = g_cie_y[0];
+        *z = g_cie_z[0];
         return;
     }
     if (lambda >= CIE_MAX_LAMBDA) {
-        *x = CIE_X[CIE_SAMPLES-1];
-        *y = CIE_Y[CIE_SAMPLES-1];
-        *z = CIE_Z[CIE_SAMPLES-1];
+        *x = g_cie_x[CIE_SAMPLES-1];
+        *y = g_cie_y[CIE_SAMPLES-1];
+        *z = g_cie_z[CIE_SAMPLES-1];
         return;
     }
     // float pos = (lambda - CIE_MIN_LAMBDA) / CIE_STEP;
@@ -104,9 +104,9 @@ void cie_xyz(float lambda, float *x, float *y, float *z)
     int idx = (int)pos;
     float t = pos - idx;
     // float t = lambda - (CIE_MIN_LAMBDA + idx);
-    *x = CIE_X[idx] * (1.0f - t) + CIE_X[idx+1] * t;
-    *y = CIE_Y[idx] * (1.0f - t) + CIE_Y[idx+1] * t;
-    *z = CIE_Z[idx] * (1.0f - t) + CIE_Z[idx+1] * t;
+    *x = g_cie_x[idx] * (1.0f - t) + g_cie_x[idx+1] * t;
+    *y = g_cie_y[idx] * (1.0f - t) + g_cie_y[idx+1] * t;
+    *z = g_cie_z[idx] * (1.0f - t) + g_cie_z[idx+1] * t;
 }
 
 t_fvec3 densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum s) {
@@ -126,13 +126,13 @@ t_fvec3 densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum s) {
     }
 
     //The average part
-    X /= CIE_SAMPLES / CIE_Y_integral;
-    Y /= CIE_SAMPLES / CIE_Y_integral;
-    Z /= CIE_SAMPLES / CIE_Y_integral;
+    X /= CIE_SAMPLES / CIE_Y_INTEGRAL;
+    Y /= CIE_SAMPLES / CIE_Y_INTEGRAL;
+    Z /= CIE_SAMPLES / CIE_Y_INTEGRAL;
     //Correction by the CIE_Y integral
-    X /= CIE_Y_integral;
-    Y /= CIE_Y_integral;
-    Z /= CIE_Y_integral;
+    X /= CIE_Y_INTEGRAL;
+    Y /= CIE_Y_INTEGRAL;
+    Z /= CIE_Y_INTEGRAL;
  
     return (t_fvec3){X, Y, Z};
 }
@@ -241,13 +241,13 @@ t_densely_sampled_spectrum xyz_to_spectrum(t_fvec3 target_xyz, bool clamp, float
 
 	t_densely_sampled_spectrum spec = {0};
 
-	ft_memcpy(spec.samples, CIE_X, sizeof(CIE_X));
+	ft_memcpy(spec.samples, g_cie_x, sizeof(g_cie_x));
 	float x_contrib = densely_sampled_spectrum_to_xyz(spec).x;
 
-	ft_memcpy(spec.samples, CIE_Y, sizeof(CIE_Y));
+	ft_memcpy(spec.samples, g_cie_y, sizeof(g_cie_y));
 	float y_contrib = densely_sampled_spectrum_to_xyz(spec).y;
 
-	ft_memcpy(spec.samples, CIE_Z, sizeof(CIE_Z));
+	ft_memcpy(spec.samples, g_cie_z, sizeof(g_cie_z));
 	float z_contrib = densely_sampled_spectrum_to_xyz(spec).z;
 
 	t_densely_sampled_spectrum curr_spec = {0};
@@ -260,19 +260,19 @@ t_densely_sampled_spectrum xyz_to_spectrum(t_fvec3 target_xyz, bool clamp, float
 				float diff_x = target_xyz.x - curr_xyz.x;
 				float factor_x = diff_x / x_contrib / 10;
 				for (int i = 0; i < CIE_SAMPLES; i++) {
-					curr_spec.samples[i] += CIE_X[i] * factor_x;
+					curr_spec.samples[i] += g_cie_x[i] * factor_x;
 				}
 			} else if (i % 3 == 1) {
 				float diff_y = target_xyz.y - curr_xyz.y;
 				float factor_y = diff_y / y_contrib / 10;
 				for (int i = 0; i < CIE_SAMPLES; i++) {
-					curr_spec.samples[i] += CIE_Y[i] * factor_y;
+					curr_spec.samples[i] += g_cie_y[i] * factor_y;
 				}
 			} else {
 				float diff_z = target_xyz.z - curr_xyz.z;
 				float factor_z = diff_z / z_contrib / 10;
 				for (int i = 0; i < CIE_SAMPLES; i++) {
-					curr_spec.samples[i] += CIE_Z[i] * factor_z;
+					curr_spec.samples[i] += g_cie_z[i] * factor_z;
 				}
 			}
 		}

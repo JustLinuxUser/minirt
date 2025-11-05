@@ -18,7 +18,7 @@ static void	sah_bucket_set_bounds_degenerate(t_sah_buckets *buckets)
 
 	i = 0;
 	while (i < SAH_BUCKETS)
-		buckets->bounds[i++] = BOUNDS_DEGENERATE;
+		buckets->bounds[i++] = bounds_degenerate();
 }
 
 static t_bounds3f	get_centroid_bounds(t_bvh_prim_slice prims)
@@ -26,7 +26,7 @@ static t_bounds3f	get_centroid_bounds(t_bvh_prim_slice prims)
 	t_bounds3f		centroid_bounds;
 	size_t			i;
 
-	centroid_bounds = BOUNDS_DEGENERATE;
+	centroid_bounds = bounds_degenerate();
 	i = 0;
 	while (i < prims.len)
 		centroid_bounds = bounds_extend_pt(

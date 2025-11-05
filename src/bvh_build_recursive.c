@@ -72,7 +72,7 @@ t_bvh_build_node	*bvh_build_recursive(t_bvh_build_state *state,
 
 	assert(slice.len > 0);
 	ret = bump_alloc(&state->allocator, sizeof(*ret));
-	*ret = (t_bvh_build_node){.bounds = BOUNDS_DEGENERATE};
+	*ret = (t_bvh_build_node){.bounds = bounds_degenerate()};
 	i = 0;
 	while (i < slice.len)
 		ret->bounds = bounds_extend_bounds(ret->bounds, slice.buff[i++].bounds);
