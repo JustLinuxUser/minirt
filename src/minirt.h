@@ -132,15 +132,12 @@ int sample_alias_table(t_lights *lights, float lu);
 // colors.c
 float linear_to_gamma(float c);
 /*NEW*/
-t_8bcolor ColortoRGB(t_color c);
-t_fvec3 SpectrumToXYZ(t_SampledSpectrum s, t_SampledWavelengths lambda);
+t_fvec3 spectrum_to_xyz(t_SampledSpectrum s, t_SampledWavelengths lambda);
 t_8bcolor xyz_to_rgb(t_fvec3 t);
 t_fvec3 rgb_to_xyz(t_8bcolor c);
 uint32_t conv_8bcolor_to_uint32(t_8bcolor c);
 t_fvec3 densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum s);
 t_color clamp_rgb(t_color c);
-
-float rand_float(uint64_t *rand_state);
 
 /*END NEW*/
 t_fvec3 perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);

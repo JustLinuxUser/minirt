@@ -1,7 +1,9 @@
 #ifndef MYMATH_H
 # define MYMATH_H
+#include "libft/libft.h"
 #include <assert.h>
 #include <math.h>
+#include <stdint.h>
 
 #define PI 3.1415
 
@@ -57,4 +59,8 @@ inline static float signf(float f) {
 	return 0;
 }
 
+inline static float	rand_float(uint64_t *rand_state)
+{
+	return (xorshift64(rand_state) / (float)UINT64_MAX);
+}
 #endif
