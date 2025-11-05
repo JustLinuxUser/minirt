@@ -33,11 +33,11 @@ void	flatten_bvh(t_linear_bvh_nd *linear,
 	linear[curr_offset].axis = tree->split_axis;
 	linear[curr_offset].n_primitives = tree->n_primitives;
 	if (tree->n_primitives)
-		linear[curr_offset]._union.primitives_offset = tree->first_prim_offset;
+		linear[curr_offset].u_.primitives_offset = tree->first_prim_offset;
 	else
 	{
 		flatten_bvh(linear, offset, tree->children[0]);
-		linear[curr_offset]._union.second_child_offset = *offset;
+		linear[curr_offset].u_.second_child_offset = *offset;
 		flatten_bvh(linear, offset, tree->children[1]);
 	}
 }

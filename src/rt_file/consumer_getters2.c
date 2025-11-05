@@ -44,6 +44,6 @@ int	push_blackbody(t_rt_token tk, t_state *state)
 
 	temperature = get_float(tk);
 	vec_densely_sampled_spectrum_push(&state->spectrums,
-		calculate_densely_sampled_spectrum(temperature));
+		densely_sampled_spectrum_blackbody(temperature));
 	return (state->spectrums.len - 1);
 }

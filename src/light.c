@@ -10,11 +10,12 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "minirt.h"
 #include "cie.h"
+#include "light_structs.h"
+#include "spectrum.h"
 
 //Calculate information for lights -> DenselySampledSpectrum
-t_densely_sampled_spectrum	calculate_densely_sampled_spectrum(float T)
+t_densely_sampled_spectrum	densely_sampled_spectrum_blackbody(float T)
 {
 	t_densely_sampled_spectrum	ret;
 	int							i;

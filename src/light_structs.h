@@ -9,10 +9,10 @@
 /*   Updated: 2025/11/02 18:52:17 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+#ifndef LIGHT_STRUCTS_H
+# define LIGHT_STRUCTS_H
 
-#pragma once
-
-#include "mymath.h"
+# include "mymath.h"
 
 typedef struct s_alias_bin
 {
@@ -41,3 +41,4 @@ typedef struct t_light
 	t_fvec3				position;
 	int					spec_idx;
 }	t_light;
+#endif

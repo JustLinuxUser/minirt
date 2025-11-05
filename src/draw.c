@@ -189,71 +189,83 @@ void render_single_thread(t_state* state) {
 		}
 	}
 }
-void launch_worker_threads(t_state* state) {
-	int i = -1;
-	int pos;
-	while (state->rndr.curr_px < state->screen_width * state->screen_height &&
-		(pos = thread_idx(state, THRD_NONE | THRD_FINISHED)) != -1 &&
-		++i < state->rndr.num_threads) {
+
+void	launch_worker_threads(t_state *state)
+{
+	int	i;
+	int	pos;
+
+	i = -1;
+	while (state->rndr.curr_px < state->screen_width * state->screen_height
+		&& (thread_idx(state, THRD_NONE | THRD_FINISHED)) != -1
+		&& ++i < state->rndr.num_threads)
+	{
+		pos = thread_idx(state, THRD_NONE | THRD_FINISHED);
 		if (state->rndr.thrd_states[pos] == THRD_FINISHED)
 			pthread_join(state->rndr.threads[pos], NULL);
 		state->rndr.thrd_states[pos] = THRD_RUNNING;
-		state->rndr.tasks[pos] =
-			(t_render_task){.state = state,
-				.start_pixel = state->rndr.curr_px,
-				.num_pixels = state->rndr.chunk_size,
-				.prng_state = move_tl_prng(state),
-				.thrd_state = &state->rndr.thrd_states[pos]};
+		state->rndr.tasks[pos]
+			= (t_render_task){.state = state,
+			.start_pixel = state->rndr.curr_px,
+			.num_pixels = state->rndr.chunk_size,
+			.prng_state = move_tl_prng(state),
+			.thrd_state = &state->rndr.thrd_states[pos]};
 		state->rndr.curr_px += state->rndr.chunk_size;
-		ft_printf("creating thread...\n");
 		pthread_create(&state->rndr.threads[pos], NULL, render_step,
-				 &state->rndr.tasks[pos]);
+			&state->rndr.tasks[pos]);
 	}
-	ft_printf("exited looop\n");
 }
 
-void render_multithread(t_state* state) {
-	if (state->rndr.curr_px == 0 && state->rndr.render_once &&
-		state->rndr.total_runs > 0)
-		return;
-	if (state->rndr.curr_px < state->screen_width * state->screen_height) {
+void	render_multithread(t_state *state)
+{
+	int	curr;
+
+	if (state->rndr.curr_px == 0 && state->rndr.render_once
+		&& state->rndr.total_runs > 0)
+		return ;
+	if (state->rndr.curr_px < state->screen_width * state->screen_height)
 		launch_worker_threads(state);
-	} else {
-		int curr;
-		while ((curr = thread_idx(state, THRD_FINISHED)) != -1) {
-			ft_printf("joining thread\n");
+	else
+	{
+		while ((curr = thread_idx(state, THRD_FINISHED)) != -1)
+		{
 			pthread_join(state->rndr.threads[curr], NULL);
 			state->rndr.thrd_states[curr] = THRD_NONE;
 		}
-		if (get_num_threads(state, THRD_NONE) == state->rndr.num_threads) {
-			ft_printf("resetting everything\n");
-			ft_memset(state->rndr.thrd_states, THRD_NONE,
-			 sizeof(state->rndr.thrd_states));
+		if (get_num_threads(state, THRD_NONE) == state->rndr.num_threads)
+		{
 			state->rndr.curr_px = 0;
 			state->rndr.total_runs++;
 			if (state->output_path.len)
-			{
 				draw(state);
+			if (state->output_path.len)
 				write_image_to_ppm(state->mlx_image, state->output_path.buff);
-			}
 			if (state->rndr.exit_after_render)
 				exit_app(state);
 		}
 	}
 }
 
-void emergency_exit(t_state* state) {
-	for (int i = 0; i < state->rndr.num_threads; i++) {
-		state->rndr.tasks[i].exit_immediatelly = 1;
-	}
-	int curr;
-	while ((curr = thread_idx(state, THRD_RUNNING | THRD_FINISHED)) != -1) {
+void	emergency_exit(t_state *state)
+{
+	int	curr;
+	int	i;
+
+	i = 0;
+	while (i < state->rndr.num_threads)
+		state->rndr.tasks[i++].exit_immediatelly = 1;
+	while (1)
+	{
+		curr = thread_idx(state, THRD_RUNNING | THRD_FINISHED);
+		if (curr == -1)
+			break ;
 		pthread_join(state->rndr.threads[curr], NULL);
 		state->rndr.thrd_states[curr] = THRD_NONE;
 	}
 }
 
-void exit_hook(void* state_arg) {
+void	exit_hook(void* state_arg)
+{
 	t_state* state = (t_state*)state_arg;
 	emergency_exit(state);
 }

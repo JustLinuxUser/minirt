@@ -14,9 +14,9 @@
 # define LIGHT_H
 # include "light_structs.h"
 # include "libft/generated/vec_alias_bin.h"
-# include "libft/generated/vec_densely_sampled_spectrum.h"
 # include "libft/generated/vec_light.h"
 # include "libft/generated/vec_float.h"
+# include "libft/generated/vec_densely_sampled_spectrum.h"
 
 typedef struct t_lights
 {
@@ -32,7 +32,7 @@ typedef struct t_SampledLight
 	float	p;
 }	t_SampledLight;
 
-t_densely_sampled_spectrum	calculate_densely_sampled_spectrum(float T);
+t_densely_sampled_spectrum	densely_sampled_spectrum_blackbody(float T);
 void						add_light(t_lights *lights, t_light to_add);
 void						calculate_pdfs(t_lights *lights);
 

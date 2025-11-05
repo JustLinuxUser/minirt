@@ -36,7 +36,7 @@ inline static void	collide_bvh_primitives(t_state *state,
 	i = 0;
 	while (i < curr.n_primitives)
 	{
-		prim_offs = curr._union.primitives_offset;
+		prim_offs = curr.u_.primitives_offset;
 		coll = collide_shape(
 				state, state->shapes.buff[prim_offs + i], b_isector->isect);
 		if (coll.collided && (coll.t < b_isector->curr_best.t
@@ -66,11 +66,11 @@ inline static void	collide_bvh_bounds(t_state *state,
 		{
 			b_isector->stack[++b_isector->stack_offs] = curr_nd_idx + 1;
 			b_isector->stack[++b_isector->stack_offs]
-				= curr._union.second_child_offset;
+				= curr.u_.second_child_offset;
 			return ;
 		}
 		b_isector->stack[++b_isector->stack_offs]
-			= curr._union.second_child_offset;
+			= curr.u_.second_child_offset;
 		b_isector->stack[++b_isector->stack_offs] = curr_nd_idx + 1;
 	}
 }

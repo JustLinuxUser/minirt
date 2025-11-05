@@ -1,6 +1,18 @@
-#ifndef DRAW_H
-#define DRAW_H
-#include "minirt.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   draw.h                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/11/05 16:15:32 by anddokhn          #+#    #+#             */
+/*   Updated: 2025/11/05 16:15:32 by anddokhn         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-void draw(t_state* state);
+#ifndef DRAW_H
+# define DRAW_H
+# include "minirt.h"
+
+void	draw(t_state *state);
 #endif
