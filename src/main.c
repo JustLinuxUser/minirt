@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "bvh.h"
 #include "libft/alloc/mmalloc.h"
 #include "minirt.h"
 #include "mymath.h"
@@ -51,55 +52,53 @@ void	init(t_state *state)
 
 void	load_shapes(t_state *state)
 {
-	for (size_t i = 0; i < state->triangles.len; i++)
-	{
-		vec_shape_push(
-			&state->shapes,
-			(t_shape){.type = OBJ_TRIANGLE, .ptr = state->triangles.buff + i});
-	}
-	for (size_t i = 0; i < state->spheres.len; i++) {
-		vec_shape_push(
-			&state->shapes,
-			(t_shape){.type = OBJ_SPHERE, .ptr = state->spheres.buff + i});
-	}
-	for (size_t i = 0; i < state->cylinders.len; i++) {
-		vec_shape_push(
-			&state->shapes,
-			(t_shape){.type = OBJ_CYLINDER, .ptr = state->cylinders.buff + i});
-	}
+	size_t	i;
 
-
-	// unbounded shapes
-	for (size_t i = 0; i < state->planes.len; i++) {
+	i = 0;
+	while (i < state->triangles.len)
+		vec_shape_push(
+			&state->shapes,
+			(t_shape){.type = OBJ_TRIANGLE,
+			.ptr = state->triangles.buff + i++});
+	i = 0;
+	while (i < state->spheres.len)
+		vec_shape_push(
+			&state->shapes,
+			(t_shape){.type = OBJ_SPHERE,
+			.ptr = state->spheres.buff + i++});
+	i = 0;
+	while (i < state->cylinders.len)
+		vec_shape_push(
+			&state->shapes,
+			(t_shape){.type = OBJ_CYLINDER,
+			.ptr = state->cylinders.buff + i++});
+	i = 0;
+	while (i < state->planes.len)
 		vec_shape_push(
 			&state->unbounded_shapes,
-			(t_shape){.type = OBJ_PLANE, .ptr = state->planes.buff + i});
-	}
+			(t_shape){.type = OBJ_PLANE, .ptr = state->planes.buff + i++});
 }
-void build_bvh(t_state* state);
 
-void free_state(t_state *state) {
-	size_t i;
+void	free_state(t_state *state)
+{
+	size_t	i;
 
 	free_zero(&state->unbounded_shapes.buff);
 	free_zero(&state->shapes.buff);
-
 	free_zero(&state->triangles.buff);
 	i = 0;
-	while (i < state->meshes.len) {
+	while (i < state->meshes.len)
+	{
 		free_zero(&state->meshes.buff[i].vertex_idxs.buff);
 		free_zero(&state->meshes.buff[i].vertices.buff);
 		i++;
 	}
 	free_zero(&state->meshes.buff);
-
 	free_zero(&state->planes.buff);
 	free_zero(&state->spheres.buff);
 	free_zero(&state->cylinders.buff);
-
 	free_zero(&state->s_colors);
 	free_zero(&state->spectrums.buff);
-
 	if (state->mlx_image)
 		mlx_delete_image(state->mlx, state->mlx_image);
 	if (state->mlx)
@@ -107,14 +106,16 @@ void free_state(t_state *state) {
 	free_zero(&state->output_path.buff);
 }
 
-void render_multithread(t_state* state, int num_threads);
-
-void exit_app(t_state *state) {
+void	exit_app(t_state *state)
+{
 	mlx_close_window(state->mlx);
 }
 
-int main(int argc, char** argv) {
-	t_state state = {
+t_state	state_default(void)
+{
+	t_state	state;
+
+	state = (t_state){
 		.screen_width = 800,
 		.screen_height = 600,
 		.samples_x = 5,
@@ -123,59 +124,32 @@ int main(int argc, char** argv) {
 		.screen_dist = 1,
 		.sky_light_idx = -1,
 		.rndr = {
-			.num_threads = 8,
-			.chunk_size = 1000,
-			.max_reflections = 4,
-			.render_once = false,
-			.exit_after_render = false,
-			.rand_state = 1,
-		}
+		.num_threads = 8,
+		.chunk_size = 1000,
+		.max_reflections = 4,
+		.render_once = false,
+		.exit_after_render = false,
+		.rand_state = 1,
+	}
 	};
+	return (state);
+}
+
+int	main(int argc, char **argv)
+{
+	t_state	state;
 
 	if (argc != 2)
 		return (1);
-
+	state = state_default();
 	if (!process_file(argv[1], &state))
-	{
 		return (free_state(&state), 1);
-	}
 	init(&state);
-
-	// return (0);
-	// if (get_obj(argv[1]))
-	//     return 1;
-	// return 0;
-
 	load_shapes(&state);
 	build_bvh(&state);
-	// 	printf("min: %f %f %f, max: %f %f %f\n", state.bvh->bounds.min.x, state.bvh->bounds.min.y, state.bvh->bounds.min.z,
-	// state.bvh->bounds.max.x, state.bvh->bounds.max.y, state.bvh->bounds.max.z
-	// 		);
-	// 	return 0;
-
 	ft_printf("triangles: %i\n", (int)state.triangles.len);
-
-	/*LIGHTS*/
-
-	// t_light light1 = {.t = POINT_LIGHT, .intensity = 100.f, .position = {.x = -30, .y = -50}};
-	// light1.spec = calculate_densely_sampled_spectrum(9000);
-	// 
-	// t_light light2 = {.t = POINT_LIGHT, .intensity = 1000.f, .position = fvec3_add(state.light_pos, (t_fvec3){.y = 20})};
-	// light2.spec = calculate_densely_sampled_spectrum(6200);
-	//
-	// t_light light3 = {.t = POINT_LIGHT, .intensity = 1000.f, .position = fvec3_add(state.light_pos, (t_fvec3){.z = 40, .y = 50})};
-	// light3.spec = calculate_densely_sampled_spectrum(3000);
-	// add_light(&lights, light3);
-	//
-	// t_light light4 = {.t = POINT_LIGHT, .intensity = 1000.f, .position = fvec3_add(state.light_pos, (t_fvec3){.z = 10, .y = 0})};
-	// light4.spec = calculate_densely_sampled_spectrum(6000);
-	// add_light(&lights, light4);
-
-	// add_light(&lights, light1);
-	// add_light(&lights, light2);
 	calculate_pdfs(&state.lights);
 	create_alias_table(&state.lights);
-
 	mlx_close_hook(state.mlx, exit_hook, &state);
 	mlx_loop_hook(state.mlx, loop_hook, &state);
 	mlx_loop(state.mlx);

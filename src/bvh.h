@@ -82,3 +82,4 @@ void				bvh_sah(t_bvh_build_state *state,
 						t_bvh_prim_slice prims, t_bvh_build_node *ret);
 t_sah_buckets		init_centroid_buckets(t_bvh_prim_slice prims,
 						t_bounds3f *centroid_bounds, int dim);
+void				build_bvh(t_state *state);
