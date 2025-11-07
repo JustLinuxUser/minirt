@@ -70,7 +70,7 @@ void	*render_step(void *arg)
 	while (z < t->state->screen_height) {
 		while (x < t->state->screen_width) {
 			t_ray curr_ray;
-			t_SampledSpectrum res_color = {0};
+			t_sampled_spec res_color = {0};
 			t_sampler_state sstate = {.stratified_x = t->state->samples_x,
 				.stratified_y = t->state->samples_y};
 
@@ -98,7 +98,7 @@ void	*render_step(void *arg)
 				curr_ray.dir = pt;
 
 				float lu = rand_float(&rand_state);
-				t_SampledWavelengths lambdas = SampleUniform(lu, 360, 830);
+				t_sampled_lambdas lambdas = sample_uniform(lu, 360, 830);
 
 				res_color = cast_reflectable_ray_new(
 					t->state, curr_ray, lambdas, t->state->rndr.max_reflections,

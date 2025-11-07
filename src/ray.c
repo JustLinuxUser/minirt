@@ -66,11 +66,11 @@ t_light	sample_effective_light(t_state *state, t_ray_isector *isector,
 	return (light);
 }
 
-t_SampledSpectrum cast_reflectable_ray_new(t_state *state, t_ray ray,
-			t_SampledWavelengths lambdas, int iters_left, uint64_t *rand_state)
+t_sampled_spec cast_reflectable_ray_new(t_state *state, t_ray ray,
+			t_sampled_lambdas lambdas, int iters_left, uint64_t *rand_state)
 {
-	t_SampledSpectrum	L = {0};
-	t_SampledSpectrum	beta = {1.f};
+	t_sampled_spec	L = {0};
+	t_sampled_spec	beta = {1.f};
 	t_collision			coll;
 	int					i;
 	int					iter = -1;
@@ -90,7 +90,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state *state, t_ray ray,
 		{
 			if (iter == 0)
 			{
-				t_SampledSpectrum sky_spec = sample_sky(state, lambdas);
+				t_sampled_spec sky_spec = sample_sky(state, lambdas);
 				i = -1;
 				while (++i < NUM_SPECTRUM_SAMPLES)
 					L.values[i] += beta.values[i] * sky_spec.values[i];
@@ -103,9 +103,9 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state *state, t_ray ray,
 		if (fvec3_dot(norm, ray.dir) > 0)
 			norm = fvec3_invert(norm);
         float lu = rand_float(rand_state);
-		t_SampledSpectrum color = {0};
+		t_sampled_spec color = {0};
 		color = get_surface_color(state, lambdas, coll);
-		t_SampledSpectrum light_spec = {0};
+		t_sampled_spec light_spec = {0};
 		t_ray_isector isector = {.ray = {.pos = p}, .t_min = 0.01, .ignore_shape = ignored_shape};
 		t_light light = sample_effective_light(state, &isector, rand_state, norm);
 		if (light.t != LIGHT_NONE) {
@@ -115,7 +115,7 @@ t_SampledSpectrum cast_reflectable_ray_new(t_state *state, t_ray ray,
 						&state->spectrums.buff[light.spec_idx],
 						lambdas), light.intensity * dot);
 		}
-		t_SampledSpectrum ambiant_spec = sample_densely_sampled_spectrum(
+		t_sampled_spec ambiant_spec = sample_densely_sampled_spectrum(
 				&state->ambiant_light_spec, lambdas);
 		i = -1;
 		while (++i < NUM_SPECTRUM_SAMPLES)

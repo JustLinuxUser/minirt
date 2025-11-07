@@ -136,7 +136,7 @@ int					sample_alias_table(t_lights *lights, float lu);
 // colors.c
 float				linear_to_gamma(float c);
 /*NEW*/
-t_fvec3				spectrum_to_xyz(t_SampledSpectrum s, t_SampledWavelengths lambda);
+t_fvec3				spectrum_to_xyz(t_sampled_spec s, t_sampled_lambdas lambda);
 t_8bcolor			xyz_to_rgb(t_fvec3 t);
 t_fvec3				rgb_to_xyz(t_8bcolor c);
 uint32_t			conv_8bcolor_to_uint32(t_8bcolor c);
@@ -147,8 +147,8 @@ t_color				clamp_rgb(t_color c);
 t_fvec3				perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c
-t_SampledSpectrum	cast_reflectable_ray_new(t_state *state, t_ray ray, 
-						t_SampledWavelengths lambdas, int iters_left, uint64_t *rand_state);
+t_sampled_spec	cast_reflectable_ray_new(t_state *state, t_ray ray, 
+						t_sampled_lambdas lambdas, int iters_left, uint64_t *rand_state);
 
 // tinyobj.c
 bool				load_triangles(t_state *state, t_obj_spec s);

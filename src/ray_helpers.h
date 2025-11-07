@@ -10,24 +10,21 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
-
-#include "ray.h"
-#include "cie.h"
-#include "minirt.h"
-#include "samplers.h"
-#include "shapes.h"
-#include "spectrum.h"
-#include <math.h>
-#include <stdlib.h>
+#ifndef RAY_HELPERS_H
+# define RAY_HELPERS_H
+# include "ray.h"
+# include "minirt.h"
+# include "shapes.h"
+# include "spectrum.h"
 
 t_collision			collide_ray_slow(t_state *state, t_ray_isector isect);
 
-t_SampledSpectrum	sample_densely_sampled_spectrum(
+t_sampled_spec	sample_densely_sampled_spectrum(
 						const t_densely_sampled_spectrum *spec,
-						t_SampledWavelengths lambdas);
+						t_sampled_lambdas lambdas);
 
-t_SampledSpectrum	get_surface_color(t_state *state,
-						t_SampledWavelengths lambdas, t_collision coll);
+t_sampled_spec	get_surface_color(t_state *state,
+						t_sampled_lambdas lambdas, t_collision coll);
 
-t_SampledSpectrum	sample_sky(t_state *state, t_SampledWavelengths lambdas);
+t_sampled_spec	sample_sky(t_state *state, t_sampled_lambdas lambdas);
+#endif

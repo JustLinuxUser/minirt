@@ -13,7 +13,7 @@
 #ifndef SHAPES_H
 # define SHAPES_H
 # include "bounds.h"
-# include "light.h"
+# include "light_structs.h"
 # include "ray.h"
 # include "mymath.h"
 # include <stdbool.h>
@@ -31,7 +31,6 @@ enum e_obj_type
 	OBJ_TRIANGLE,
 };
 
-
 typedef struct s_triangle
 {
 	int	mesh_idx;
@@ -39,7 +38,6 @@ typedef struct s_triangle
 }	t_triangle;
 
 # include "libft/generated/vec_triangle.h"
-
 
 typedef struct t_sphere
 {

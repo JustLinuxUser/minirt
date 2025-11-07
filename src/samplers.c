@@ -11,11 +11,8 @@
 /* ************************************************************************** */
 
 #include "samplers.h"
-#include "minirt.h"
 #include "float.h"
 #include <stdbool.h>
-#include <stdlib.h>
-#include <math.h>
 
 t_fvec3	rand_direction(uint64_t *rand_state)
 {

@@ -11,138 +11,124 @@
 /* ************************************************************************** */
 
 #include "minirt.h"
-#include <stdio.h>
 #include "cie.h"
 #include "libft/libft.h"
 
-/*SAMPLED SPECTRUM*/
-
-t_SampledSpectrum sampled_spectrum_add(t_SampledSpectrum ret, t_SampledSpectrum to_add)
+t_sampled_spec	sampled_spectrum_add(t_sampled_spec ret, t_sampled_spec to_add)
 {
-    int i = -1;
-    
-    while (++i < NUM_SPECTRUM_SAMPLES)
-        ret.values[i] += to_add.values[i];
-    return ret;
+	int	i;
+
+	i = -1;
+	while (++i < NUM_SPECTRUM_SAMPLES)
+		ret.values[i] += to_add.values[i];
+	return (ret);
 }
 
-t_SampledSpectrum sampled_spectrum_scale(t_SampledSpectrum ret, float scalar)
+t_sampled_spec	sampled_spectrum_scale(t_sampled_spec ret, float scalar)
 {
-    int i = -1;
-    
-    while (++i < NUM_SPECTRUM_SAMPLES)
-        ret.values[i] *= scalar;
-    return ret;
+	int	i;
+
+	i = -1;
+	while (++i < NUM_SPECTRUM_SAMPLES)
+		ret.values[i] *= scalar;
+	return (ret);
 }
 
-float lerp(float x, float a, float b)
+float	lerp(float x, float a, float b)
 {
-    return (1 - x) * a + x * b;
+	return ((1 - x) * a + x * b);
 }
 
 /*SAMPLED WAVELENGTHS*/
 
-t_SampledWavelengths SampleUniform(float u, float lambda_min, float lambda_max)
+t_sampled_lambdas	sample_uniform(float u, float lambda_min, float lambda_max)
 {
-    t_SampledWavelengths ret;
-    float delta = (lambda_max - lambda_min) / NUM_SPECTRUM_SAMPLES;
+	t_sampled_lambdas	ret;
+	float delta = (lambda_max - lambda_min) / NUM_SPECTRUM_SAMPLES;
 
-    ret.lambda[0] = lerp(u, lambda_min, lambda_max);
+	ret.lambda[0] = lerp(u, lambda_min, lambda_max);
 
-    for (int i = 1; i < NUM_SPECTRUM_SAMPLES; i++) {
-        //ret.lambda[i] = lambda_min + (i + u) * delta;
-        ret.lambda[i] = ret.lambda[i - 1] + delta;
-        if (ret.lambda[i] > lambda_max)
-            ret.lambda[i] = lambda_min + (ret.lambda[i] - lambda_max);
-    }
+	for (int i = 1; i < NUM_SPECTRUM_SAMPLES; i++) {
+		ret.lambda[i] = ret.lambda[i - 1] + delta;
+		if (ret.lambda[i] > lambda_max)
+			ret.lambda[i] = lambda_min + (ret.lambda[i] - lambda_max);
+	}
 
-    for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++) {
-        ret.pdf[i] = 1.f / (lambda_max - lambda_min); 
-    }
-    //FOR NOW, A KIND OF SOLUTION
-    // ret.lambda[0] = 430.f;
-    // ret.lambda[1] = 530.f;
-    // ret.lambda[2] = 630.f;
-    // ret.lambda[3] = 830.f;
-    //printf("lambdas: %f, %f, %f, %f\n", ret.lambda[0], ret.lambda[1], ret.lambda[2], ret.lambda[3]);
-    return ret;
+	for (int i = 0; i < NUM_SPECTRUM_SAMPLES; i++) {
+		ret.pdf[i] = 1.f / (lambda_max - lambda_min); 
+	}
+	return ret;
 }
 
-/*SPECTRUM*/
-
-/*???*/
-
-/*COLOR*/
-
-float clamp(float x, float minVal, float maxVal)
+float	fclamp(float x, float minVal, float maxVal)
 {
-    if (x < minVal)
-        return minVal;
-    else if (x > maxVal)
-        return maxVal;
-    else
-        return x;
+	if (x < minVal)
+		return minVal;
+	else if (x > maxVal)
+		return maxVal;
+	else
+		return (x);
 }
 
 /*WAVELENGTHS TO XYZ (invented converision values based on graphic)*/
 void cie_xyz(float lambda, float *x, float *y, float *z)
 {
-    if (lambda <= CIE_MIN_LAMBDA) {
-        *x = g_cie_x[0];
-        *y = g_cie_y[0];
-        *z = g_cie_z[0];
-        return;
-    }
-    if (lambda >= CIE_MAX_LAMBDA) {
-        *x = g_cie_x[CIE_SAMPLES-1];
-        *y = g_cie_y[CIE_SAMPLES-1];
-        *z = g_cie_z[CIE_SAMPLES-1];
-        return;
-    }
-    // float pos = (lambda - CIE_MIN_LAMBDA) / CIE_STEP;
-    float pos = lambda - CIE_MIN_LAMBDA;
-    int idx = (int)pos;
-    float t = pos - idx;
-    // float t = lambda - (CIE_MIN_LAMBDA + idx);
-    *x = g_cie_x[idx] * (1.0f - t) + g_cie_x[idx+1] * t;
-    *y = g_cie_y[idx] * (1.0f - t) + g_cie_y[idx+1] * t;
-    *z = g_cie_z[idx] * (1.0f - t) + g_cie_z[idx+1] * t;
+	if (lambda <= CIE_MIN_LAMBDA) {
+		*x = g_cie_x[0];
+		*y = g_cie_y[0];
+		*z = g_cie_z[0];
+		return;
+	}
+	if (lambda >= CIE_MAX_LAMBDA) {
+		*x = g_cie_x[CIE_SAMPLES-1];
+		*y = g_cie_y[CIE_SAMPLES-1];
+		*z = g_cie_z[CIE_SAMPLES-1];
+		return;
+	}
+	// float pos = (lambda - CIE_MIN_LAMBDA) / CIE_STEP;
+	float pos = lambda - CIE_MIN_LAMBDA;
+	int idx = (int)pos;
+	float t = pos - idx;
+	// float t = lambda - (CIE_MIN_LAMBDA + idx);
+	*x = g_cie_x[idx] * (1.0f - t) + g_cie_x[idx+1] * t;
+	*y = g_cie_y[idx] * (1.0f - t) + g_cie_y[idx+1] * t;
+	*z = g_cie_z[idx] * (1.0f - t) + g_cie_z[idx+1] * t;
 }
 
 t_fvec3 densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum s) {
-    float X = 0.0f, Y = 0.0f, Z = 0.0f;
+	float X = 0.0f, Y = 0.0f, Z = 0.0f;
 
-    for (int i = CIE_MIN_LAMBDA; i <= CIE_MAX_LAMBDA; ++i) {
-        float l = i;
-        float value = s.samples[i - (int)CIE_MIN_LAMBDA];
-     
-        //Need the color evaluation (static for now)
-        //Need to understand chromacity
-        float x_bar, y_bar, z_bar;
-        cie_xyz(l, &x_bar, &y_bar, &z_bar);
-        X += value * x_bar;
-        Y += value * y_bar;
-        Z += value * z_bar;
-    }
+	for (int i = CIE_MIN_LAMBDA; i <= CIE_MAX_LAMBDA; ++i) {
+		float l = i;
+		float value = s.samples[i - (int)CIE_MIN_LAMBDA];
 
-    //The average part
-    X /= CIE_SAMPLES / CIE_Y_INTEGRAL;
-    Y /= CIE_SAMPLES / CIE_Y_INTEGRAL;
-    Z /= CIE_SAMPLES / CIE_Y_INTEGRAL;
-    //Correction by the CIE_Y integral
-    X /= CIE_Y_INTEGRAL;
-    Y /= CIE_Y_INTEGRAL;
-    Z /= CIE_Y_INTEGRAL;
- 
-    return (t_fvec3){X, Y, Z};
+		//Need the color evaluation (static for now)
+		//Need to understand chromacity
+		float x_bar, y_bar, z_bar;
+		cie_xyz(l, &x_bar, &y_bar, &z_bar);
+		X += value * x_bar;
+		Y += value * y_bar;
+		Z += value * z_bar;
+	}
+
+	//The average part
+	X /= CIE_SAMPLES / CIE_Y_INTEGRAL;
+	Y /= CIE_SAMPLES / CIE_Y_INTEGRAL;
+	Z /= CIE_SAMPLES / CIE_Y_INTEGRAL;
+	//Correction by the CIE_Y integral
+	X /= CIE_Y_INTEGRAL;
+	Y /= CIE_Y_INTEGRAL;
+	Z /= CIE_Y_INTEGRAL;
+
+	return (t_fvec3){X, Y, Z};
 }
 
 t_color clamp_rgb(t_color c) {
-    t_color out;
-    out.x = clamp(c.x, 0.0f, 1.0f);
-    out.y = clamp(c.y, 0.0f, 1.0f);
-    out.z = clamp(c.z, 0.0f, 1.0f);
-    return out;
+	t_color out;
+	out.x = fclamp(c.x, 0.0f, 1.0f);
+	out.y = fclamp(c.y, 0.0f, 1.0f);
+	out.z = fclamp(c.z, 0.0f, 1.0f);
+	return out;
 }
 
 // int main()
@@ -162,18 +148,18 @@ t_color clamp_rgb(t_color c) {
 
 float blackbody(float lambda, float t)
 {
-    if (t <= 0)
-    {
-        return 0;
-    }
-    float c = 299792458.f;
-    float h =  6.62606957e-34f;
-    float kb = 1.3806488e-23f;
-    
-    float l = lambda * 1e-9f;
-    float Le = (2 * h * c * c) / (powf(l, 5) * (expf((h * c) / (l * kb * t)) - 1));
-    //printf("LE: %f\n", Le);
-    return Le;
+	if (t <= 0)
+	{
+		return 0;
+	}
+	float c = 299792458.f;
+	float h =  6.62606957e-34f;
+	float kb = 1.3806488e-23f;
+
+	float l = lambda * 1e-9f;
+	float Le = (2 * h * c * c) / (powf(l, 5) * (expf((h * c) / (l * kb * t)) - 1));
+	//printf("LE: %f\n", Le);
+	return Le;
 }
 
 // typedef struct s_sigmoid {

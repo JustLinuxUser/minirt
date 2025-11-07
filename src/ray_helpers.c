@@ -48,33 +48,33 @@ t_collision	collide_ray_slow(t_state *state, t_ray_isector isect)
 	return (curr_coll);
 }
 
-t_SampledSpectrum	sample_densely_sampled_spectrum(
-		const t_densely_sampled_spectrum *spec, t_SampledWavelengths lambdas)
+t_sampled_spec	sample_densely_sampled_spectrum(
+		const t_densely_sampled_spectrum *spec, t_sampled_lambdas lambdas)
 {
 	int					i;
-	t_SampledSpectrum	ret;
+	t_sampled_spec	ret;
 
 	i = -1;
-	ret = (t_SampledSpectrum){0};
+	ret = (t_sampled_spec){0};
 	while (++i < NUM_SPECTRUM_SAMPLES)
 		ret.values[i] = spec->samples[
 			(int)(lambdas.lambda[i] - CIE_MIN_LAMBDA)];
 	return (ret);
 }
 
-t_SampledSpectrum	get_surface_color(t_state *state,
-		t_SampledWavelengths lambdas, t_collision coll)
+t_sampled_spec	get_surface_color(t_state *state,
+		t_sampled_lambdas lambdas, t_collision coll)
 {
 	return (sample_densely_sampled_spectrum(
 			shape_spectrum(state, coll), lambdas));
 }
 
-t_SampledSpectrum	sample_sky(t_state *state, t_SampledWavelengths lambdas)
+t_sampled_spec	sample_sky(t_state *state, t_sampled_lambdas lambdas)
 {
-	t_SampledSpectrum	spec;
+	t_sampled_spec	spec;
 	t_light				l;
 
-	spec = (t_SampledSpectrum){0};
+	spec = (t_sampled_spec){0};
 	if (state->sky_light_idx != -1)
 	{
 		l = state->lights.lights.buff[state->sky_light_idx];

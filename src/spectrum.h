@@ -13,17 +13,18 @@
 #ifndef SPECTRUM_H
 # define SPECTRUM_H
 
-#include "config.h"
-#include "light.h"
+# include "config.h"
+# include "light.h"
 
 /*SAMPLED SPECTRUM*/
 
-typedef struct t_SampledSpectrum {
-    float values[NUM_SPECTRUM_SAMPLES];
-} t_SampledSpectrum;
+typedef struct t_SampledSpectrum
+{
+    float	values[NUM_SPECTRUM_SAMPLES];
+}	t_sampled_spec;
 
-t_SampledSpectrum sampled_spectrum_add(t_SampledSpectrum ret, t_SampledSpectrum to_add);
-t_SampledSpectrum sampled_spectrum_scale(t_SampledSpectrum ret, float scalar);
+t_sampled_spec sampled_spectrum_add(t_sampled_spec ret, t_sampled_spec to_add);
+t_sampled_spec sampled_spectrum_scale(t_sampled_spec ret, float scalar);
 
 /*SAMPLED WAVELENGTHS*/
 
@@ -31,10 +32,10 @@ typedef struct t_SampledWavelengths {
     float lambda[NUM_SPECTRUM_SAMPLES]; //wavelengths
     float pdf[NUM_SPECTRUM_SAMPLES]; //probability density
 
-} t_SampledWavelengths;
+} t_sampled_lambdas;
 
 float lerp(float x, float a, float b);
-t_SampledWavelengths SampleUniform(float u, float lambda_min, float lambda_max);
+t_sampled_lambdas sample_uniform(float u, float lambda_min, float lambda_max);
 void cie_xyz(float lambda, float *x, float *y, float *z);
 
 

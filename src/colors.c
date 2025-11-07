@@ -29,7 +29,7 @@ float	linear_to_gamma(float c)
 //         return 1.055f * powf(x, 1.0f/2.4f) - 0.055f;
 // }
 
-t_fvec3	spectrum_to_xyz(t_SampledSpectrum s, t_SampledWavelengths lambda)
+t_fvec3	spectrum_to_xyz(t_sampled_spec s, t_sampled_lambdas lambda)
 {
 	t_fvec3	ret;
 	t_fvec3	tmp;
