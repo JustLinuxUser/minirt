@@ -19,9 +19,7 @@
 # define CIE_STEP 1
 # define CIE_Y_INTEGRAL 106.856895
 
-extern const float	g_cie_x[CIE_SAMPLES];
-extern const float	g_cie_y[CIE_SAMPLES];
-extern const float	g_cie_z[CIE_SAMPLES];
-extern const float	g_cie_lambda[CIE_SAMPLES];
-
+float	*cie_x(void);
+float	*cie_y(void);
+float	*cie_z(void);
 #endif
