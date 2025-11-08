@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "rt_consumer.h"
-#include <stdio.h>
 
 bool	process_camera_renderer_settings(t_rt_consumer_tl *tl)
 {
@@ -113,16 +112,17 @@ bool	process_camera(t_rt_consumer_tl *tl)
 
 	if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
-	tl->state->cam.pos = get_fvec3(nd.token);
+	tl->state->cam.cam.pos = get_fvec3(nd.token);
 	if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
-	tl->state->cam.dir = fvec3_norm(get_fvec3(nd.token));
-	tl->state->cam_yaw = atan2f(tl->state->cam.dir.x, tl->state->cam.dir.y);
-	tl->state->cam_pitch = asinf(-tl->state->cam.dir.z);
+	tl->state->cam.cam.dir = fvec3_norm(get_fvec3(nd.token));
+	tl->state->cam.cam_yaw = atan2f(tl->state->cam.cam.dir.x,
+			tl->state->cam.cam.dir.y);
+	tl->state->cam.cam_pitch = asinf(-tl->state->cam.cam.dir.z);
 	if (get_tl_typed(tl, "fov", RT_ND_TUPLE_F1, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 180))
 		return (false);
-	tl->state->fov = get_float(nd.token);
+	tl->state->cam.fov = get_float(nd.token);
 	if (!process_camera_renderer_settings(tl))
 		return (false);
 	if (!process_camera_renderer_settings2(tl))

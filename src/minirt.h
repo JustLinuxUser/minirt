@@ -83,6 +83,22 @@ typedef struct s_renderer_state
 	int				rand_px;
 }	t_renderer_state;
 
+typedef struct s_camera
+{
+	t_ray	cam;
+	float	fov;
+	float	cam_pitch;
+	float	cam_yaw;
+
+	float	proj_coef;
+	float	screen_dist;
+
+	t_fvec3	x0y0;
+	t_fvec3	x1y0;
+	t_fvec3	x0y1;
+	t_fvec3	x1y1;
+}	t_camera;
+
 typedef struct s_state
 {
 	t_fvec3							*s_colors;
@@ -93,18 +109,12 @@ typedef struct s_state
 	int								samples_x;
 	int								samples_y;
 
-	t_ray							cam;
-	float							fov;
-	float							cam_pitch;
-	float							cam_yaw;
+	t_camera						cam;
 
 	t_densely_sampled_spectrum		ambiant_light_spec;
 	int								sky_light_idx;
 
 	t_lights						lights;
-
-	float							proj_coef;
-	float							screen_dist;
 
 	t_vec_mesh						meshes;
 	t_vec_triangle					triangles;

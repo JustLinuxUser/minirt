@@ -25,11 +25,31 @@
 #include <pthread.h>
 #include "rt_utils.h"
 
-void	init(t_state *state)
+void	init_camera(t_state *state)
 {
 	float	fov_x;
 	float	proj_plane_width;
 
+	fov_x = state->cam.fov / 180 * PI;
+	proj_plane_width = 2 * tan(fov_x / 2) * state->cam.screen_dist;
+	state->cam.proj_coef = proj_plane_width / state->screen_width;
+	state->cam.x0y0 = vec3_rotate_yaw_pitch(
+			perspective_cam_ray(state, (t_fvec2){0}, (t_fvec2){0}),
+			state->cam.cam_yaw, state->cam.cam_pitch);
+	state->cam.x1y0 = vec3_rotate_yaw_pitch(
+			perspective_cam_ray(state, (t_fvec2){.x = state->screen_width},
+				(t_fvec2){0}), state->cam.cam_yaw, state->cam.cam_pitch);
+	state->cam.x0y1 = vec3_rotate_yaw_pitch(
+			perspective_cam_ray(state, (t_fvec2){.y = state->screen_height},
+				(t_fvec2){0}), state->cam.cam_yaw, state->cam.cam_pitch);
+	state->cam.x1y1 = vec3_rotate_yaw_pitch(
+			perspective_cam_ray(state, (t_fvec2){.x = state->screen_width,
+				.y = state->screen_height}, (t_fvec2){0}),
+			state->cam.cam_yaw, state->cam.cam_pitch);
+}
+
+void	init(t_state *state)
+{
 	ft_memset(state->rndr.thrd_states,
 		THRD_NONE, sizeof(state->rndr.thrd_states));
 	state->mlx
@@ -45,9 +65,7 @@ void	init(t_state *state)
 	state->s_colors
 		= mmalloc(state->screen_width * state->screen_height * sizeof(t_fvec3),
 			"allocating the xyz colors buffer");
-	fov_x = state->fov / 180 * PI;
-	proj_plane_width = 2 * tan(fov_x / 2) * state->screen_dist;
-	state->proj_coef = proj_plane_width / state->screen_width;
+	init_camera(state);
 }
 
 void	load_shapes(t_state *state)
@@ -120,8 +138,10 @@ t_state	state_default(void)
 		.screen_height = 600,
 		.samples_x = 5,
 		.samples_y = 5,
+		.cam = {
 		.fov = 90,
 		.screen_dist = 1,
+	},
 		.sky_light_idx = -1,
 		.rndr = {
 		.num_threads = 8,
