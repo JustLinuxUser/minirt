@@ -26,7 +26,7 @@ t_rand_state	move_tl_prng(t_state *state)
 		state->rndr.rand_px++;
 		state->rndr.rand_px = state->rndr.rand_px
 			% (state->screen_width * state->screen_height);
-		xorshiro128plusplus_jump(&state->rndr.rand_state);
+		xoroshiro128plusplus_jump(&state->rndr.rand_state);
 	}
 	return (state->rndr.rand_state);
 }
@@ -77,7 +77,7 @@ void	*render_step(void *arg)
 				.stratified_y = t->state->samples_y};
 			t_fvec3 xyz_color = {0};
 			t_rand_state rand_state = t->prng_state;
-			xorshiro128plusplus_jump(&t->prng_state);
+			xoroshiro128plusplus_jump(&t->prng_state);
 			while (sample_stratified(&sstate, &sample)) {
 				if (t->exit_immediatelly == 1
 					|| coord_to_idx(t->state, x, z) - t->start_pixel > t->num_pixels - 1)

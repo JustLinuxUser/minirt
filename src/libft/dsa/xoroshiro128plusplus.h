@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   xorshiro128plusplus.h                              :+:      :+:    :+:   */
+/*   xoroshiro128plusplus.h                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -19,10 +19,10 @@ typedef struct s_rand_state
 	uint64_t	s[2];
 }	t_rand_state;
 
-uint64_t	xorshiro128plusplus(t_rand_state *s);
+uint64_t	xoroshiro128plusplus(t_rand_state *s);
 
 /* This is the jump function for the generator. It is equivalent
    to 2^64 calls to next(); it can be used to generate 2^64
    non-overlapping subsequences for parallel computations. */
-void		xorshiro128plusplus_jump(t_rand_state *s);
+void		xoroshiro128plusplus_jump(t_rand_state *s);
 #endif

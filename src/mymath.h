@@ -12,7 +12,7 @@
 
 #ifndef MYMATH_H
 # define MYMATH_H
-# include "libft/dsa/xorshiro128plusplus.h"
+# include "libft/dsa/xoroshiro128plusplus.h"
 # include <assert.h>
 # include <stdint.h>
 
@@ -62,6 +62,6 @@ void	sort2f(float *a, float *b);
 
 inline static float	rand_float(t_rand_state *rand_state)
 {
-	return (xorshiro128plusplus(rand_state) / (float)UINT64_MAX);
+	return (xoroshiro128plusplus(rand_state) / (float)UINT64_MAX);
 }
 #endif

@@ -15,7 +15,7 @@
 # include "MLX42/include/MLX42/MLX42.h"
 # include "config.h"
 # include "libft/dsa/dyn_str.h"
-# include "libft/dsa/xorshiro128plusplus.h"
+# include "libft/dsa/xoroshiro128plusplus.h"
 # include "mymath.h"
 # include "obj_loader.h"
 # include "spectrum.h"

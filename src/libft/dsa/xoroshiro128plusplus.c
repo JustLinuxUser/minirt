@@ -40,14 +40,14 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. */
 
 #include <stddef.h>
 #include <stdint.h>
-#include "xorshiro128plusplus.h"
+#include "xoroshiro128plusplus.h"
 
 static inline uint64_t	rotl(const uint64_t x, int k)
 {
 	return ((x << k) | (x >> (64 - k)));
 }
 
-uint64_t	xorshiro128plusplus(t_rand_state *s)
+uint64_t	xoroshiro128plusplus(t_rand_state *s)
 {
 	const uint64_t	s0 = s->s[0];
 	const uint64_t	result = rotl(s0 + s->s[1], 17) + s0;
@@ -63,7 +63,7 @@ uint64_t	xorshiro128plusplus(t_rand_state *s)
 /* This is the jump function for the generator. It is equivalent
    to 2^64 calls to next(); it can be used to generate 2^64
    non-overlapping subsequences for parallel computations. */
-void	xorshiro128plusplus_jump(t_rand_state *s)
+void	xoroshiro128plusplus_jump(t_rand_state *s)
 {
 	uint64_t				s0;
 	uint64_t				s1;
@@ -84,7 +84,7 @@ void	xorshiro128plusplus_jump(t_rand_state *s)
 				s0 ^= s->s[0];
 				s1 ^= s->s[1];
 			}
-			xorshiro128plusplus(s);
+			xoroshiro128plusplus(s);
 		}
 	}
 	s->s[0] = s0;
@@ -95,7 +95,7 @@ void	xorshiro128plusplus_jump(t_rand_state *s)
    2^96 calls to next(); it can be used to generate 2^32 starting points,
    from each of which jump() will generate 2^32 non-overlapping
    subsequences for parallel distributed computations. */
-void	xorshiro128plusplus_long_jump(t_rand_state *s)
+void	xoroshiro128plusplus_long_jump(t_rand_state *s)
 {
 	static const uint64_t	long_jump[2]
 		= {0x360fd5f2cf8d5d99, 0x9c6e6877736c46e3};
@@ -117,7 +117,7 @@ void	xorshiro128plusplus_long_jump(t_rand_state *s)
 				s0 ^= s->s[0];
 				s1 ^= s->s[1];
 			}
-			xorshiro128plusplus(s);
+			xoroshiro128plusplus(s);
 		}
 	}
 	s->s[0] = s0;
