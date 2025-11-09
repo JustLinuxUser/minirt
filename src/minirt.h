@@ -12,10 +12,10 @@
 
 #ifndef MINIRT_H
 # define MINIRT_H
-# include "MLX42/MLX42.h"
 # include "MLX42/include/MLX42/MLX42.h"
 # include "config.h"
 # include "libft/dsa/dyn_str.h"
+# include "libft/dsa/xorshiro128plusplus.h"
 # include "mymath.h"
 # include "obj_loader.h"
 # include "spectrum.h"
@@ -56,7 +56,7 @@ typedef struct s_render_task
 	int				num_pixels;
 	uint8_t			*thrd_state;
 	int				exit_immediatelly;
-	uint64_t		prng_state;
+	t_rand_state	prng_state;
 }			t_render_task;
 
 enum e_THRD_STATE
@@ -79,7 +79,7 @@ typedef struct s_renderer_state
 	bool			render_once;
 	bool			exit_after_render;
 
-	uint64_t		rand_state;
+	t_rand_state	rand_state;
 	int				rand_px;
 }	t_renderer_state;
 
@@ -158,7 +158,7 @@ t_fvec3				perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c
 t_sampled_spec	cast_reflectable_ray_new(t_state *state, t_ray ray, 
-						t_sampled_lambdas lambdas, int iters_left, uint64_t *rand_state);
+						t_sampled_lambdas lambdas, int iters_left, t_rand_state *rand_state);
 
 // tinyobj.c
 bool				load_triangles(t_state *state, t_obj_spec s);

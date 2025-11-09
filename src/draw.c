@@ -15,19 +15,18 @@
 #include "MLX42/MLX42.h"
 #include "libft/libft.h"
 #include "minirt.h"
-#include "rt_file/rt_parser.h"
 #include "rt_utils.h"
 #include "samplers.h"
 #include "draw.h"
 
-uint64_t	move_tl_prng(t_state *state)
+t_rand_state	move_tl_prng(t_state *state)
 {
 	while (state->rndr.rand_px != state->rndr.curr_px)
 	{
 		state->rndr.rand_px++;
 		state->rndr.rand_px = state->rndr.rand_px
 			% (state->screen_width * state->screen_height);
-		xorshift64(&state->rndr.rand_state);
+		xorshiro128plusplus_jump(&state->rndr.rand_state);
 	}
 	return (state->rndr.rand_state);
 }
@@ -77,14 +76,14 @@ void	*render_step(void *arg)
 			t_sampler_state sstate = {.stratified_x = t->state->samples_x,
 				.stratified_y = t->state->samples_y};
 			t_fvec3 xyz_color = {0};
-			uint64_t rand_state = xorshift64(&t->prng_state);
-			rand_state++;
+			t_rand_state rand_state = t->prng_state;
+			xorshiro128plusplus_jump(&t->prng_state);
 			while (sample_stratified(&sstate, &sample)) {
-				if (t->exit_immediatelly == 1 ||
-					coord_to_idx(t->state, x, z) - t->start_pixel >
-					t->num_pixels - 1) {
+				if (t->exit_immediatelly == 1
+					|| coord_to_idx(t->state, x, z) - t->start_pixel > t->num_pixels - 1)
+				{
 					*t->thrd_state = THRD_FINISHED;
-					return 0;
+					return (0);
 				}
 				float lu = rand_float(&rand_state);
 				t_sampled_lambdas lambdas = sample_uniform(lu, 360, 830);
@@ -95,17 +94,17 @@ void	*render_step(void *arg)
 				xyz_color =
 					fvec3_add(spectrum_to_xyz(res_color, lambdas), xyz_color);
 			}
-			xyz_color = fvec3_scale(
-				xyz_color, 1. / (sstate.stratified_x * sstate.stratified_y));
+			xyz_color = fvec3_scale(xyz_color,
+					1. / (sstate.stratified_x * sstate.stratified_y));
 			t->state->s_colors[z * t->state->screen_width + x] = fvec3_add(
-				t->state->s_colors[z * t->state->screen_width + x], xyz_color);
+					t->state->s_colors[z * t->state->screen_width + x], xyz_color);
 			x++;
 		}
 		x = 0;
 		z++;
 	}
 	*t->thrd_state = THRD_FINISHED;
-	return 0;
+	return (0);
 }
 
 void	draw(t_state *state)
@@ -136,7 +135,7 @@ void	draw(t_state *state)
 	}
 }
 
-int	thread_idx(t_state* state, int mask)
+int	thread_idx(t_state *state, int mask)
 {
 	int	j;
 
@@ -147,13 +146,17 @@ int	thread_idx(t_state* state, int mask)
 	return (-1);
 }
 
-int	get_num_threads(t_state* state, int mask)
+int	get_num_threads(t_state *state, int mask)
 {
-	int ret = 0;
-	for (int j = 0; j < state->rndr.num_threads; j++)
+	int	ret;
+	int	j;
+
+	ret = 0;
+	j = -1;
+	while (++j < state->rndr.num_threads)
 		if (state->rndr.thrd_states[j] & mask)
 			ret++;
-	return ret;
+	return (ret);
 }
 
 void	render_single_thread(t_state *state)

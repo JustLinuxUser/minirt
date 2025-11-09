@@ -12,7 +12,7 @@
 
 #ifndef MYMATH_H
 # define MYMATH_H
-# include "libft/libft.h"
+# include "libft/dsa/xorshiro128plusplus.h"
 # include <assert.h>
 # include <stdint.h>
 
@@ -60,8 +60,8 @@ float	fvec3_idx(t_fvec3 v, int idx);
 
 void	sort2f(float *a, float *b);
 
-inline static float	rand_float(uint64_t *rand_state)
+inline static float	rand_float(t_rand_state *rand_state)
 {
-	return (xorshift64(rand_state) / (float)UINT64_MAX);
+	return (xorshiro128plusplus(rand_state) / (float)UINT64_MAX);
 }
 #endif

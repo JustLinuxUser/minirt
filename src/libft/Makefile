@@ -88,6 +88,7 @@ SOURCES +=	dsa/dyn_str.c\
 			dsa/deque_char2.c\
 			dsa/prng.c\
 			dsa/xorshift.c\
+			dsa/xoroshiro128plusplus.c\
 			dsa/vec_dyn_str.c\
 			dsa/smoothsort.c\
 			dsa/smoothsort2.c\

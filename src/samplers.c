@@ -14,7 +14,7 @@
 #include "float.h"
 #include <stdbool.h>
 
-t_fvec3	rand_direction(uint64_t *rand_state)
+t_fvec3	rand_direction(t_rand_state *rand_state)
 {
 	t_fvec3	ret;
 	float	lensq;
@@ -31,7 +31,7 @@ t_fvec3	rand_direction(uint64_t *rand_state)
 	return (fvec3_norm(ret));
 }
 
-t_fvec3	rand_halfsphere(t_fvec3 norm, uint64_t *rand_state)
+t_fvec3	rand_halfsphere(t_fvec3 norm, t_rand_state *rand_state)
 {
 	t_fvec3	ret;
 

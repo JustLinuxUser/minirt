@@ -21,7 +21,7 @@
 #include "ray_helpers.h"
 
 t_light	sample_effective_light(t_state *state, t_ray_isector *isector,
-		uint64_t *rand_state, t_fvec3 norm)
+		t_rand_state *rand_state, t_fvec3 norm)
 {
 	t_light		light;
 	float		light_t;
@@ -67,7 +67,7 @@ t_light	sample_effective_light(t_state *state, t_ray_isector *isector,
 }
 
 t_sampled_spec cast_reflectable_ray_new(t_state *state, t_ray ray,
-			t_sampled_lambdas lambdas, int iters_left, uint64_t *rand_state)
+			t_sampled_lambdas lambdas, int iters_left, t_rand_state *rand_state)
 {
 	t_sampled_spec	L = {0};
 	t_sampled_spec	beta = {1.f};
@@ -102,7 +102,6 @@ t_sampled_spec cast_reflectable_ray_new(t_state *state, t_ray ray,
 		norm = collision_norm(state, coll, p);
 		if (fvec3_dot(norm, ray.dir) > 0)
 			norm = fvec3_invert(norm);
-        float lu = rand_float(rand_state);
 		t_sampled_spec color = {0};
 		color = get_surface_color(state, lambdas, coll);
 		t_sampled_spec light_spec = {0};

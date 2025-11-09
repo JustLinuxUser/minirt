@@ -149,7 +149,9 @@ t_state	state_default(void)
 		.max_reflections = 4,
 		.render_once = false,
 		.exit_after_render = false,
-		.rand_state = 1,
+		.rand_state.s = {
+		1, 1
+	},
 	}
 	};
 	return (state);

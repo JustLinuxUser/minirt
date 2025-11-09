@@ -25,6 +25,6 @@ typedef struct sampler_state
 }	t_sampler_state;
 
 bool	sample_stratified(t_sampler_state *state, t_fvec2 *sample);
-t_fvec3	rand_halfsphere(t_fvec3 norm, uint64_t *rand_state);
-t_fvec3	rand_direction(uint64_t *rand_state);
+t_fvec3	rand_halfsphere(t_fvec3 norm, t_rand_state *rand_state);
+t_fvec3	rand_direction(t_rand_state *rand_state);
 #endif
