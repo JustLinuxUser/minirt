@@ -60,44 +60,60 @@ t_ray	projection_ray(t_render_task *t, int x, int z, t_fvec2 sample)
 	return (ret);
 }
 
+t_fvec3	render_subpixel(t_render_task *t, t_ray ray, t_rand_state *rand_state)
+{
+	t_sampled_lambdas	lambdas;
+
+	lambdas = sample_uniform(rand_float(rand_state), 360, 830);
+	return (spectrum_to_xyz(cast_reflectable_ray_new(
+				t->state, ray, lambdas,
+				t->state->rndr.max_reflections, rand_state),
+			lambdas));
+}
+
+int	render_pixel(t_render_task *t, int x, int z)
+{
+	t_fvec2			sample;
+	t_sampler_state	sstate;
+	t_fvec3			xyz_color;
+	t_rand_state	rand_state;
+
+	sstate = (t_sampler_state){.stratified_x = t->state->samples_x,
+		.stratified_y = t->state->samples_y};
+	xyz_color = (t_fvec3){0};
+	rand_state = t->prng_state;
+	xoroshiro128plusplus_jump(&t->prng_state);
+	while (sample_stratified(&sstate, &sample))
+	{
+		if (t->exit_immediatelly == 1 || coord_to_idx(t->state, x, z)
+			- t->start_pixel > t->num_pixels - 1)
+		{
+			*t->thrd_state = THRD_FINISHED;
+			return (0);
+		}
+		xyz_color = fvec3_add(render_subpixel(t,
+					projection_ray(t, x, z, sample), &rand_state), xyz_color);
+	}
+	t->state->s_colors[z * t->state->screen_width + x] = fvec3_add(t->state
+			->s_colors[z * t->state->screen_width + x], fvec3_scale(xyz_color,
+				1. / (sstate.stratified_x * sstate.stratified_y)));
+	return (1);
+}
+
 void	*render_step(void *arg)
 {
 	t_render_task	*t;
 	int				x;
 	int				z;
-	t_fvec2			sample;
-	t_ray			curr_ray;
 
 	t = (t_render_task *)arg;
 	idx_to_coords(t->state, t->start_pixel, &x, &z);
-	while (z < t->state->screen_height) {
-		while (x < t->state->screen_width) {
-			t_sampled_spec res_color = {0};
-			t_sampler_state sstate = {.stratified_x = t->state->samples_x,
-				.stratified_y = t->state->samples_y};
-			t_fvec3 xyz_color = {0};
-			t_rand_state rand_state = t->prng_state;
-			xoroshiro128plusplus_jump(&t->prng_state);
-			while (sample_stratified(&sstate, &sample)) {
-				if (t->exit_immediatelly == 1
-					|| coord_to_idx(t->state, x, z) - t->start_pixel > t->num_pixels - 1)
-				{
-					*t->thrd_state = THRD_FINISHED;
-					return (0);
-				}
-				float lu = rand_float(&rand_state);
-				t_sampled_lambdas lambdas = sample_uniform(lu, 360, 830);
-				curr_ray = projection_ray(t, x, z, sample);
-				res_color = cast_reflectable_ray_new(
-					t->state, curr_ray, lambdas, t->state->rndr.max_reflections,
-					&rand_state);
-				xyz_color =
-					fvec3_add(spectrum_to_xyz(res_color, lambdas), xyz_color);
-			}
-			xyz_color = fvec3_scale(xyz_color,
-					1. / (sstate.stratified_x * sstate.stratified_y));
-			t->state->s_colors[z * t->state->screen_width + x] = fvec3_add(
-					t->state->s_colors[z * t->state->screen_width + x], xyz_color);
+	while (z < t->state->screen_height)
+	{
+		while (x < t->state->screen_width)
+		{
+			if (!render_pixel(t, x, z))
+				return (0);
 			x++;
 		}
 		x = 0;
@@ -159,20 +175,33 @@ int	get_num_threads(t_state *state, int mask)
 	return (ret);
 }
 
+static void	finish_render_loop(t_state *state)
+{
+	state->rndr.curr_px = 0;
+	state->rndr.total_runs++;
+	if (state->output_path.len)
+		draw(state);
+	if (state->output_path.len)
+		write_image_to_ppm(state->mlx_image, state->output_path.buff);
+	if (state->rndr.exit_after_render)
+		exit_app(state);
+}
+
 void	render_single_thread(t_state *state)
 {
-	double	start;
-	uint8_t	exit_flag;
+	double			start;
+	uint8_t			exit_flag;
+	t_render_task	render_task;
 
-	if (state->rndr.curr_px == 0 && state->rndr.render_once &&
-		state->rndr.total_runs > 0)
+	if (state->rndr.curr_px == 0 && state->rndr.render_once
+		&& state->rndr.total_runs > 0)
 		return ;
 	start = mlx_get_time();
 	while (mlx_get_time() - start < 1.0 / SINGLE_THREAD_TARGET_FPS)
 	{
 		if (state->rndr.curr_px < state->screen_width * state->screen_height)
 		{
-			t_render_task render_task = {.state = state,
+			render_task = (t_render_task){.state = state,
 				.start_pixel = state->rndr.curr_px,
 				.prng_state = move_tl_prng(state),
 				.num_pixels = 1,
@@ -182,15 +211,7 @@ void	render_single_thread(t_state *state)
 		}
 		else
 		{
-			state->rndr.total_runs++;
-			state->rndr.curr_px = 0;
-			if (state->output_path.len)
-			{
-				draw(state);
-				write_image_to_ppm(state->mlx_image, state->output_path.buff);
-			}
-			if (state->rndr.exit_after_render)
-				exit_app(state);
+			finish_render_loop(state);
 		}
 	}
 }
@@ -221,6 +242,7 @@ void	launch_worker_threads(t_state *state)
 	}
 }
 
+
 static void	collect_and_wait_multithreaded(t_state *state)
 {
 	int	curr;
@@ -235,14 +257,7 @@ static void	collect_and_wait_multithreaded(t_state *state)
 	}
 	if (get_num_threads(state, THRD_NONE) == state->rndr.num_threads)
 	{
-		state->rndr.curr_px = 0;
-		state->rndr.total_runs++;
-		if (state->output_path.len)
-			draw(state);
-		if (state->output_path.len)
-			write_image_to_ppm(state->mlx_image, state->output_path.buff);
-		if (state->rndr.exit_after_render)
-			exit_app(state);
+		finish_render_loop(state);
 	}
 }
 
@@ -289,5 +304,6 @@ void	loop_hook(void *state_param)
 
 	state = (t_state *)state_param;
 	render_multithread(state);
+	// render_single_thread(state);
 	draw(state);
 }
