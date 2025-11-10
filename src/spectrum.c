@@ -105,7 +105,7 @@ void	cie_xyz(float lambda, float *x, float *y, float *z)
 	*z = cie_z()[idx] * (1.0f - t) + cie_z()[idx + 1] * t;
 }
 
-t_fvec3	densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum s)
+t_fvec3	densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum *s)
 {
 	t_fvec3	ret;
 	t_fvec3	bar;
@@ -117,7 +117,7 @@ t_fvec3	densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum s)
 	i = CIE_MIN_LAMBDA;
 	while (i <= CIE_MAX_LAMBDA)
 	{
-		value = s.samples[i - (int)CIE_MIN_LAMBDA];
+		value = s->samples[i - (int)CIE_MIN_LAMBDA];
 		cie_xyz(i, &bar.x, &bar.y, &bar.z);
 		ret.x += value * bar.x;
 		ret.y += value * bar.y;
@@ -165,67 +165,84 @@ inline static float	color_error(t_fvec3 c0, t_fvec3 c1)
 	return (fvec3_len_sq(fvec3_sub(c0, c1)));
 }
 
-t_densely_sampled_spectrum	xyz_to_spectrum(t_fvec3 target_xyz,
+void add_contrib(t_densely_sampled_spectrum *spec, float diff, float contrib, float *cie)
+{
+	float factor = diff / contrib / 10;
+
+	for (int i = 0; i < CIE_SAMPLES; i++) {
+		spec->samples[i] += cie[i] * factor;
+	}
+}
+
+void	clamp_spectre(t_densely_sampled_spectrum *spec)
+{
+	float	max;
+	int		i;
+
+	max = 0;
+	i = 0;
+	while (i < CIE_SAMPLES)
+	{
+		spec->samples[i] = fmax(spec->samples[i], 0);
+		max = fmax(spec->samples[i], max);
+		i++;
+	}
+	max = fmax(max, 1);
+	i = 0;
+	while (i < CIE_SAMPLES)
+		spec->samples[i++] /= max;
+}
+
+void	reduce_err_iter(t_densely_sampled_spectrum *spec,
+			t_fvec3 target, t_fvec3 contrib)
+{
+	t_fvec3	curr;
+	int		i;
+
+	i = 0;
+	while (i < 100)
+	{
+		curr = densely_sampled_spectrum_to_xyz(spec);
+		if (i % 3 == 0)
+			add_contrib(spec, target.x - curr.x, contrib.x, cie_x());
+		else if (i % 3 == 1)
+			add_contrib(spec, target.y - curr.y, contrib.y, cie_y());
+		else
+			add_contrib(spec, target.z - curr.z, contrib.z, cie_z());
+		i++;
+	}
+	i = 0;
+	while (i < CIE_SAMPLES)
+	{
+		spec->samples[i] = fmax(spec->samples[i], 0);
+		i++;
+	}
+}
+t_densely_sampled_spectrum	xyz_to_spectrum(t_fvec3 target,
 		bool clamp, float *err)
 {
 	t_densely_sampled_spectrum	spec;
 	t_fvec3						contrib;
+	int							i;
+	t_fvec3						curr_xyz;
 
 	ft_memcpy(spec.samples, cie_x(), sizeof(spec.samples));
-	contrib.x = densely_sampled_spectrum_to_xyz(spec).x;
+	contrib.x = densely_sampled_spectrum_to_xyz(&spec).x;
 	ft_memcpy(spec.samples, cie_y(), sizeof(spec.samples));
-	contrib.y = densely_sampled_spectrum_to_xyz(spec).y;
+	contrib.y = densely_sampled_spectrum_to_xyz(&spec).y;
 	ft_memcpy(spec.samples, cie_z(), sizeof(spec.samples));
-	contrib.z = densely_sampled_spectrum_to_xyz(spec).z;
+	contrib.z = densely_sampled_spectrum_to_xyz(&spec).z;
 	spec = (t_densely_sampled_spectrum){0};
-	for (int i = 0; i < 10; i++)
+	i = 0;
+	while (i < 10)
 	{
-		for (int i = 0; i < 100; i++)
-		{
-			t_fvec3 curr_xyz = densely_sampled_spectrum_to_xyz(spec);
-			if (i % 3 == 0)
-			{
-				float diff_x = target_xyz.x - curr_xyz.x;
-				float factor_x = diff_x / contrib.x / 10;
-				for (int i = 0; i < CIE_SAMPLES; i++) {
-					spec.samples[i] += cie_x()[i] * factor_x;
-				}
-			}
-			else if (i % 3 == 1)
-			{
-				float diff_y = target_xyz.y - curr_xyz.y;
-				float factor_y = diff_y / contrib.y / 10;
-				for (int i = 0; i < CIE_SAMPLES; i++) {
-					spec.samples[i] += cie_y()[i] * factor_y;
-				}
-			}
-			else
-			{
-				float diff_z = target_xyz.z - curr_xyz.z;
-				float factor_z = diff_z / contrib.z / 10;
-				for (int i = 0; i < CIE_SAMPLES; i++) {
-					spec.samples[i] += cie_z()[i] * factor_z;
-				}
-			}
-		}
-		for (int i = 0; i < CIE_SAMPLES; i++) {
-			spec.samples[i] = fmax(spec.samples[i], 0);
-		}
-		t_fvec3 curr_xyz = densely_sampled_spectrum_to_xyz(spec);
+		curr_xyz = densely_sampled_spectrum_to_xyz(&spec);
+		reduce_err_iter(&spec, target, contrib);
 		if (err)
-			*err = color_error(target_xyz, curr_xyz);
+			*err = color_error(target, curr_xyz);
+		i++;
 	}
 	if (clamp)
-	{
-		float max = 0;
-		for (int i = 0; i < CIE_SAMPLES; i++) {
-			spec.samples[i] = fmax(spec.samples[i], 0);
-			max = fmax(spec.samples[i], max);
-		}
-		max = fmax(max, 1);
-		for (int i = 0; i < CIE_SAMPLES; i++) {
-			spec.samples[i] /= max;
-		}
-	}
-	return spec;
+		clamp_spectre(&spec);
+	return (spec);
 }

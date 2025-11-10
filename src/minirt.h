@@ -150,7 +150,7 @@ t_fvec3				spectrum_to_xyz(t_sampled_spec s, t_sampled_lambdas lambda);
 t_8bcolor			xyz_to_rgb(t_fvec3 t);
 t_fvec3				rgb_to_xyz(t_8bcolor c);
 uint32_t			conv_8bcolor_to_uint32(t_8bcolor c);
-t_fvec3				densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum s);
+t_fvec3				densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum *s);
 t_color				clamp_rgb(t_color c);
 
 /*END NEW*/
