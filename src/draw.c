@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "MLX42/MLX42.h"
+#include "cie.h"
 #include "libft/libft.h"
 #include "minirt.h"
 #include "rt_utils.h"
@@ -64,7 +65,8 @@ t_fvec3	render_subpixel(t_render_task *t, t_ray ray, t_rand_state *rand_state)
 {
 	t_sampled_lambdas	lambdas;
 
-	lambdas = sample_uniform(rand_float(rand_state), 360, 830);
+	lambdas = sample_uniform(
+			rand_float(rand_state), CIE_MIN_LAMBDA, CIE_MAX_LAMBDA);
 	return (spectrum_to_xyz(cast_reflectable_ray_new(
 				t->state, ray, lambdas,
 				t->state->rndr.max_reflections, rand_state),
