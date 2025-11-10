@@ -218,6 +218,7 @@ void	reduce_err_iter(t_densely_sampled_spectrum *spec,
 		i++;
 	}
 }
+
 t_densely_sampled_spectrum	xyz_to_spectrum(t_fvec3 target,
 		bool clamp, float *err)
 {
