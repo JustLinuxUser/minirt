@@ -42,38 +42,60 @@ bool	intersect_sphere(t_sphere s, t_ray r, float *t, bool *inside)
 	return (true);
 }
 
+typedef struct s_isect_cylinder
+{
+	t_fvec3	ba;
+	t_fvec3	oc;
+	float	baba;
+	float	bard;
+	float	baoc;
+	float	k2;
+	float	k1;
+	float	h;
+	float	t;
+	float	y;
+}	t_isect_cylinder;
+
+bool	intersect_cylinder_caps(t_isect_cylinder i, float *t_ret, t_fvec3 *norm)
+{
+	i.t = (((i.y >= 0.0) * i.baba) - i.baoc) / i.bard;
+	if (fabs(i.k1 + i.k2 * i.t) < i.h)
+	{
+		*t_ret = i.t;
+		*norm = fvec3_norm(i.ba);
+		return (true);
+	}
+	return (false);
+}
+
 // https://iquilezles.org/articles/intersectors/
 bool	intersect_cylinder(t_ray r, t_cylinder cy, float *t_ret, t_fvec3 *norm)
 {
-	t_fvec3	ba = fvec3_sub(cy.b, cy.a);
-	t_fvec3	oc = fvec3_sub(r.pos, cy.a);
-	float	baba = fvec3_dot(ba, ba);
-	float	bard = fvec3_dot(ba, r.dir);
-	float	baoc = fvec3_dot(ba, oc);
-	float	k2 = baba - bard * bard;
-	float	k1 = baba * fvec3_dot(oc, r.dir) - baoc * bard;
+	t_isect_cylinder	i;
 
-	float	h = k1 * k1 - k2 * (baba * fvec3_dot(oc, oc) - baoc * baoc - cy.radius * cy.radius * baba);
-	if (h < 0.0)
-		return (false);  // no intersection
-	h = sqrt(h);
-	float t = (-k1 - h) / k2;
-	// body
-	float y = baoc + t * bard;
-	if (y > 0.0 && y < baba) {
-		*t_ret = t;
-		*norm = fvec3_scale(fvec3_sub(fvec3_add(oc, fvec3_scale(r.dir, t)),
-								fvec3_scale(fvec3_scale(ba, y), 1.0 / baba)), 1 / cy.radius);
-		return true;
+	i.ba = fvec3_sub(cy.b, cy.a);
+	i.oc = fvec3_sub(r.pos, cy.a);
+	i.baba = fvec3_dot(i.ba, i.ba);
+	i.bard = fvec3_dot(i.ba, r.dir);
+	i.baoc = fvec3_dot(i.ba, i.oc);
+	i.k2 = i.baba - i.bard * i.bard;
+	i.k1 = i.baba * fvec3_dot(i.oc, r.dir) - i.baoc * i.bard;
+	i.h = i.k1 * i.k1 - i.k2 * (i.baba * fvec3_dot(i.oc, i.oc)
+			- i.baoc * i.baoc - cy.radius * cy.radius * i.baba);
+	if (i.h < 0.0)
+		return (false);
+	i.h = sqrt(i.h);
+	i.t = (-i.k1 - i.h) / i.k2;
+	i.y = i.baoc + i.t * i.bard;
+	if (i.y > 0.0 && i.y < i.baba)
+	{
+		*t_ret = i.t;
+		*norm = fvec3_scale(fvec3_sub(fvec3_add(i.oc, fvec3_scale(r.dir, i.t)),
+					fvec3_scale(fvec3_scale(i.ba, i.y), 1.0 / i.baba)),
+				1 / cy.radius);
+		return (true);
 	}
-	// caps
-	t = (((y < 0.0) ? 0.0 : baba) - baoc) / bard;
-	if (fabs(k1 + k2 * t) < h) {
-		*t_ret = t;
-		*norm = fvec3_norm(ba);
-		return true;
-	}
-	return false;  // no intersection
+	return (intersect_cylinder_caps(i, t_ret, norm));
 }
 
 bool	intersect_plane(t_plane plane, t_ray r, float *t)
@@ -95,13 +117,13 @@ bool	intersect_triangle(t_ray ray,
 						t_fvec3 c,
 						t_triangle_collision *coll)
 {
+	float	inv_det;
+	float	det;
 	t_fvec3	edge1 = fvec3_sub(b, a);
 	t_fvec3	edge2 = fvec3_sub(c, a);
 	t_fvec3	ray_cross_e2 = fvec3_cross(ray.dir, edge2);
 	t_fvec3	s_cross_e1;
 	t_fvec3	s;
-	float	inv_det;
-	float	det;
 
 	det = fvec3_dot(edge1, ray_cross_e2);
 

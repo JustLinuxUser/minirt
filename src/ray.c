@@ -66,24 +66,27 @@ t_light	sample_effective_light(t_state *state, t_ray_isector *isector,
 	return (light);
 }
 
-t_sampled_spec cast_reflectable_ray_new(t_state *state, t_ray ray,
-			t_sampled_lambdas lambdas, int iters_left, t_rand_state *rand_state)
+t_sampled_spec	cast_reflectable_ray_new(t_state *state, t_ray ray,
+			t_sampled_lambdas lambdas, t_rand_state *rand_state)
 {
-	t_sampled_spec	L = {0};
-	t_sampled_spec	beta = {1.f};
+	t_sampled_spec		L = {0};
+	t_sampled_spec		beta = {1.f};
 	t_collision			coll;
 	int					i;
 	int					iter = -1;
 	t_fvec3				p;
 	t_fvec3				norm = {0};
 	void				*ignored_shape = 0;
+	int					iters_left;
 
 	i = -1;
 	while (++i < NUM_SPECTRUM_SAMPLES)
 		beta.values[i] = 1.f;
+	iters_left = state->rndr.max_reflections;
 	while (iters_left-- > 0)
 	{
 		iter++;
+
 		coll = collide_bvh(state, (t_ray_isector){.ray = ray, .t_max = INFINITY,
 				.t_min = 0.01, .ignore_shape = ignored_shape});
 		if (!coll.collided)
@@ -121,16 +124,14 @@ t_sampled_spec cast_reflectable_ray_new(t_state *state, t_ray ray,
 			L.values[i] += beta.values[i] * color.values[i]
 				* (light_spec.values[i] + ambiant_spec.values[i]
 					* fabs(fvec3_dot(norm, ray.dir)));
-		t_ray new_ray = (t_ray){.pos = p, .dir = rand_halfsphere(norm, rand_state)};
-		ray = new_ray;
-		float dot = fmax(fvec3_dot(norm, new_ray.dir), 0);
+		ray = (t_ray){.pos = p, .dir = rand_halfsphere(norm, rand_state)};
 		i = -1;
 		while (++i < NUM_SPECTRUM_SAMPLES)
 		{
 			if (lambdas.pdf[i] == 0.f)
 				beta.values[i] = 0.f;
 			else
-				beta.values[i] *= color.values[i] * dot;
+				beta.values[i] *= color.values[i] * fmax(fvec3_dot(norm, ray.dir), 0);
 		}
 	}
 	return (L);

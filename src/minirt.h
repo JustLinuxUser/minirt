@@ -158,7 +158,7 @@ t_fvec3				perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
 
 // ray.c
 t_sampled_spec	cast_reflectable_ray_new(t_state *state, t_ray ray, 
-						t_sampled_lambdas lambdas, int iters_left, t_rand_state *rand_state);
+						t_sampled_lambdas lambdas, t_rand_state *rand_state);
 
 // tinyobj.c
 bool				load_triangles(t_state *state, t_obj_spec s);
