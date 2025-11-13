@@ -111,36 +111,43 @@ bool	intersect_plane(t_plane plane, t_ray r, float *t)
 	return (true);
 }
 
+typedef struct s_triangle_isector
+{
+	float	inv_det;
+	float	det;
+	t_fvec3	edge1;
+	t_fvec3	edge2;
+	t_fvec3	ray_cross_e2;
+	t_fvec3	s_cross_e1;
+	t_fvec3	s;
+}	t_triangle_isector;
+
 bool	intersect_triangle(t_ray ray,
 						t_fvec3 a,
 						t_fvec3 b,
 						t_fvec3 c,
 						t_triangle_collision *coll)
 {
-	float	inv_det;
-	float	det;
-	t_fvec3	edge1 = fvec3_sub(b, a);
-	t_fvec3	edge2 = fvec3_sub(c, a);
-	t_fvec3	ray_cross_e2 = fvec3_cross(ray.dir, edge2);
-	t_fvec3	s_cross_e1;
-	t_fvec3	s;
+	t_triangle_isector	i;
 
-	det = fvec3_dot(edge1, ray_cross_e2);
-
-	if (det > -FLT_EPSILON && det < FLT_EPSILON)
-		return (false);  // This ray is parallel to this triangle.
-	inv_det = 1.0 / det;
-	s = fvec3_sub(ray.pos, a);
-	coll->u = inv_det * fvec3_dot(s, ray_cross_e2);
+	i.edge1 = fvec3_sub(b, a);
+	i.edge2 = fvec3_sub(c, a);
+	i.ray_cross_e2 = fvec3_cross(ray.dir, i.edge2);
+	i.det = fvec3_dot(i.edge1, i.ray_cross_e2);
+	if (i.det > -FLT_EPSILON && i.det < FLT_EPSILON)
+		return (false);
+	i.inv_det = 1.0 / i.det;
+	i.s = fvec3_sub(ray.pos, a);
+	coll->u = i.inv_det * fvec3_dot(i.s, i.ray_cross_e2);
 	if ((coll->u < 0 && fabs(coll->u) > FLT_EPSILON)
 		|| (coll->u > 1 && fabs(coll->u - 1) > FLT_EPSILON))
 		return (false);
-	s_cross_e1 = fvec3_cross(s, edge1);
-	coll->v = inv_det * fvec3_dot(ray.dir, s_cross_e1);
+	i.s_cross_e1 = fvec3_cross(i.s, i.edge1);
+	coll->v = i.inv_det * fvec3_dot(ray.dir, i.s_cross_e1);
 	if ((coll->v < 0 && fabs(coll->v) > FLT_EPSILON)
 		|| (coll->u + coll->v > 1 && fabs(coll->u + coll->v - 1) > FLT_EPSILON))
 		return (false);
-	coll->t = inv_det * fvec3_dot(edge2, s_cross_e1);
+	coll->t = i.inv_det * fvec3_dot(i.edge2, i.s_cross_e1);
 	return (coll->t > FLT_EPSILON);
 }
 

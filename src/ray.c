@@ -70,7 +70,7 @@ t_sampled_spec	cast_reflectable_ray_new(t_state *state, t_ray ray,
 			t_sampled_lambdas lambdas, t_rand_state *rand_state)
 {
 	t_sampled_spec		L = {0};
-	t_sampled_spec		beta = {1.f};
+	t_sampled_spec		beta;
 	t_collision			coll;
 	int					i;
 	int					iter = -1;
