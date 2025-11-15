@@ -92,4 +92,3 @@ bool	write_image_to_ppm(mlx_image_t *img, char *path)
 	dyn_str_write_file(buff, path);
 	free(buff.buff);
 }
-
