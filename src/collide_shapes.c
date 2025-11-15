@@ -31,10 +31,14 @@ inline static void	collide_shape_triangle(t_state *state, t_triangle triangle,
 		t_ray_isector isector, t_collision *ret)
 {
 	t_triangle_pts			pts;
+	t_triangle_pts			pts_param;
 	t_triangle_collision	coll;
 
 	pts = triangle_points(state, triangle);
-	if (intersect_triangle(isector.ray, pts, &coll))
+	pts_param.a = pts.b;
+	pts_param.b = pts.c;
+	pts_param.c = pts.a;
+	if (intersect_triangle(isector.ray, pts_param, &coll))
 	{
 		ret->collided = true;
 		ret->t = coll.t;
