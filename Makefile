@@ -27,8 +27,7 @@ endif
 TAG_FILE := $(BUILD_DIR)/profile_$(BUILD_NAME)
 NAME_PROFILE := $(BUILD_DIR)/$(BUILD_NAME)_$(NAME)
 
-# TODO: Add this before entering the project
-# CFLAGS += -Werror
+CFLAGS += -Werror
 
 LIBFT_DIR := ./src/libft
 LIBFT := ${LIBFT_DIR}/build/$(PROFILE)_libft.a
@@ -90,7 +89,8 @@ $(if ${PROFILE_FOUND}, , $(error Unknown profile" ${PROFILE}${NL}Choose one of: 
 
 all: $(NAME)
 
-bonus: $(NAME)
+bonus:
+	make BONUS=true
 
 $(NAME): $(NAME_PROFILE) ${TAG_FILE}
 	cp $(NAME_PROFILE) $(NAME)
@@ -131,5 +131,5 @@ fclean: clean
 re::fclean
 re::all
 
-.PHONY: clean fclean re all
+.PHONY: clean fclean re all bonus
 -include $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.d)
