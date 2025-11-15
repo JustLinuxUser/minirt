@@ -12,11 +12,20 @@ ifndef PROFILE
 	PROFILE=debug
 endif
 
-TAG_FILE := $(BUILD_DIR)/profile_$(PROFILE)
-NAME_PROFILE := $(BUILD_DIR)/$(PROFILE)_$(NAME)
-PROFILES := opt debug debug_mem debug_mem_sanitize debug_mem_sanitize_mem
 
+PROFILES := opt debug debug_mem debug_mem_sanitize debug_mem_sanitize_mem
 CFLAGS := -fPIE -MMD -fPIE -Wall -Wextra -Wmaybe-uninitialized -Wmissing-field-initializers --std=c99 -pedantic -g3 $(FLAGS)
+
+ifdef BONUS
+	BUILD_NAME := ${PROFILE}_BONUS
+	CFLAGS += -DBONUS
+endif
+ifndef BONUS
+	BUILD_NAME := ${PROFILE}
+endif
+
+TAG_FILE := $(BUILD_DIR)/profile_$(BUILD_NAME)
+NAME_PROFILE := $(BUILD_DIR)/$(BUILD_NAME)_$(NAME)
 
 # TODO: Add this before entering the project
 # CFLAGS += -Werror
@@ -70,7 +79,7 @@ endif
 
 PROFILE_FOUND := $(filter $(PROFILE), $(PROFILES))
 
-OBJS := $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.o)
+OBJS := $(SOURCES:%.c=$(BUILD_DIR)/$(BUILD_NAME)/%.o)
 
 define NL
 
@@ -80,6 +89,8 @@ endef
 $(if ${PROFILE_FOUND}, , $(error Unknown profile" ${PROFILE}${NL}Choose one of: $(PROFILES)))
 
 all: $(NAME)
+
+bonus: $(NAME)
 
 $(NAME): $(NAME_PROFILE) ${TAG_FILE}
 	cp $(NAME_PROFILE) $(NAME)
@@ -105,7 +116,7 @@ $(LIBMLX):
 
 FORCE: ;
 
-build/${PROFILE}/%.o: %.c Makefile
+build/${BUILD_NAME}/%.o: %.c Makefile
 	@mkdir -p $$(dirname $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
