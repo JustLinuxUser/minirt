@@ -105,6 +105,7 @@ bool	process_sky(t_rt_consumer_tl *tl)
 	t_rt_node	nd;
 	t_light		l;
 
+	l = (t_light){0};
 	if (get_tl_typed(tl, "lighting_ratio", RT_ND_TUPLE_F1, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, INFINITY))
 		return (false);

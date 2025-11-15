@@ -17,72 +17,15 @@
 # include "ray.h"
 # include "mymath.h"
 # include <stdbool.h>
-
 # include "libft/generated/vec_fvec3.h"
 # include "libft/generated/vec_int.h"
-
-struct	s_state;
-
-enum e_obj_type
-{
-	OBJ_SPHERE,
-	OBJ_PLANE,
-	OBJ_CYLINDER,
-	OBJ_TRIANGLE,
-};
-
-typedef struct s_triangle
-{
-	int	mesh_idx;
-	int	triangle_idx;
-}	t_triangle;
-
-# include "libft/generated/vec_triangle.h"
-
-typedef struct t_sphere
-{
-	t_fvec3	p;
-	float	r;
-	int		spectrum_idx;
-}	t_sphere;
-
+# include "shape_structs.h"
 # include "libft/generated/vec_sphere.h"
-
-typedef struct t_cylinder
-{
-	t_fvec3	a;
-	t_fvec3	b;
-	float	radius;
-	int		spectrum_idx;
-}	t_cylinder;
-
 # include "libft/generated/vec_cylinder.h"
-
-
-typedef struct s_mesh
-{
-	t_vec_fvec3	vertices;
-	t_vec_int	vertex_idxs;
-	int			spectrum_idx;
-}	t_mesh;
-
-typedef struct s_plane
-{
-	t_fvec3	pos;
-	t_fvec3	dir;
-	int		spectrum_idx;
-}	t_plane;
-
 # include "libft/generated/vec_plane.h"
 # include "libft/generated/vec_mesh.h"
-
-typedef struct s_shape
-{
-	enum e_obj_type	type;
-	void			*ptr;
-}	t_shape;
-
 # include "libft/generated/vec_shape.h"
+# include "libft/generated/vec_triangle.h"
 
 typedef struct s_collision
 {
@@ -104,6 +47,31 @@ typedef struct s_triangle_collision
 	t_shape	shape;
 }	t_triangle_collision;
 
+typedef struct s_triangle_isector
+{
+	float	inv_det;
+	float	det;
+	t_fvec3	edge1;
+	t_fvec3	edge2;
+	t_fvec3	ray_cross_e2;
+	t_fvec3	s_cross_e1;
+	t_fvec3	s;
+}	t_triangle_isector;
+
+typedef struct s_isect_cylinder
+{
+	t_fvec3	ba;
+	t_fvec3	oc;
+	float	baba;
+	float	bard;
+	float	baoc;
+	float	k2;
+	float	k1;
+	float	h;
+	float	t;
+	float	y;
+}	t_isect_cylinder;
+
 typedef struct t_triangle_pts
 {
 	t_fvec3	a;
@@ -118,4 +86,14 @@ t_fvec3						collision_norm(struct s_state *state,
 t_bounds3f					shape_bounds(struct s_state *state, t_shape shape);
 t_densely_sampled_spectrum	*shape_spectrum(struct s_state *state,
 								t_collision collision);
+bool						intersect_sphere(t_sphere s, t_ray r,
+								float *t, bool *inside);
+bool						intersect_cylinder(t_ray r, t_cylinder cy,
+								float *t_ret, t_fvec3 *norm);
+bool						intersect_plane(t_plane plane, t_ray r, float *t);
+bool						intersect_triangle(t_ray ray,
+								t_triangle_pts pts,
+								t_triangle_collision *coll);
+t_triangle_pts				triangle_points(struct s_state *state,
+								t_triangle triangle);
 #endif

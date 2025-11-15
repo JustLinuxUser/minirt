@@ -59,27 +59,33 @@ bool	dyn_str_write_file(t_dyn_str buff, char *fname)
 	return (close(fd), true);
 }
 
-bool	write_image_to_ppm(mlx_image_t *img, char *path)
+static void	ppm_header(t_dyn_str *buff, mlx_image_t *img)
+{
+	dyn_str_pushstr(buff, "P3\n");
+	dyn_str_pushnbr(buff, img->width);
+	dyn_str_pushstr(buff, " ");
+	dyn_str_pushnbr(buff, img->height);
+	dyn_str_pushstr(buff, "\n");
+	dyn_str_pushnbr(buff, 255);
+	dyn_str_pushstr(buff, "\n");
+}
+
+void	write_image_to_ppm(mlx_image_t *img, char *path)
 {
 	t_dyn_str	buff;
+	int			x;
+	int			y;
+	uint8_t		*p;
 
 	buff = (t_dyn_str){0};
-	dyn_str_pushstr(&buff, "P3\n");
-	dyn_str_pushnbr(&buff, img->width);
-	dyn_str_pushstr(&buff, " ");
-	dyn_str_pushnbr(&buff, img->height);
-	dyn_str_pushstr(&buff, "\n");
-	dyn_str_pushnbr(&buff, 255);
-	dyn_str_pushstr(&buff, "\n");
-	for (int y = 0; y < img->height; y++)
+	ppm_header(&buff, img);
+	y = -1;
+	while ((size_t)++y < img->height)
 	{
-		for (int x = 0; x < img->width; x++)
+		x = -1;
+		while ((size_t)++x < img->width)
 		{
-			uint32_t rgba =
-				((uint32_t*)
-				img->pixels)[y * img->width + x];
-			uint8_t* p = (uint8_t*)&rgba;
-
+			p = (uint8_t *)&((uint32_t *)img->pixels)[y * img->width + x];
 			dyn_str_pushnbr(&buff, p[0]);
 			dyn_str_pushstr(&buff, " ");
 			dyn_str_pushnbr(&buff, p[1]);

@@ -16,6 +16,6 @@
 # include "libft/dsa/dyn_str.h"
 
 void	free_zero(void *ptr);
-bool	write_image_to_ppm(mlx_image_t *img, char *path);
+void	write_image_to_ppm(mlx_image_t *img, char *path);
 bool	dyn_str_write_file(t_dyn_str buff, char *fname);
 #endif

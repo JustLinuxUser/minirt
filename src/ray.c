@@ -26,7 +26,7 @@ typedef struct s_light_color_sampler
 	t_fvec3		light_dir;
 }	t_light_color_sampler;
 
-void	dir_intencity(t_light_color_sampler *s, t_rand_state *rand_state,
+bool	dir_intencity(t_light_color_sampler *s, t_rand_state *rand_state,
 			t_fvec3 norm, t_ray_isector *isector)
 {
 	if (s->light.t == POINT_LIGHT)
@@ -49,7 +49,9 @@ void	dir_intencity(t_light_color_sampler *s, t_rand_state *rand_state,
 	else
 	{
 		ft_assert("Unreachable" == 0);
+		return (false);
 	}
+	return (true);
 }
 
 t_light	sample_effective_light(t_state *state, t_ray_isector *isector,
@@ -65,7 +67,8 @@ t_light	sample_effective_light(t_state *state, t_ray_isector *isector,
 	s.light_t = INFINITY;
 	s.light.intensity = s.light.intensity
 		/ state->lights.pdfs.buff[s.light_idx];
-	dir_intencity(&s, rand_state, norm, isector);
+	if (!dir_intencity(&s, rand_state, norm, isector))
+		return ((t_light){0});
 	isector->ray.dir = fvec3_norm(s.light_dir);
 	isector->t_max = s.light_t;
 	s.light_coll = collide_bvh(state, *isector);
@@ -76,7 +79,7 @@ t_light	sample_effective_light(t_state *state, t_ray_isector *isector,
 
 typedef struct s_integrator
 {
-	t_sampled_spec		L;
+	t_sampled_spec		l;
 	t_sampled_spec		beta;
 	t_collision			coll;
 	int					i;
@@ -101,7 +104,7 @@ bool	process_collision(t_state *state,
 			sky_spec = sample_sky(state, lambdas);
 			i->i = -1;
 			while (++i->i < NUM_SPECTRUM_SAMPLES)
-				i->L.values[i->i]
+				i->l.values[i->i]
 					+= i->beta.values[i->i] * sky_spec.values[i->i];
 		}
 		return (false);
@@ -138,7 +141,7 @@ t_sampled_spec	add_color(t_state *state, t_sampled_lambdas lambdas,
 			&state->ambiant_light_spec, lambdas);
 	i->i = -1;
 	while (++i->i < NUM_SPECTRUM_SAMPLES)
-		i->L.values[i->i] += i->beta.values[i->i] * color.values[i->i]
+		i->l.values[i->i] += i->beta.values[i->i] * color.values[i->i]
 			* (light_spec.values[i->i] + ambiant_spec.values[i->i]
 				* fabs(fvec3_dot(i->norm, i->ray.dir)));
 	return (color);
@@ -169,5 +172,5 @@ t_sampled_spec	cast_reflectable_ray_new(t_state *state, t_ray start_ray,
 				* fmax(fvec3_dot(i.norm, i.ray.dir), 0);
 		}
 	}
-	return (i.L);
+	return (i.l);
 }
