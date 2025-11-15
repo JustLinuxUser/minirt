@@ -12,6 +12,7 @@
 
 #include "samplers.h"
 #include "float.h"
+#include "spectrum.h"
 #include <stdbool.h>
 
 t_fvec3	rand_direction(t_rand_state *rand_state)
@@ -54,4 +55,29 @@ bool	sample_stratified(t_sampler_state *state, t_fvec2 *sample)
 	if (state->last_y > state->stratified_y)
 		return (false);
 	return (true);
+}
+
+t_sampled_lambdas	sample_uniform(float u, float lambda_min, float lambda_max)
+{
+	t_sampled_lambdas	ret;
+	float				delta;
+	int					i;
+
+	delta = (lambda_max - lambda_min) / NUM_SPECTRUM_SAMPLES;
+	ret.lambda[0] = lerp(u, lambda_min, lambda_max);
+	i = 1;
+	while (i < NUM_SPECTRUM_SAMPLES)
+	{
+		ret.lambda[i] = ret.lambda[i - 1] + delta;
+		if (ret.lambda[i] > lambda_max)
+			ret.lambda[i] = lambda_min + (ret.lambda[i] - lambda_max);
+		i++;
+	}
+	i = 0;
+	while (i < NUM_SPECTRUM_SAMPLES)
+	{
+		ret.pdf[i] = 1.f / (lambda_max - lambda_min);
+		i++;
+	}
+	return (ret);
 }

@@ -47,6 +47,7 @@ t_fvec3	fvec3_sub(t_fvec3 a, t_fvec3 b);
 t_fvec3	fvec3_add(t_fvec3 a, t_fvec3 b);
 t_fvec3	fvec3_mul(t_fvec3 a, t_fvec3 b);
 float	fvec3_dot(t_fvec3 a, t_fvec3 b);
+float	fclamp(float x, float min, float max);
 
 t_fvec3	fvec3_norm(t_fvec3 v);
 float	fvec3_len_sq(t_fvec3 v);
@@ -63,5 +64,10 @@ void	sort2f(float *a, float *b);
 inline static float	rand_float(t_rand_state *rand_state)
 {
 	return (xoroshiro128plusplus(rand_state) / (float)UINT64_MAX);
+}
+
+inline static float	lerp(float x, float a, float b)
+{
+	return ((1 - x) * a + x * b);
 }
 #endif

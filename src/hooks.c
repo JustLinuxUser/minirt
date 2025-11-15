@@ -1,25 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ray.h                                              :+:      :+:    :+:   */
+/*   hooks.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mhornero <mhornero@student.42.fr>          +#+  +:+       +#+        */
+/*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/11/02 19:56:51 by mhornero          #+#    #+#             */
-/*   Updated: 2025/11/02 20:21:59 by mhornero         ###   ########.fr       */
+/*   Created: 2025/11/15 17:51:58 by anddokhn          #+#    #+#             */
+/*   Updated: 2025/11/15 17:51:58 by anddokhn         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef RAY_H
-# define RAY_H
-# include "mymath.h"
-# include "spectrum.h"
+#include "draw.h"
+#include "minirt.h"
 
-typedef struct t_ray_isector
+void	exit_app(t_state *state)
 {
-	t_ray	ray;
-	float	t_min;
-	float	t_max;
-	void	*ignore_shape;
-}	t_ray_isector;
-#endif
+	mlx_close_window(state->mlx);
+}
+
+void	exit_hook(void *state_arg)
+{
+	t_state	*state;
+
+	state = (t_state *)state_arg;
+	emergency_exit(state);
+}

@@ -12,7 +12,6 @@
 
 #include "shapes.h"
 #include <float.h>
-#include <math.h>
 #include <stdbool.h>
 #include "bounds.h"
 #include "libft/utils/utils.h"
@@ -44,7 +43,8 @@ t_fvec3	collision_norm(t_state *state, t_collision collision, t_fvec3 pos)
 	return ((t_fvec3){0});
 }
 
-t_densely_sampled_spectrum	*shape_spectrum(t_state *state, t_collision collision)
+t_densely_sampled_spectrum	*shape_spectrum(t_state *state,
+								t_collision collision)
 {
 	int	idx;
 
@@ -90,7 +90,7 @@ inline static t_bounds3f	bounds_cylinder(t_cylinder cylinder)
 	return (bounds);
 }
 
-t_bounds3f	shape_bounds(t_state* state, t_shape shape)
+t_bounds3f	shape_bounds(t_state *state, t_shape shape)
 {
 	t_bounds3f		bounds;
 	t_sphere		sp;

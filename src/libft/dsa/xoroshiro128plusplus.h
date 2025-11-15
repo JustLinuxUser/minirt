@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   xoroshiro128plusplus.h                              :+:      :+:    :+:   */
+/*   xoroshiro128plusplus.h                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: anddokhn <anddokhn@student.42madrid.com>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,8 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef XORSHIRO128PLUSPLUS_H
-# define XORSHIRO128PLUSPLUS_H
+#ifndef XOROSHIRO128PLUSPLUS_H
+# define XOROSHIRO128PLUSPLUS_H
 # include <stdint.h>
 
 typedef struct s_rand_state
@@ -25,4 +25,5 @@ uint64_t	xoroshiro128plusplus(t_rand_state *s);
    to 2^64 calls to next(); it can be used to generate 2^64
    non-overlapping subsequences for parallel computations. */
 void		xoroshiro128plusplus_jump(t_rand_state *s);
+
 #endif

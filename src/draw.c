@@ -72,14 +72,6 @@ void	render_single_thread(t_state *state)
 	}
 }
 
-void	exit_hook(void *state_arg)
-{
-	t_state	*state;
-
-	state = (t_state *)state_arg;
-	emergency_exit(state);
-}
-
 #ifdef BONUS
 
 void	loop_hook(void *state_param)

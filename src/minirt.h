@@ -150,14 +150,16 @@ t_fvec3				spectrum_to_xyz(t_sampled_spec s, t_sampled_lambdas lambda);
 t_8bcolor			xyz_to_rgb(t_fvec3 t);
 t_fvec3				rgb_to_xyz(t_8bcolor c);
 uint32_t			conv_8bcolor_to_uint32(t_8bcolor c);
-t_fvec3				densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum *s);
+t_fvec3				densely_sampled_spectrum_to_xyz(
+						t_densely_sampled_spectrum *s);
 t_color				clamp_rgb(t_color c);
 
 /*END NEW*/
-t_fvec3				perspective_cam_ray(t_state* state, t_fvec2 px, t_fvec2 sample);
+t_fvec3				perspective_cam_ray(t_state *state,
+						t_fvec2 px, t_fvec2 sample);
 
 // ray.c
-t_sampled_spec	cast_reflectable_ray_new(t_state *state, t_ray ray, 
+t_sampled_spec		cast_reflectable_ray_new(t_state *state, t_ray ray,
 						t_sampled_lambdas lambdas, t_rand_state *rand_state);
 
 // tinyobj.c
@@ -168,4 +170,5 @@ void				loop_hook(void *state_param);
 void				exit_hook(void *state_param);
 
 void				exit_app(t_state *state);
+void				free_state(t_state *state);
 #endif

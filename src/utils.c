@@ -18,6 +18,7 @@
 #include "MLX42/MLX42.h"
 #include "libft/dsa/dyn_str.h"
 #include "libft/ft_printf/ft_printf.h"
+#include "minirt.h"
 #include "rt_utils.h"
 #include "error.h"
 
@@ -97,4 +98,31 @@ void	write_image_to_ppm(mlx_image_t *img, char *path)
 	}
 	dyn_str_write_file(buff, path);
 	free(buff.buff);
+}
+
+void	free_state(t_state *state)
+{
+	size_t	i;
+
+	free_zero(&state->unbounded_shapes.buff);
+	free_zero(&state->shapes.buff);
+	free_zero(&state->triangles.buff);
+	i = 0;
+	while (i < state->meshes.len)
+	{
+		free_zero(&state->meshes.buff[i].vertex_idxs.buff);
+		free_zero(&state->meshes.buff[i].vertices.buff);
+		i++;
+	}
+	free_zero(&state->meshes.buff);
+	free_zero(&state->planes.buff);
+	free_zero(&state->spheres.buff);
+	free_zero(&state->cylinders.buff);
+	free_zero(&state->s_colors);
+	free_zero(&state->spectrums.buff);
+	if (state->mlx_image)
+		mlx_delete_image(state->mlx, state->mlx_image);
+	if (state->mlx)
+		mlx_terminate(state->mlx);
+	free_zero(&state->output_path.buff);
 }

@@ -20,8 +20,7 @@ void	negative_dirs(t_ray_isector isect, bool dir_is_neg[3])
 
 	inv_dir = (t_fvec3){.x = 1 / isect.ray.dir.x,
 		.y = 1 / isect.ray.dir.y, .z = 1 / isect.ray.dir.z};
-	// TODO: Check if this is like it's supposed to be
-	dir_is_neg[0] = inv_dir.x > 0;
+	dir_is_neg[0] = inv_dir.x < 0;
 	dir_is_neg[1] = inv_dir.y < 0;
 	dir_is_neg[2] = inv_dir.z < 0;
 }

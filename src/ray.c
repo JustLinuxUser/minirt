@@ -9,22 +9,15 @@
 /*   Updated: 2025/11/02 20:33:48 by mhornero         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 #include "ray.h"
+#include "ray_structs.h"
 #include "minirt.h"
 #include "samplers.h"
 #include "shapes.h"
 #include "spectrum.h"
 #include <math.h>
 #include "ray_helpers.h"
-
-typedef struct s_light_color_sampler
-{
-	t_light		light;
-	float		light_t;
-	t_collision	light_coll;
-	int			light_idx;
-	t_fvec3		light_dir;
-}	t_light_color_sampler;
 
 bool	dir_intencity(t_light_color_sampler *s, t_rand_state *rand_state,
 			t_fvec3 norm, t_ray_isector *isector)
@@ -76,19 +69,6 @@ t_light	sample_effective_light(t_state *state, t_ray_isector *isector,
 		s.light.t = LIGHT_NONE;
 	return (s.light);
 }
-
-typedef struct s_integrator
-{
-	t_sampled_spec		l;
-	t_sampled_spec		beta;
-	t_collision			coll;
-	int					i;
-	int					iter;
-	t_fvec3				p;
-	t_fvec3				norm;
-	void				*ignored_shape;
-	t_ray				ray;
-}	t_integrator;
 
 bool	process_collision(t_state *state,
 			t_integrator *i, t_sampled_lambdas lambdas)

@@ -23,7 +23,6 @@
 #include "libft/libft.h"
 #include "MLX42/MLX42.h"
 #include <pthread.h>
-#include "rt_utils.h"
 
 void	init_camera(t_state *state)
 {
@@ -95,38 +94,6 @@ void	load_shapes(t_state *state)
 		vec_shape_push(
 			&state->unbounded_shapes,
 			(t_shape){.type = OBJ_PLANE, .ptr = state->planes.buff + i++});
-}
-
-void	free_state(t_state *state)
-{
-	size_t	i;
-
-	free_zero(&state->unbounded_shapes.buff);
-	free_zero(&state->shapes.buff);
-	free_zero(&state->triangles.buff);
-	i = 0;
-	while (i < state->meshes.len)
-	{
-		free_zero(&state->meshes.buff[i].vertex_idxs.buff);
-		free_zero(&state->meshes.buff[i].vertices.buff);
-		i++;
-	}
-	free_zero(&state->meshes.buff);
-	free_zero(&state->planes.buff);
-	free_zero(&state->spheres.buff);
-	free_zero(&state->cylinders.buff);
-	free_zero(&state->s_colors);
-	free_zero(&state->spectrums.buff);
-	if (state->mlx_image)
-		mlx_delete_image(state->mlx, state->mlx_image);
-	if (state->mlx)
-		mlx_terminate(state->mlx);
-	free_zero(&state->output_path.buff);
-}
-
-void	exit_app(t_state *state)
-{
-	mlx_close_window(state->mlx);
 }
 
 t_state	state_default(void)

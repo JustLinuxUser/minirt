@@ -22,3 +22,13 @@ void	sort2f(float *a, float *b)
 	*a = *b;
 	*b = temp;
 }
+
+float	fclamp(float x, float min, float max)
+{
+	if (x < min)
+		return (min);
+	else if (x > max)
+		return (max);
+	else
+		return (x);
+}
