@@ -10,12 +10,13 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef OBJ_TOKENIZER_H
+# define OBJ_TOKENIZER_H
 
-#include "../rt_file/rt_parser.h"
-#include <stdio.h>
-#include "obj_structs.h"
-#include "../libft/generated/vec_obj_token.h"
+# include "../rt_file/rt_parser.h"
+# include <stdio.h>
+# include "obj_structs.h"
+# include "../libft/generated/vec_obj_token.h"
 
 typedef struct t_obj_tokenizer
 {
@@ -36,3 +37,4 @@ bool	tokenize_obj_number(t_obj_tokenizer *tokenizer,
 void	tokenize_comment(t_obj_tokenizer *tokenizer);
 bool	tokenize_word(t_obj_tokenizer *tokenizer);
 void	tokenize_newline(t_obj_tokenizer *tokenizer);
+#endif

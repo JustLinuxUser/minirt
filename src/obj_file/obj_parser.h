@@ -10,9 +10,10 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef OBJ_PARSER_H
+# define OBJ_PARSER_H
 
-#include "obj_tokenizer.h"
+# include "obj_tokenizer.h"
 
 typedef struct s_obj_parser
 {
@@ -26,3 +27,4 @@ int			parse_obj(char *filename, t_obj_parser *ret);
 bool		tokens_left(t_obj_parser *parser);
 t_obj_token	consume_obj_token(t_obj_parser *parser);
 t_obj_token	peek_obj_token(t_obj_parser *parser);
+#endif

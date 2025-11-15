@@ -10,7 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef OBJ_STRUCTS_H
+# define OBJ_STRUCTS_H
 
 enum e_OBJ_TT
 {
@@ -33,3 +34,4 @@ typedef struct t_obj_token
 	int				vals[3];
 	int				num_vals;
 }	t_obj_token;
+#endif

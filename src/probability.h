@@ -10,10 +10,12 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#pragma once
+#ifndef PROBABILITY_H
+# define PROBABILITY_H
 
 typedef struct t_outcome
 {
 	float	p_hat;
 	int		index;
 }	t_outcome;
+#endif

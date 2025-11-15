@@ -10,13 +10,13 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-// TODO: Change this to BVH_H
-#pragma once
+#ifndef BVH_H
+# define BVH_H
 
-#include "minirt.h"
-#include "libft/alloc/alloc.h"
-#include "bounds.h"
-#include <stddef.h>
+# include "minirt.h"
+# include "libft/alloc/alloc.h"
+# include "bounds.h"
+# include <stddef.h>
 
 typedef struct s_bvh_node
 {
@@ -83,3 +83,4 @@ void				bvh_sah(t_bvh_build_state *state,
 t_sah_buckets		init_centroid_buckets(t_bvh_prim_slice prims,
 						t_bounds3f *centroid_bounds, int dim);
 void				build_bvh(t_state *state);
+#endif

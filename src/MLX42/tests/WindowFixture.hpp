@@ -3,6 +3,8 @@
 // See README in the root project for more information.
 // -----------------------------------------------------------------------------
 
+#ifndef WINDOWFIXTURE_HPP
+#define WINDOWFIXTURE_HPP
 # pragma once
 
 # include <gtest/gtest.h>
@@ -35,3 +37,4 @@ protected:
 		ASSERT_EQ(mlx_errno, MLX_SUCCESS);
 	}
 };
+#endif
