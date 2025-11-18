@@ -12,6 +12,7 @@
 
 #include "obj_parser.h"
 #include "../rt_utils.h"
+#include "../libft/ft_printf/ft_printf.h"
 
 bool	parse_obj_vertices(t_obj_parser *parser)
 {
@@ -105,6 +106,7 @@ int	parse_obj(char *filename, t_obj_parser *ret)
 
 	parser = (t_obj_parser){0};
 	parser.curr_token = 0;
+	ft_eprintf("Parsing obj: \"%s\"...\n", filename);
 	if (!tokenize_obj(filename, &parser.tokenizer))
 		return (0);
 	vec_fvec3_init(&parser.vertices, 0);

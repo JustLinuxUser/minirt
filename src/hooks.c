@@ -11,10 +11,12 @@
 /* ************************************************************************** */
 
 #include "draw.h"
+#include "libft/ft_printf/ft_printf.h"
 #include "minirt.h"
 
 void	exit_app(t_state *state)
 {
+	ft_eprintf("Exiting...\n");
 	mlx_close_window(state->mlx);
 }
 
@@ -24,4 +26,5 @@ void	exit_hook(void *state_arg)
 
 	state = (t_state *)state_arg;
 	emergency_exit(state);
+	ft_eprintf("Exiting...\n");
 }

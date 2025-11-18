@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "rt_consumer.h"
+#include "../libft/ft_printf/ft_printf.h"
 #include <stddef.h>
 
 bool	process_file(char *fpath, t_state *state)
@@ -24,6 +25,7 @@ bool	process_file(char *fpath, t_state *state)
 	dyn_str_init(&file);
 	if (!dyn_str_read_file(fpath, &file))
 		return (false);
+	ft_eprintf("Processing a scene file: \"%s\"...\n", fpath);
 	parser = (t_rt_parser){.tokenizer.file.contents = file,
 		.tokenizer.file.fname = fpath};
 	if (!parse_file(&parser))

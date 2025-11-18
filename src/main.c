@@ -129,14 +129,16 @@ int	main(int argc, char **argv)
 	t_state	state;
 
 	if (argc != 2)
-		return (1);
+		return (ft_eprintf("Usage:\n\t%s <scene.rt>\n", argv[0]), 1);
 	state = state_default();
 	if (!process_file(argv[1], &state))
 		return (free_state(&state), 1);
 	init(&state);
 	load_shapes(&state);
 	build_bvh(&state);
-	ft_printf("triangles: %i\n", (int)state.triangles.len);
+	ft_eprintf("Finished processing the scene...\n"
+		"Total number of shapes: %i\nRendering...\n",
+		(int)state.shapes.len + (int)state.unbounded_shapes.len);
 	calculate_pdfs(&state.lights);
 	create_alias_table(&state.lights);
 	mlx_close_hook(state.mlx, exit_hook, &state);

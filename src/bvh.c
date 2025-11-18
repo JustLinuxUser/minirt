@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "libft/ft_printf/ft_printf.h"
 #include "minirt.h"
 #include "shapes.h"
 #include "libft/alloc/alloc.h"
@@ -69,6 +70,7 @@ void	build_bvh(t_state *state)
 
 	if (state->shapes.len == 0)
 		return ;
+	ft_eprintf("Building a BVH...\n");
 	bvh_primitives = init_bvh_primitives(state);
 	bstate = (t_bvh_build_state){.state = *state,
 		.ordered_shapes = {0},

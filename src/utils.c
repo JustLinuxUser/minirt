@@ -62,6 +62,7 @@ bool	dyn_str_write_file(t_dyn_str buff, char *fname)
 
 static void	ppm_header(t_dyn_str *buff, mlx_image_t *img)
 {
+	*buff = (t_dyn_str){0};
 	dyn_str_pushstr(buff, "P3\n");
 	dyn_str_pushnbr(buff, img->width);
 	dyn_str_pushstr(buff, " ");
@@ -78,7 +79,6 @@ void	write_image_to_ppm(mlx_image_t *img, char *path)
 	int			y;
 	uint8_t		*p;
 
-	buff = (t_dyn_str){0};
 	ppm_header(&buff, img);
 	y = -1;
 	while ((size_t)++y < img->height)
@@ -96,6 +96,7 @@ void	write_image_to_ppm(mlx_image_t *img, char *path)
 		}
 		dyn_str_pushstr(&buff, "\n");
 	}
+	ft_eprintf("Writing the render output to an image: \"%s\"\n", path);
 	dyn_str_write_file(buff, path);
 	free(buff.buff);
 }

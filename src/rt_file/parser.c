@@ -83,7 +83,6 @@ static bool	process_token(t_rt_parser *parser, t_rt_kv *stmt, bool *ret)
 		free_node(stmt->v);
 		return (false);
 	}
-	pprint_node(*parser, stmt->v, 0);
 	if (!try_push_checked_dup(parser, &parser->statements, *stmt, true))
 	{
 		print_parser_err(parser);
