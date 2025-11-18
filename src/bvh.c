@@ -84,5 +84,6 @@ void	build_bvh(t_state *state)
 			"Allocating a buffer for the linear bvh");
 	flatten_bvh(state->bvh, 0, tree);
 	bump_alloc_free(&bstate.allocator);
+	free(state->shapes.buff);
 	state->shapes = bstate.ordered_shapes;
 }

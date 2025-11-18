@@ -92,6 +92,8 @@ void	create_alias_table(t_lights *lights)
 			vec_outcome_push(&under, ov);
 	}
 	handle_remaining_outcomes(lights, &under, &over);
+	free(under.buff);
+	free(over.buff);
 }
 
 int	sample_alias_table(t_lights *lights, float lu)

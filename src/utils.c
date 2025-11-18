@@ -60,54 +60,22 @@ bool	dyn_str_write_file(t_dyn_str buff, char *fname)
 	return (close(fd), true);
 }
 
-static void	ppm_header(t_dyn_str *buff, mlx_image_t *img)
+void	free_state2(t_state *state)
 {
-	*buff = (t_dyn_str){0};
-	dyn_str_pushstr(buff, "P3\n");
-	dyn_str_pushnbr(buff, img->width);
-	dyn_str_pushstr(buff, " ");
-	dyn_str_pushnbr(buff, img->height);
-	dyn_str_pushstr(buff, "\n");
-	dyn_str_pushnbr(buff, 255);
-	dyn_str_pushstr(buff, "\n");
-}
-
-void	write_image_to_ppm(mlx_image_t *img, char *path)
-{
-	t_dyn_str	buff;
-	int			x;
-	int			y;
-	uint8_t		*p;
-
-	ppm_header(&buff, img);
-	y = -1;
-	while ((size_t)++y < img->height)
-	{
-		x = -1;
-		while ((size_t)++x < img->width)
-		{
-			p = (uint8_t *)&((uint32_t *)img->pixels)[y * img->width + x];
-			dyn_str_pushnbr(&buff, p[0]);
-			dyn_str_pushstr(&buff, " ");
-			dyn_str_pushnbr(&buff, p[1]);
-			dyn_str_pushstr(&buff, " ");
-			dyn_str_pushnbr(&buff, p[2]);
-			dyn_str_pushstr(&buff, " ");
-		}
-		dyn_str_pushstr(&buff, "\n");
-	}
-	ft_eprintf("Writing the render output to an image: \"%s\"\n", path);
-	dyn_str_write_file(buff, path);
-	free(buff.buff);
+	free_zero(&state->unbounded_shapes.buff);
+	free_zero(&state->shapes.buff);
+	free_zero(&state->triangles.buff);
+	free_zero(&state->bvh);
+	free_zero(&state->lights.bins.buff);
+	free_zero(&state->lights.lights.buff);
+	free_zero(&state->lights.pdfs.buff);
 }
 
 void	free_state(t_state *state)
 {
 	size_t	i;
 
-	free_zero(&state->unbounded_shapes.buff);
-	free_zero(&state->shapes.buff);
-	free_zero(&state->triangles.buff);
+	free_state2(state);
 	i = 0;
 	while (i < state->meshes.len)
 	{
@@ -123,7 +91,9 @@ void	free_state(t_state *state)
 	free_zero(&state->spectrums.buff);
 	if (state->mlx_image)
 		mlx_delete_image(state->mlx, state->mlx_image);
+	state->mlx_image = 0;
 	if (state->mlx)
 		mlx_terminate(state->mlx);
+	state->mlx = 0;
 	free_zero(&state->output_path.buff);
 }
