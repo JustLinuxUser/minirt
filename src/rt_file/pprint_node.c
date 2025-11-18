@@ -33,7 +33,7 @@ static void	print_indent(size_t indent)
 	i = 0;
 	while (i < indent)
 	{
-		ft_printf("    ");
+		ft_eprintf("    ");
 		i++;
 	}
 }
@@ -45,13 +45,13 @@ void	pprint_dict(t_rt_parser parser, t_rt_node nd, size_t indent)
 
 	if (nd.t == RT_ND_DICT)
 	{
-		ft_printf("{\n");
+		ft_eprintf("{\n");
 		i = 0;
 		while (i < nd.dict.len)
 		{
 			k = nd.dict.buff[i].k;
 			print_indent(indent + 1);
-			ft_printf("%.*s:\n", k.len,
+			ft_eprintf("%.*s:\n", k.len,
 				parser.tokenizer.file.contents.buff + k.start_idx);
 			pprint_node(parser, nd.dict.buff[i].v, indent + 2);
 			i++;
@@ -66,12 +66,12 @@ void	pprint_node(t_rt_parser parser, t_rt_node nd, size_t indent)
 	print_indent(indent);
 	if (nd.t == RT_ND_IDENT || nd.t == RT_ND_STRING || is_tuple(nd.t))
 	{
-		ft_printf("%.*s\n", nd.token.len,
+		ft_eprintf("%.*s\n", nd.token.len,
 			parser.tokenizer.file.contents.buff + nd.token.start_idx);
 	}
 	if (nd.t == RT_ND_LIST)
 	{
-		ft_printf("[\n");
+		ft_eprintf("[\n");
 		i = 0;
 		while (i < nd.list.len)
 			pprint_node(parser, nd.list.buff[i++], indent + 1);
@@ -80,7 +80,7 @@ void	pprint_node(t_rt_parser parser, t_rt_node nd, size_t indent)
 	if (nd.t == RT_ND_LIST || nd.t == RT_ND_DICT)
 		print_indent(indent);
 	if (nd.t == RT_ND_LIST)
-		ft_printf("]\n");
+		ft_eprintf("]\n");
 	if (nd.t == RT_ND_DICT)
-		ft_printf("}\n");
+		ft_eprintf("}\n");
 }

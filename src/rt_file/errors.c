@@ -28,13 +28,13 @@ void	print_tokenizer_err(t_rt_tokenizer *tokenizer)
 	};
 	print_warn_lvl(e.warn_level);
 	if (tokenizer->err == RT_ERR_TUPLE_TOO_LARGE)
-		ft_printf("Tuples can't have more then 3 numbers\n");
+		ft_eprintf("Tuples can't have more then 3 numbers\n");
 	else if (tokenizer->err == RT_ERR_INVALID_NUM)
-		ft_printf("Failed to parse number:\n");
+		ft_eprintf("Failed to parse number:\n");
 	else if (tokenizer->err == RT_ERR_UNCLOSED_QUOTE)
-		ft_printf("Unclosed quote:\n");
+		ft_eprintf("Unclosed quote:\n");
 	else if (tokenizer->err == RT_ERR_UNKNOWN_CHAR)
-		ft_printf("Unexpected character:\n");
+		ft_eprintf("Unexpected character:\n");
 	else
 		ft_assert("Should not be here!" == 0);
 	print_line_highlight_range_col(e);
@@ -52,7 +52,7 @@ void	print_pareser_dup_key_error(t_rt_parser *parser)
 	};
 	ft_assert(parser->err_ref_tok.t != RT_NONE);
 	ft_assert(parser->err_ref_tok2.t != RT_NONE);
-	ft_printf("Got a duplicate key:\n");
+	ft_eprintf("Got a duplicate key:\n");
 	e.start_idx = parser->err_ref_tok.start_idx;
 	e.len = parser->err_ref_tok.len;
 	print_line_highlight_range_col(e);
@@ -60,7 +60,7 @@ void	print_pareser_dup_key_error(t_rt_parser *parser)
 	e.len = parser->err_ref_tok2.len;
 	e.warn_level = RT_HELP;
 	print_warn_lvl(e.warn_level);
-	ft_printf("Overwriting the previous definition of this key:\n");
+	ft_eprintf("Overwriting the previous definition of this key:\n");
 	print_line_highlight_range_col(e);
 }
 
@@ -77,9 +77,9 @@ void	print_parser_err(t_rt_parser *parser)
 	print_warn_lvl(e.warn_level);
 	ft_assert(parser->err);
 	if (parser->err == RT_ERR_UNEXPECTED_TOKEN)
-		ft_printf("Unexpected token:\n");
+		ft_eprintf("Unexpected token:\n");
 	else if (parser->err == RT_ERR_NEW_SYNTAX_IN_OLD_CONTEXT)
-		ft_printf("Can't use v2 syntax in a v1 list\n");
+		ft_eprintf("Can't use v2 syntax in a v1 list\n");
 	else if (parser->err == RT_ERR_DUPLICATE_KEY)
 	{
 		print_pareser_dup_key_error(parser);

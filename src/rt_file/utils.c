@@ -54,7 +54,7 @@ bool	dyn_str_read_file(char *file, t_dyn_str *ret)
 			dyn_str_pushnstr(ret, buff, len);
 		else
 			return (print_err(),
-				ft_printf("Failed to read the file: %s: %s\n", file,
+				ft_eprintf("Failed to read the file: %s: %s\n", file,
 					strerror(errno)), close(fd), false);
 	}
 	return (close(fd), true);

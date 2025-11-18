@@ -25,7 +25,7 @@ void	*mmalloc(size_t amount, char *msg)
 	ret = malloc(amount);
 	if (!ret)
 	{
-		ft_printf("ERROR: Failed to allocate %zu bytes "
+		ft_eprintf("ERROR: Failed to allocate %zu bytes "
 			"of memory while: %s, %s\n",
 			amount, msg, strerror(errno));
 		exit(1);

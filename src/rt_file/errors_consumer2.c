@@ -28,7 +28,7 @@ bool	print_consumer_err_6(t_rt_consumer *consumer)
 		e.start_idx = consumer->last_node.token.start_idx;
 		e.len = consumer->last_node.token.len;
 		print_warn_lvl(ANSI_NUM_RED);
-		ft_printf(
+		ft_eprintf(
 			ANSI_RESET"The tuple \""ANSI_BOLD ANSI_YELLOW"%.*s"ANSI_RESET
 			"\" contains a value outside the range ["ANSI_BOLD ANSI_GREEN"%i"
 			ANSI_RESET", "ANSI_BOLD ANSI_GREEN"%i"ANSI_RESET"]\n",
@@ -58,7 +58,7 @@ bool	print_consumer_err_7(t_rt_consumer *consumer)
 		e.len = consumer->last_key.len;
 		e.warn_level = ANSI_NUM_YELLOW;
 		print_warn_lvl(ANSI_NUM_RED);
-		ft_printf(
+		ft_eprintf(
 			ANSI_RESET "Got an error while processing the key \""ANSI_BOLD
 			ANSI_YELLOW"%.*s"ANSI_RESET"\"\n", consumer->last_key.len,
 			consumer->parser.tokenizer.file.contents.buff

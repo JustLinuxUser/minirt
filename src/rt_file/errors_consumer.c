@@ -27,7 +27,7 @@ bool	print_consumer_err_1(t_rt_consumer *consumer)
 	{
 		ft_assert(consumer->last_node.t != RT_ND_NONE);
 		print_warn_lvl(e.warn_level);
-		ft_printf(ANSI_RESET "Expected ""\""ANSI_GREEN ANSI_BOLD "%s" ANSI_RESET
+		ft_eprintf(ANSI_RESET "Expected ""\""ANSI_GREEN ANSI_BOLD "%s"ANSI_RESET
 			"\", but got \"" ANSI_BOLD ANSI_RED "%s" ANSI_RESET "\"\n",
 			type_to_str(consumer->expected),
 			type_to_str(effective_type(consumer->expected,
@@ -52,7 +52,7 @@ bool	print_consumer_err_2(t_rt_consumer *consumer)
 	{
 		ft_assert(consumer->last_key.t != RT_NONE);
 		print_warn_lvl(e.warn_level);
-		ft_printf(
+		ft_eprintf(
 			ANSI_RESET "Unknown key: \""ANSI_BOLD ANSI_RED"%.*s\033" ANSI_RESET
 			"\"\n", consumer->last_key.len,
 			consumer->parser.tokenizer.file.contents.buff
@@ -80,7 +80,7 @@ bool	print_consumer_err_3(t_rt_consumer *consumer)
 		e.start_idx = consumer->last_node.token.start_idx;
 		e.len = consumer->last_node.token.len;
 		print_warn_lvl(ANSI_NUM_RED);
-		ft_printf(
+		ft_eprintf(
 			ANSI_RESET"Unused node: \"" ANSI_BOLD ANSI_RED "%.*s"
 			ANSI_RESET"\"\n", consumer->last_node.token.len,
 			consumer->parser.tokenizer.file.contents.buff
@@ -106,7 +106,7 @@ bool	print_consumer_err_4(t_rt_consumer *consumer)
 		e.len = consumer->last_key.len;
 		e.warn_level = ANSI_NUM_YELLOW;
 		print_warn_lvl(ANSI_NUM_RED);
-		ft_printf(
+		ft_eprintf(
 			ANSI_RESET "List \"" ANSI_BOLD ANSI_YELLOW "%.*s"ANSI_RESET
 			"\" too short, expected an item of type: \"" ANSI_BOLD
 			ANSI_YELLOW "%s"ANSI_RESET"\" at position "ANSI_BOLD
@@ -135,7 +135,7 @@ bool	print_consumer_err_5(t_rt_consumer *consumer)
 		e.len = consumer->last_key.len;
 		e.warn_level = ANSI_NUM_YELLOW;
 		print_warn_lvl(ANSI_NUM_RED);
-		ft_printf(
+		ft_eprintf(
 			ANSI_RESET "The key \""ANSI_BOLD ANSI_YELLOW"%.*s"ANSI_RESET
 			"\" does not contain an identifier \""ANSI_BOLD ANSI_GREEN
 			"%s"ANSI_RESET"\" of type: \""ANSI_BOLD ANSI_YELLOW

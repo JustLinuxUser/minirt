@@ -20,7 +20,7 @@ void	print_err(void)
 	static bool	first = true;
 
 	if (first)
-		ft_printf("Error\n");
+		ft_eprintf("Error\n");
 	first = false;
 }
 

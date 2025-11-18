@@ -30,10 +30,10 @@ void	bvh_create_leaf_node(t_bvh_build_state *state,
 		shape = state->state.shapes.buff[prims.buff[i].shape_idx];
 		bounds = shape_bounds(&state->state, shape);
 		if (!bounds_check_enclosed(ret->bounds, bounds))
-			ft_printf("Failing in bvh leaf node\n");
+			ft_eprintf("Failing in bvh leaf node\n");
 		if (ft_memcmp(&bounds, &prims.buff[i].bounds, sizeof(bounds)))
 		{
-			ft_printf("Got different bounds\n");
+			ft_eprintf("Got different bounds\n");
 		}
 		i++;
 		vec_shape_push(&state->ordered_shapes, shape);
