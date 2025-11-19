@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "shapes.h"
-#include <float.h>
+#include "float_utils.h"
 #include <stdbool.h>
 #include "bounds.h"
 #include "libft/utils/utils.h"

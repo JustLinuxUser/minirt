@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "shapes.h"
-#include <float.h>
+#include "float_utils.h"
 #include <math.h>
 #include <stdbool.h>
 
