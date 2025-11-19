@@ -14,7 +14,7 @@ endif
 
 
 PROFILES := opt debug debug_mem debug_mem_sanitize debug_mem_sanitize_mem
-CFLAGS := -fPIE -MMD -fPIE -Wall -Wextra -Wmaybe-uninitialized -Wmissing-field-initializers --std=c99 -pedantic -g3 $(FLAGS)
+CFLAGS := -fPIE -MMD -fPIE -Wall -Wextra --std=c99 -pedantic -g3 $(FLAGS)
 
 ifdef BONUS
 	BUILD_NAME := ${PROFILE}_BONUS
