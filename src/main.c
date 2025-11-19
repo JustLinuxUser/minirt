@@ -142,6 +142,7 @@ int	main(int argc, char **argv)
 	calculate_pdfs(&state.lights);
 	create_alias_table(&state.lights);
 	mlx_close_hook(state.mlx, exit_hook, &state);
+	mlx_key_hook(state.mlx, key_hook, &state);
 	mlx_loop_hook(state.mlx, loop_hook, &state);
 	mlx_loop(state.mlx);
 	free_state(&state);

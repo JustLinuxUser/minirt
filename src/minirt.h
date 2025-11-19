@@ -171,4 +171,5 @@ void				exit_hook(void *state_param);
 
 void				exit_app(t_state *state);
 void				free_state(t_state *state);
+void				key_hook(mlx_key_data_t keydata, void *param);
 #endif
