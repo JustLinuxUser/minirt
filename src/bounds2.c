@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "bounds.h"
-#include "float.h"
+#include "float_utils.h"
 
 uint8_t	bounds_max_dim(t_bounds3f bounds)
 {

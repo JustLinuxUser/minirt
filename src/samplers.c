@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "samplers.h"
-#include "float.h"
+#include "float_utils.h"
 #include "spectrum.h"
 #include <stdbool.h>
 
