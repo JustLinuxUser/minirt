@@ -14,7 +14,7 @@ endif
 
 
 PROFILES := opt debug debug_mem debug_mem_sanitize debug_mem_sanitize_mem
-CFLAGS := -fPIE -MMD -fPIE -Wall -Wextra --std=c99 -pedantic -g3 $(FLAGS)
+CFLAGS := -fPIE -MMD -fPIE -Wall -Wextra -Werror --std=c99 -pedantic -g3 $(FLAGS)
 
 ifdef BONUS
 	BUILD_NAME := ${PROFILE}_BONUS
@@ -26,8 +26,6 @@ endif
 
 TAG_FILE := $(BUILD_DIR)/profile_$(BUILD_NAME)
 NAME_PROFILE := $(BUILD_DIR)/$(BUILD_NAME)_$(NAME)
-
-CFLAGS += -Werror
 
 LIBFT_DIR := ./src/libft
 LIBFT := ${LIBFT_DIR}/build/$(PROFILE)_libft.a
