@@ -89,6 +89,7 @@ void	free_state(t_state *state)
 	free_zero(&state->cylinders.buff);
 	free_zero(&state->s_colors);
 	free_zero(&state->spectrums.buff);
+	free_zero(&state->img_buffer);
 	if (state->mlx_image)
 		mlx_delete_image(state->mlx, state->mlx_image);
 	state->mlx_image = 0;

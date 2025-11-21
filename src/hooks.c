@@ -17,7 +17,9 @@
 void	exit_app(t_state *state)
 {
 	ft_eprintf("Exiting...\n");
-	mlx_close_window(state->mlx);
+	state->rndr.should_stop = true;
+	if (!state->rndr.headless)
+		mlx_close_window(state->mlx);
 }
 
 void	exit_hook(void *state_arg)

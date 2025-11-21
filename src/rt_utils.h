@@ -12,10 +12,10 @@
 
 #ifndef RT_UTILS_H
 # define RT_UTILS_H
-# include "MLX42/MLX42.h"
 # include "libft/dsa/dyn_str.h"
+# include "stdint.h"
 
 void	free_zero(void *ptr);
-void	write_image_to_ppm(mlx_image_t *img, char *path);
+void	write_image_to_ppm(uint32_t *pixels, int width, int height, char *path);
 bool	dyn_str_write_file(t_dyn_str buff, char *fname);
 #endif

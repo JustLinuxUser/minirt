@@ -78,6 +78,13 @@ bool	process_camera_renderer_settings3(t_rt_consumer_tl *tl)
 			return (false);
 		tl->state->rndr.exit_after_render = get_bool(nd.token);
 	}
+	ret = get_tl_typed(tl, "headless", RT_ND_BOOL, &nd);
+	if (ret != 0)
+	{
+		if (ret != 1)
+			return (false);
+		tl->state->rndr.headless = get_bool(nd.token);
+	}
 	return (true);
 }
 

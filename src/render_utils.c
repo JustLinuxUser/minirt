@@ -39,12 +39,20 @@ t_rand_state	move_tl_prng(t_state *state)
 
 void	finish_render_loop(t_state *state)
 {
+	uint32_t	*pixels;
+
 	state->rndr.curr_px = 0;
 	state->rndr.total_runs++;
 	if (state->output_path.len)
 		draw(state);
 	if (state->output_path.len)
-		write_image_to_ppm(state->mlx_image, state->output_path.buff);
+	{
+		pixels = state->img_buffer;
+		if (state->mlx_image != 0)
+			pixels = (uint32_t *)state->mlx_image->pixels;
+		write_image_to_ppm(pixels, state->screen_width, state->screen_height,
+			state->output_path.buff);
+	}
 	if (state->rndr.exit_after_render)
 		exit_app(state);
 }

@@ -51,16 +51,22 @@ void	init(t_state *state)
 {
 	ft_memset(state->rndr.thrd_states,
 		THRD_NONE, sizeof(state->rndr.thrd_states));
-	state->mlx
-		= mlx_init(state->screen_width, state->screen_height, "MiniRT", false);
-	if (!state->mlx)
-		critical_error("Failed to initialize mlx");
-	state->mlx_image
-		= mlx_new_image(state->mlx, state->screen_width, state->screen_height);
-	if (!state->mlx_image)
-		critical_error("Failed to initialize mlx image buffer");
-	if (-1 == mlx_image_to_window(state->mlx, state->mlx_image, 0, 0))
-		critical_error("Failed to put image to the window");
+	if (!state->rndr.headless)
+	{
+		state->mlx = mlx_init(state->screen_width,
+				state->screen_height, "MiniRT", false);
+		if (!state->mlx)
+			critical_error("Failed to initialize mlx");
+		state->mlx_image = mlx_new_image(state->mlx,
+				state->screen_width, state->screen_height);
+		if (!state->mlx_image)
+			critical_error("Failed to initialize mlx image buffer");
+		if (-1 == mlx_image_to_window(state->mlx, state->mlx_image, 0, 0))
+			critical_error("Failed to put image to the window");
+	}
+	else
+		state->img_buffer = mmalloc(sizeof(uint32_t) * state->screen_width
+				* state->screen_height, "Allocating the image buffer");
 	state->s_colors
 		= mmalloc(state->screen_width * state->screen_height * sizeof(t_fvec3),
 			"allocating the xyz colors buffer");
@@ -141,9 +147,15 @@ int	main(int argc, char **argv)
 		(int)state.shapes.len + (int)state.unbounded_shapes.len);
 	calculate_pdfs(&state.lights);
 	create_alias_table(&state.lights);
-	mlx_close_hook(state.mlx, exit_hook, &state);
-	mlx_key_hook(state.mlx, key_hook, &state);
-	mlx_loop_hook(state.mlx, loop_hook, &state);
-	mlx_loop(state.mlx);
+	if (!state.rndr.headless)
+	{
+		mlx_close_hook(state.mlx, exit_hook, &state);
+		mlx_key_hook(state.mlx, key_hook, &state);
+		mlx_loop_hook(state.mlx, loop_hook, &state);
+		mlx_loop(state.mlx);
+	}
+	else
+		while (!state.rndr.should_stop)
+			loop_hook(&state);
 	free_state(&state);
 }

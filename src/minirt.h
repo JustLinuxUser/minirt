@@ -79,8 +79,11 @@ typedef struct s_renderer_state
 	bool			render_once;
 	bool			exit_after_render;
 
+	bool			headless;
+
 	t_rand_state	rand_state;
 	int				rand_px;
+	bool			should_stop;
 }	t_renderer_state;
 
 typedef struct s_camera
@@ -133,7 +136,8 @@ typedef struct s_state
 
 	t_dyn_str						output_path;
 	mlx_t							*mlx;
-	mlx_image_t						*mlx_image;
+	mlx_image_t						*mlx_image; // used in a headfull mode :)
+	uint32_t						*img_buffer; // used in headless mode
 	t_renderer_state				rndr;
 }	t_state;
 
