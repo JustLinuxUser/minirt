@@ -36,7 +36,7 @@ bool	intersect_sphere(t_sphere s, t_ray r, float *t, bool *inside)
 	else
 		*t = ts.y;
 	*inside = ts.x > 0 && ts.y > 0;
-	return (true);
+	return (*t > 0);
 }
 
 bool	intersect_cylinder_caps(t_isect_cylinder i, float *t_ret, t_fvec3 *norm)
