@@ -299,4 +299,4 @@ re::fclean
 re::all
 
 .PHONY: clean fclean re all bonus
--include $(SOURCES:%.c=$(BUILD_DIR)/$(PROFILE)/%.d)
+-include $(SOURCES:%.c=$(BUILD_DIR)/$(BUILD_NAME)/%.d)
