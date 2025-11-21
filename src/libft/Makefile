@@ -3,7 +3,6 @@ NAME := libft.a
 UNAME_S := $(shell uname -s)
 SHELL := bash
 
-CC := cc
 SOURCES := src/ft_atoi.c        \
 		   src/ft_checked_atoi.c\
 		   src/ft_bzero.c       \

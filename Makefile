@@ -236,6 +236,7 @@ ifeq ($(PROFILE),debug_mem_sanitize)
 	endif
 endif
 ifeq ($(PROFILE),debug_mem_sanitize_mem)
+	CC := clang
 	ifeq ($(UNAME_S),Darwin)
 		CFLAGS += -DDEBUG_ALLOC -fsanitize-recover=all -fsanitize=undefined,memory -fsanitize-memory-track-origins -fPIE -fno-omit-frame-pointer
 	else
