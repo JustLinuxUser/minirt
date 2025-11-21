@@ -23,7 +23,7 @@ t_densely_sampled_spectrum	densely_sampled_spectrum_blackbody(float T)
 
 	i = CIE_MIN_LAMBDA;
 	bb_const = blackbody(2.89e-3f / T * 1e9f, T);
-	while (i < CIE_MAX_LAMBDA)
+	while (i <= (int)CIE_MAX_LAMBDA)
 	{
 		ret.samples[i - (int)CIE_MIN_LAMBDA] = blackbody(i, T)
 			/ bb_const;
