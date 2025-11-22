@@ -134,17 +134,16 @@ int	main(int argc, char **argv)
 {
 	t_state	state;
 
-	if (argc != 2)
-		return (ft_eprintf("Usage:\n\t%s <scene.rt>\n", argv[0]), 1);
+	if (argc != 2 || !str_ends_with(argv[1], ".rt") || ft_strlen(argv[1]) <= 3)
+		return (ft_eprintf("Error\nUsage:\n\t%s <scene.rt>\n", argv[0]), 1);
 	state = state_default();
 	if (!process_file(argv[1], &state))
 		return (free_state(&state), 1);
 	init(&state);
 	load_shapes(&state);
 	build_bvh(&state);
-	ft_eprintf("Finished processing the scene...\n"
-		"Total number of shapes: %i\nRendering...\n",
-		(int)state.shapes.len + (int)state.unbounded_shapes.len);
+	ft_eprintf("Finished processing the scene...\nTotal number of shapes: %i\n"
+		"Rendering...\n", (int)(state.shapes.len + state.unbounded_shapes.len));
 	calculate_pdfs(&state.lights);
 	create_alias_table(&state.lights);
 	if (!state.rndr.headless)

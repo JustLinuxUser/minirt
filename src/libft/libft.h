@@ -26,6 +26,7 @@ size_t		ft_strlcpy(char *dest, const char *src, size_t size);
 int			ft_strncmp(const char *s1, const char *s2, size_t n);
 int			ft_strcmp(const char *s1, const char *s2);
 char		*ft_strnstr(const char *str, const char *to_find, size_t len);
+bool		str_ends_with(const char *haystack, const char *needle);
 
 void		ft_bzero(void *s, size_t n);
 void		*ft_memset(void *s, int c, size_t n);

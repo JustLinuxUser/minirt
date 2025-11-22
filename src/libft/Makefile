@@ -37,6 +37,7 @@ SOURCES := src/ft_atoi.c        \
 		   src/ft_strncmp.c     \
 		   src/ft_strcmp.c      \
 		   src/ft_strnstr.c     \
+		   src/str_ends_with.c  \
 		   src/ft_strtrim.c     \
 		   src/ft_substr.c      \
 		   src/ft_tolower.c     \
