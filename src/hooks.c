@@ -30,3 +30,12 @@ void	exit_hook(void *state_arg)
 	emergency_exit(state);
 	ft_eprintf("Exiting...\n");
 }
+
+void	key_hook(mlx_key_data_t keydata, void *param)
+{
+	t_state	*state;
+
+	state = (t_state *)param;
+	if (keydata.key == MLX_KEY_ESCAPE)
+		exit_app(state);
+}

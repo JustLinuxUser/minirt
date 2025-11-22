@@ -140,7 +140,6 @@ src/render_multithreaded.c\
 src/render_multithreaded2.c\
 src/render_step.c\
 src/render_utils.c\
-src/keyhook.c\
 src/rt_file/consumer_camera.c\
 src/rt_file/consumer_getters.c\
 src/rt_file/consumer_getters2.c\
