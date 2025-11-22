@@ -150,7 +150,7 @@ TAG_FILE := $(BUILD_DIR)/profile_$(PROFILE)
 NAME_PROFILE := $(BUILD_DIR)/$(PROFILE)_$(NAME)
 PROFILES := opt debug debug_mem debug_mem_sanitize debug_mem_sanitize_mem
 
-CFLAGS := -MMD -fPIE -Wall -Wextra -Werror --std=c99 -pedantic -g3 $(FLAGS)
+CFLAGS := -MMD -fPIE -Wall -Wextra -Werror --std=c99 -pedantic -g3 -fno-builtin $(FLAGS)
 
 ifeq ($(PROFILE),opt)
 	CFLAGS += -O3
@@ -172,11 +172,7 @@ ifeq ($(PROFILE),debug_mem_sanitize)
 	endif
 endif
 ifeq ($(PROFILE),debug_mem_sanitize_mem)
-	ifeq ($(UNAME_S),Darwin)
-		CFLAGS += -DDEBUG_ALLOC -fsanitize-recover=all -fsanitize=undefined,memory -fsanitize-memory-track-origins -fPIE -fno-omit-frame-pointer
-	else
-		CFLAGS += -DDEBUG_ALLOC -fsanitize-recover=all -fsanitize=undefined,memory -fsanitize-memory-track-origins -fPIE -fno-omit-frame-pointer
-	endif
+	CFLAGS += -DDEBUG_ALLOC -fsanitize-recover=all -fsanitize=memory,undefined -fsanitize-memory-track-origins -fPIE -fno-omit-frame-pointer -O1
 endif
 
 PROFILE_FOUND := $(filter $(PROFILE), $(PROFILES))
