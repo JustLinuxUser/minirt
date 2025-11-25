@@ -23,6 +23,7 @@
 # include "shapes.h"
 # include "bounds.h"
 # include "light.h"
+# include "libft/generated/vec_densely_sampled_spectrum.h"
 
 # include <pthread.h>
 # include <stdbool.h>
@@ -146,6 +147,7 @@ t_collision			collide_bvh(t_state *state, t_ray_isector isector);
 // probability.c
 void				create_alias_table(t_lights *lights);
 int					sample_alias_table(t_lights *lights, float lu);
+void				calculate_pdfs(t_state *state);
 
 // colors.c
 float				linear_to_gamma(float c);
@@ -156,7 +158,11 @@ t_fvec3				rgb_to_xyz(t_8bcolor c);
 uint32_t			conv_8bcolor_to_uint32(t_8bcolor c);
 t_fvec3				densely_sampled_spectrum_to_xyz(
 						t_densely_sampled_spectrum *s);
+float				densely_sapmled_spectrum_avg_power(
+						t_densely_sampled_spectrum *s);
 t_color				clamp_rgb(t_color c);
+float				light_power(t_state *state, t_light l);
+void				calculate_pdfs(t_state *state);
 
 /*END NEW*/
 t_fvec3				perspective_cam_ray(t_state *state,

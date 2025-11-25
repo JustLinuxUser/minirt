@@ -10,8 +10,10 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "bounds.h"
 #include "cie.h"
 #include "light_structs.h"
+#include "minirt.h"
 #include "spectrum.h"
 
 //Calculate information for lights -> DenselySampledSpectrum
@@ -37,20 +39,56 @@ void	add_light(t_lights *lights, t_light to_add)
 	if (!lights)
 		return ;
 	vec_light_push(&lights->lights, to_add);
-	lights->total_power += to_add.intensity;
 }
 
-void	calculate_pdfs(t_lights *lights)
+t_bounding_sphere	scene_bounding_sphere(t_state *state)
+{
+	t_bounding_sphere	ret;
+	t_bounds3f			bounds;
+
+	bounds = state->bvh->bounds;
+	ret.p = bounds_centroid(bounds);
+	ret.r = sqrtf(fvec3_len_sq(fvec3_sub(bounds.min, ret.p)));
+	return (ret);
+}
+
+void	calculate_pdfs(t_state *state)
 {
 	size_t	i;
 
+	free(state->lights.pdfs.buff);
+	state->lights.bounding_sphere = scene_bounding_sphere(state);
+	vec_float_init(&state->lights.pdfs, state->lights.lights.len);
 	i = 0;
-	free(lights->pdfs.buff);
-	vec_float_init(&lights->pdfs, lights->lights.len);
-	while (i < lights->lights.len)
+	while (i < state->lights.lights.len)
+		state->lights.total_power
+			+= light_power(state, state->lights.lights.buff[i++]);
+	i = 0;
+	while (i < state->lights.lights.len)
 	{
-		lights->pdfs.buff[i] = lights->lights.buff[i].intensity
-			/ lights->total_power;
+		state->lights.pdfs.buff[i]
+			= light_power(state, state->lights.lights.buff[i])
+			/ state->lights.total_power;
 		i++;
 	}
+}
+
+float	light_power(t_state *state, t_light l)
+{
+	float				power;
+
+	power = 0;
+	if (l.t == POINT_LIGHT)
+		power = l.intensity * 4 * PI;
+	else if (l.t == DISTANT_LIGHT)
+		power = PI * state->lights.bounding_sphere.r
+			* state->lights.bounding_sphere.r * l.intensity;
+	else if (l.t == AMBIANT_LIGHT)
+		power = 4 * PI * state->lights.bounding_sphere.r
+			* state->lights.bounding_sphere.r * l.intensity;
+	else
+		ft_assert("Unreachable" == 0);
+	power *= densely_sapmled_spectrum_avg_power(
+			state->spectrums.buff + l.spec_idx);
+	return (power);
 }

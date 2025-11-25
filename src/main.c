@@ -144,7 +144,7 @@ int	main(int argc, char **argv)
 	build_bvh(&state);
 	ft_eprintf("Finished processing the scene...\nTotal number of shapes: %i\n"
 		"Rendering...\n", (int)(state.shapes.len + state.unbounded_shapes.len));
-	calculate_pdfs(&state.lights);
+	calculate_pdfs(&state);
 	create_alias_table(&state.lights);
 	if (!state.rndr.headless)
 	{

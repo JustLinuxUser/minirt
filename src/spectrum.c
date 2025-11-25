@@ -89,3 +89,18 @@ t_fvec3	densely_sampled_spectrum_to_xyz(t_densely_sampled_spectrum *s)
 	ret.z /= CIE_Y_INTEGRAL;
 	return (ret);
 }
+
+float	densely_sapmled_spectrum_avg_power(t_densely_sampled_spectrum *s)
+{
+	float	sum;
+	int		i;
+
+	sum = 0;
+	i = 0;
+	while (i < CIE_SAMPLES)
+	{
+		sum += s->samples[i];
+		i++;
+	}
+	return (sum / CIE_SAMPLES);
+}

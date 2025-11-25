@@ -26,9 +26,10 @@ static void	init_outcome_arrays(t_lights *lights,
 	vec_outcome_init(over, lights->lights.len);
 	while (i < lights->lights.len)
 	{
-		outcome = (t_outcome){.index = i, .p_hat = lights->bins.buff[i].prob};
-		if (lights->lights.buff[i].intensity * lights->lights.len
-			> lights->total_power)
+		outcome = (t_outcome){.index = i,
+			.p_hat = lights->bins.buff[i].prob};
+		if (lights->pdfs.buff[i] * lights->lights.len
+			> 1.f)
 			vec_outcome_push(over, outcome);
 		else
 			vec_outcome_push(under, outcome);
@@ -45,7 +46,7 @@ static void	init_bins(t_lights *lights)
 	{
 		vec_alias_bin_push(&lights->bins,
 			(t_alias_bin){.prob = (float)lights->lights.len
-			* (float)lights->lights.buff[i].intensity / lights->total_power});
+			* lights->pdfs.buff[i]});
 		i++;
 	}
 }
