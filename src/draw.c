@@ -11,13 +11,14 @@
 /* ************************************************************************** */
 
 #include <pthread.h>
+#include <threads.h>
 #include <unistd.h>
 #include "MLX42/MLX42.h"
 #include "libft/libft.h"
 #include "minirt.h"
 #include "draw.h"
 
-void draw_pixel(uint8_t* pixel, uint32_t color)
+void	draw_pixel(uint8_t *pixel, uint32_t color)
 {
 	*(pixel++) = (uint8_t)(color >> 24);
 	*(pixel++) = (uint8_t)(color >> 16);
@@ -91,6 +92,8 @@ void	loop_hook(void *state_param)
 
 	state = (t_state *)state_param;
 	render_multithread(state);
+	if (state->rndr.headless)
+		thrd_yield();
 	draw(state);
 }
 #else
