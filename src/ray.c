@@ -34,7 +34,7 @@ bool	dir_intencity(t_light_color_sampler *s, t_rand_state *rand_state,
 	}
 	else if (s->light.t == AMBIANT_LIGHT)
 	{
-		s->light.intensity /= 2.0;
+		s->light.intensity *= 2 * PI;
 		s->light_dir = rand_halfsphere(norm, rand_state);
 	}
 	else

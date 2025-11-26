@@ -79,16 +79,16 @@ float	light_power(t_state *state, t_light l)
 
 	power = 0;
 	if (l.t == POINT_LIGHT)
-		power = l.intensity * 4 * PI;
+		power = 4 * PI;
 	else if (l.t == DISTANT_LIGHT)
 		power = PI * state->lights.bounding_sphere.r
-			* state->lights.bounding_sphere.r * l.intensity;
+			* state->lights.bounding_sphere.r;
 	else if (l.t == AMBIANT_LIGHT)
 		power = 4 * PI * state->lights.bounding_sphere.r
-			* state->lights.bounding_sphere.r * l.intensity;
+			* state->lights.bounding_sphere.r;
 	else
 		ft_assert("Unreachable" == 0);
-	power *= densely_sapmled_spectrum_avg_power(
+	power *= l.intensity * densely_sapmled_spectrum_avg_power(
 			state->spectrums.buff + l.spec_idx);
 	return (power);
 }
