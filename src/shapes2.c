@@ -46,7 +46,7 @@ bool	intersect_cylinder_caps(t_isect_cylinder i, float *t_ret, t_fvec3 *norm)
 	{
 		*t_ret = i.t;
 		*norm = fvec3_norm(i.ba);
-		return (true);
+		return (*t_ret > 0);
 	}
 	return (false);
 }
@@ -76,7 +76,7 @@ bool	intersect_cylinder(t_ray r, t_cylinder cy, float *t_ret, t_fvec3 *norm)
 		*norm = fvec3_scale(fvec3_sub(fvec3_add(i.oc, fvec3_scale(r.dir, i.t)),
 					fvec3_scale(fvec3_scale(i.ba, i.y), 1.0 / i.baba)),
 				1 / cy.radius);
-		return (true);
+		return (*t_ret > 0);
 	}
 	return (intersect_cylinder_caps(i, t_ret, norm));
 }
