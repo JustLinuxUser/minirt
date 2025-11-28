@@ -22,7 +22,7 @@ bool	process_ambiant(t_rt_consumer_tl *tl)
 	int			i;
 
 	if (get_tl_typed(tl, "lighting_ratio", RT_ND_TUPLE_F1, &nd) != 1
-		|| !check_range(tl->consumer, nd, 0, INFINITY))
+		|| !check_range(tl->consumer, nd, 0, 1.0))
 		return (false);
 	scale = get_float(nd.token);
 	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1

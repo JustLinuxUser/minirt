@@ -22,7 +22,7 @@ bool	process_sphere(t_rt_consumer_tl *tl)
 	sp.p = get_fvec3(nd.token);
 	if (get_tl_typed(tl, "diameter", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
-	sp.r = get_float(nd.token);
+	sp.r = get_float(nd.token) / 2;
 	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
