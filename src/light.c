@@ -46,7 +46,9 @@ t_bounding_sphere	scene_bounding_sphere(t_state *state)
 	t_bounding_sphere	ret;
 	t_bounds3f			bounds;
 
-	bounds = state->bvh->bounds;
+	bounds = bounds_degenerate();
+	if (state->bvh)
+		bounds = state->bvh->bounds;
 	ret.p = bounds_centroid(bounds);
 	ret.r = sqrtf(fvec3_len_sq(fvec3_sub(bounds.min, ret.p)));
 	return (ret);
