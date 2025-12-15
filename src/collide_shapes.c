@@ -50,20 +50,14 @@ inline static void	collide_shape_triangle(t_state *state, t_triangle triangle,
 inline static void	collide_shape_sphere(t_sphere sphere,
 		t_ray_isector isector, t_collision *ret)
 {
-	bool	inside;
-
-	if (intersect_sphere(sphere, isector.ray, &ret->t, &inside))
-	{
-		ret->collided = true;
-		ret->u = inside;
-	}
+	ret->collided = intersect_sphere(sphere, isector.ray, &ret->t);
 }
 
 inline static void	collide_shape_cylinder(t_cylinder cylinder,
 		t_ray_isector isector, t_collision *ret)
 {
 	ret->collided = intersect_cylinder(isector.ray,
-			cylinder, &ret->t, &ret->norm);
+			cylinder, &ret->t, (bool *)&ret->u);
 }
 
 t_collision	collide_shape(t_state *state, t_shape shape, t_ray_isector isector)
@@ -82,12 +76,5 @@ t_collision	collide_shape(t_state *state, t_shape shape, t_ray_isector isector)
 				isector.ray, &ret.t);
 	else
 		ft_assert("Unreachable" != 0);
-	if (ret.collided && (ret.t > isector.t_max
-			|| (shape.ptr == isector.ignore_shape && ret.t < isector.t_min)
-		))
-	{
-		ret.collided = false;
-		ret.t = 0;
-	}
 	return (ret);
 }

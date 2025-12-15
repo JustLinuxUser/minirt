@@ -11,11 +11,23 @@
 /* ************************************************************************** */
 
 #include "shapes.h"
-#include "float_utils.h"
 #include <stdbool.h>
 #include "bounds.h"
 #include "libft/utils/utils.h"
 #include "minirt.h"
+#include "mymath.h"
+#include "shape_structs.h"
+
+t_fvec3	cylinder_norm(t_cylinder cy, t_fvec3 pos, t_collision coll)
+{
+	float	t;
+
+	if (*(bool *)&coll.u)
+		return (cy.dir);
+	t = fvec3_dot(cy.dir, fvec3_sub(pos, cy.b));
+	return (fvec3_norm(fvec3_sub(fvec3_sub(pos, fvec3_scale(cy.dir, t)),
+				cy.b)));
+}
 
 t_fvec3	collision_norm(t_state *state, t_collision collision, t_fvec3 pos)
 {
@@ -36,7 +48,8 @@ t_fvec3	collision_norm(t_state *state, t_collision collision, t_fvec3 pos)
 		return (fvec3_norm(fvec3_sub(pos, sphere->p)));
 	}
 	else if (collision.shape.type == OBJ_CYLINDER)
-		return (collision.norm);
+		return (cylinder_norm(*((t_cylinder *)collision.shape.ptr),
+				pos, collision));
 	else if (collision.shape.type == OBJ_PLANE)
 		return (((t_plane *)collision.shape.ptr)->dir);
 	ft_assert("Unreachable" != 0);
@@ -66,27 +79,29 @@ t_densely_sampled_spectrum	*shape_spectrum(t_state *state,
 	return (state->spectrums.buff + idx);
 }
 
-inline static t_bounds3f	bounds_cylinder(t_cylinder cylinder)
+inline static t_bounds3f	bounds_cylinder(t_cylinder cy)
 {
 	t_bounds3f	bounds;
 
 	bounds = bounds_degenerate();
-	bounds = bounds_extend_pt(bounds, fvec3_add(cylinder.a, (t_fvec3){
-				.x = cylinder.radius,
-				.y = cylinder.radius,
-				.z = cylinder.radius}));
-	bounds = bounds_extend_pt(bounds, fvec3_sub(cylinder.a, (t_fvec3){
-				.x = cylinder.radius,
-				.y = cylinder.radius,
-				.z = cylinder.radius}));
-	bounds = bounds_extend_pt(bounds, fvec3_add(cylinder.b, (t_fvec3){
-				.x = cylinder.radius,
-				.y = cylinder.radius,
-				.z = cylinder.radius}));
-	bounds = bounds_extend_pt(bounds, fvec3_sub(cylinder.b, (t_fvec3){
-				.x = cylinder.radius,
-				.y = cylinder.radius,
-				.z = cylinder.radius}));
+	bounds = bounds_extend_pt(bounds, fvec3_add(cy.b, (t_fvec3){
+				.x = cy.radius,
+				.y = cy.radius,
+				.z = 0.1}));
+	bounds = bounds_extend_pt(bounds, fvec3_sub(cy.b, (t_fvec3){
+				.x = cy.radius,
+				.y = cy.radius,
+				.z = 0.1}));
+	bounds = bounds_extend_pt(bounds, fvec3_add(
+				fvec3_add(fvec3_scale(cy.dir, cy.height), cy.b), (t_fvec3){
+				.x = cy.radius,
+				.y = cy.radius,
+				.z = cy.radius}));
+	bounds = bounds_extend_pt(bounds, fvec3_sub(
+				fvec3_add(fvec3_scale(cy.dir, cy.height), cy.b), (t_fvec3){
+				.x = cy.radius,
+				.y = cy.radius,
+				.z = cy.radius}));
 	return (bounds);
 }
 

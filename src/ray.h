@@ -21,5 +21,6 @@ typedef struct t_ray_isector
 	float	t_min;
 	float	t_max;
 	void	*ignore_shape;
+	t_fvec3	prev_norm;
 }	t_ray_isector;
 #endif

@@ -12,7 +12,22 @@
 
 #include "bvh.h"
 #include "ray.h"
+#include "shape_structs.h"
 #include <stdbool.h>
+#include <stdio.h>
+
+t_collision	better_collision(t_ray_isector isect,
+			t_collision prev, t_collision new)
+{
+	(void)isect;
+	if (new.t < isect.t_min || new.t > isect.t_max)
+		return (prev);
+	if (new.shape.ptr == isect.ignore_shape && fabs(new.t) < isect.t_min)
+		return (prev);
+	if (new.collided && (new.t < prev.t || !prev.collided))
+		return (new);
+	return (prev);
+}
 
 void	negative_dirs(t_ray_isector isect, bool dir_is_neg[3])
 {
@@ -38,9 +53,8 @@ inline static void	collide_bvh_primitives(t_state *state,
 		prim_offs = curr.u_.primitives_offset;
 		coll = collide_shape(
 				state, state->shapes.buff[prim_offs + i], b_isector->isect);
-		if (coll.collided && (coll.t < b_isector->curr_best.t
-				|| !b_isector->curr_best.collided))
-			b_isector->curr_best = coll;
+		b_isector->curr_best
+			= better_collision(b_isector->isect, b_isector->curr_best, coll);
 		i++;
 	}
 }
@@ -89,12 +103,9 @@ t_collision	collide_bvh(t_state *state, t_ray_isector isect)
 	i = 0;
 	while (i < state->unbounded_shapes.len)
 	{
-		coll = collide_shape(
-				state, state->unbounded_shapes.buff[i], isect);
-		if (coll.collided
-			&& (coll.t < b_isector.curr_best.t
-				|| !b_isector.curr_best.collided))
-			b_isector.curr_best = coll;
+		coll = collide_shape(state, state->unbounded_shapes.buff[i], isect);
+		b_isector.curr_best
+			= better_collision(isect, b_isector.curr_best, coll);
 		i++;
 	}
 	return (b_isector.curr_best);

@@ -30,7 +30,7 @@ typedef struct s_integrator
 	int					i;
 	int					iter;
 	t_fvec3				p;
-	t_fvec3				norm;
+	t_fvec3				coll_norm;
 	void				*ignored_shape;
 	t_ray				ray;
 }	t_integrator;

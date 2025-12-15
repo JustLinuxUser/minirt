@@ -105,27 +105,24 @@ bool	process_cylinder(t_rt_consumer_tl *tl)
 {
 	t_rt_node	nd;
 	t_cylinder	cylinder;
-	t_fvec3		dir;
-	float		height;
 
 	cylinder = (t_cylinder){0};
 	if (get_tl_typed(tl, "position", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
-	cylinder.a = get_fvec3(nd.token);
+	cylinder.b = get_fvec3(nd.token);
 	if (get_tl_typed(tl, "direction", RT_ND_TUPLE_F3, &nd) != 1)
 		return (false);
-	dir = fvec3_norm(get_fvec3(nd.token));
+	cylinder.dir = fvec3_norm(get_fvec3(nd.token));
 	if (get_tl_typed(tl, "diameter", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
 	cylinder.radius = get_float(nd.token) / 2.0;
 	if (get_tl_typed(tl, "height", RT_ND_TUPLE_F1, &nd) != 1)
 		return (false);
-	height = get_float(nd.token);
+	cylinder.height = get_float(nd.token);
 	if (get_tl_typed(tl, "color", RT_ND_TUPLE_I3, &nd) != 1
 		|| !check_range(tl->consumer, nd, 0, 255))
 		return (false);
 	cylinder.spectrum_idx = push_color(nd.token, tl->state, true);
-	cylinder.b = fvec3_add(fvec3_scale(dir, height), cylinder.a);
 	vec_cylinder_push(&tl->state->cylinders, cylinder);
 	return (true);
 }

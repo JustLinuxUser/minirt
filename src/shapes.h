@@ -31,11 +31,10 @@ typedef struct s_collision
 {
 	bool	collided;
 	float	t;
+	float	t2;
 	/*triangle*/
-	float	u;
+	float	u; // used for a cylinder too
 	float	v;
-	/*cylinder*/
-	t_fvec3	norm;
 	t_shape	shape;
 }	t_collision;
 
@@ -60,16 +59,13 @@ typedef struct s_triangle_isector
 
 typedef struct s_isect_cylinder
 {
-	t_fvec3	ba;
-	t_fvec3	oc;
-	float	baba;
-	float	bard;
-	float	baoc;
-	float	k2;
-	float	k1;
-	float	h;
-	float	t;
-	float	y;
+	t_fvec3	b;
+	t_fvec3	a;
+	t_fvec3	n;
+	t_fvec3	nxa;
+	float	nxa_len_sq;
+	t_fvec3	bxa;
+	float	rhs;
 }	t_isect_cylinder;
 
 typedef struct t_triangle_pts
@@ -87,9 +83,9 @@ t_bounds3f					shape_bounds(struct s_state *state, t_shape shape);
 t_densely_sampled_spectrum	*shape_spectrum(struct s_state *state,
 								t_collision collision);
 bool						intersect_sphere(t_sphere s, t_ray r,
-								float *t, bool *inside);
+								float *t);
 bool						intersect_cylinder(t_ray r, t_cylinder cy,
-								float *t_ret, t_fvec3 *norm);
+								float *t_ret, bool *cap);
 bool						intersect_plane(t_plane plane, t_ray r, float *t);
 bool						intersect_triangle(t_ray ray,
 								t_triangle_pts pts,

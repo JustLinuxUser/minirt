@@ -38,9 +38,10 @@ typedef struct t_sphere
 
 typedef struct t_cylinder
 {
-	t_fvec3	a;
 	t_fvec3	b;
+	t_fvec3	dir;
 	float	radius;
+	float	height;
 	int		spectrum_idx;
 }	t_cylinder;
 

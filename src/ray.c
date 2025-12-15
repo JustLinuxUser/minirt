@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "ray.h"
+#include "mymath.h"
 #include "ray_structs.h"
 #include "minirt.h"
 #include "samplers.h"
@@ -89,9 +90,9 @@ bool	process_collision(t_state *state,
 	}
 	i->ignored_shape = i->coll.shape.ptr;
 	i->p = fvec3_add(fvec3_scale(i->ray.dir, i->coll.t), i->ray.pos);
-	i->norm = collision_norm(state, i->coll, i->p);
-	if (fvec3_dot(i->norm, i->ray.dir) > 0)
-		i->norm = fvec3_invert(i->norm);
+	i->coll_norm = collision_norm(state, i->coll, i->p);
+	if (fvec3_dot(i->coll_norm, i->ray.dir) > 0)
+		i->coll_norm = fvec3_invert(i->coll_norm);
 	return (true);
 }
 
@@ -100,28 +101,27 @@ t_sampled_spec	add_color(t_state *state, t_sampled_lambdas lambdas,
 {
 	t_sampled_spec	light_spec;
 	t_sampled_spec	color;
-	t_ray_isector	isector;
+	t_ray_isector	lisector;
 	t_light			light;
 	t_sampled_spec	ambiant_spec;
 
 	light_spec = (t_sampled_spec){0};
 	color = get_surface_color(state, lambdas, i->coll);
-	isector = (t_ray_isector){.ray = {.pos = i->p}, .t_min = 0.01,
+	lisector = (t_ray_isector){.ray = {.pos = i->p}, .t_min = 0.01,
 		.ignore_shape = i->ignored_shape};
-	light = sample_effective_light(state, &isector, rand_state, i->norm);
+	light = sample_effective_light(state, &lisector, rand_state, i->coll_norm);
 	if (light.t != LIGHT_NONE)
-	{
 		light_spec = sampled_spectrum_scale(sample_densely_sampled_spectrum(
 					&state->spectrums.buff[light.spec_idx], lambdas),
-				light.intensity * fmax(fvec3_dot(i->norm, isector.ray.dir), 0));
-	}
+				light.intensity
+				* fmaxf(fvec3_dot(i->coll_norm, lisector.ray.dir), 0));
 	ambiant_spec = sample_densely_sampled_spectrum(
 			&state->ambiant_light_spec, lambdas);
 	i->i = -1;
 	while (++i->i < NUM_SPECTRUM_SAMPLES)
 		i->l.values[i->i] += i->beta.values[i->i] * color.values[i->i]
 			* (light_spec.values[i->i] + ambiant_spec.values[i->i]
-				* fabs(fvec3_dot(i->norm, i->ray.dir)));
+				* fabs(fvec3_dot(i->coll_norm, i->ray.dir)));
 	return (color);
 }
 
@@ -142,12 +142,13 @@ t_sampled_spec	cast_reflectable_ray_new(t_state *state, t_ray start_ray,
 		if (!process_collision(state, &i, lambdas))
 			break ;
 		color = add_color(state, lambdas, &i, rand_state);
-		i.ray = (t_ray){.pos = i.p, .dir = rand_halfsphere(i.norm, rand_state)};
+		i.ray = (t_ray){.pos = i.p,
+			.dir = rand_halfsphere(i.coll_norm, rand_state)};
 		i.i = -1;
 		while (++i.i < NUM_SPECTRUM_SAMPLES)
 		{
 			i.beta.values[i.i] *= color.values[i.i]
-				* fmax(fvec3_dot(i.norm, i.ray.dir), 0);
+				* fmax(fvec3_dot(i.coll_norm, i.ray.dir), 0);
 		}
 	}
 	return (i.l);
