@@ -29,11 +29,11 @@
 
 typedef struct s_collision
 {
-	bool	collided;
 	float	t;
-	float	t2;
+	bool	collided;
+	bool	disk_collision; //  cylinder
 	/*triangle*/
-	float	u; // used for a cylinder too
+	float	u;
 	float	v;
 	t_shape	shape;
 }	t_collision;

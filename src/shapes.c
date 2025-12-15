@@ -22,7 +22,7 @@ t_fvec3	cylinder_norm(t_cylinder cy, t_fvec3 pos, t_collision coll)
 {
 	float	t;
 
-	if (*(bool *)&coll.u)
+	if (coll.disk_collision)
 		return (cy.dir);
 	t = fvec3_dot(cy.dir, fvec3_sub(pos, cy.b));
 	return (fvec3_norm(fvec3_sub(fvec3_sub(pos, fvec3_scale(cy.dir, t)),

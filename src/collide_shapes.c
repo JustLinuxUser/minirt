@@ -57,7 +57,7 @@ inline static void	collide_shape_cylinder(t_cylinder cylinder,
 		t_ray_isector isector, t_collision *ret)
 {
 	ret->collided = intersect_cylinder(isector.ray,
-			cylinder, &ret->t, (bool *)&ret->u);
+			cylinder, &ret->t, &ret->disk_collision);
 }
 
 t_collision	collide_shape(t_state *state, t_shape shape, t_ray_isector isector)
