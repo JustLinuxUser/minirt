@@ -169,6 +169,7 @@ src/rt_file/vec_rt_nd.c\
 src/samplers.c\
 src/shapes.c\
 src/shapes2.c\
+src/shapes3.c\
 src/spectrum.c\
 src/tinyobj.c\
 src/utils.c\
