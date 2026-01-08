@@ -26,7 +26,7 @@ bool	intersect_sphere(t_sphere s, t_ray r, float *t)
 	l = fvec3_sub(s.p, r.pos);
 	tc = fvec3_dot(l, fvec3_norm(r.dir));
 	d = fvec3_dot(l, l) - tc * tc;
-	if (d > s.r * s.r || d < 0)
+	if (d > s.r * s.r || d < -0.01)
 		return (false);
 	tlc = sqrt(s.r * s.r - d);
 	ts.x = tc + tlc;
