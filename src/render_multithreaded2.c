@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "draw.h"
+#include "libft/ft_printf/ft_printf.h"
 #include "minirt.h"
 
 void	emergency_exit(t_state *state)

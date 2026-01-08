@@ -18,6 +18,7 @@ void	exit_app(t_state *state)
 {
 	ft_eprintf("Exiting...\n");
 	state->rndr.should_stop = true;
+	emergency_exit(state);
 	if (!state->rndr.headless)
 		mlx_close_window(state->mlx);
 }
@@ -27,8 +28,7 @@ void	exit_hook(void *state_arg)
 	t_state	*state;
 
 	state = (t_state *)state_arg;
-	emergency_exit(state);
-	ft_eprintf("Exiting...\n");
+	exit_app(state);
 }
 
 void	key_hook(mlx_key_data_t keydata, void *param)

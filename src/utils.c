@@ -97,4 +97,5 @@ void	free_state(t_state *state)
 		mlx_terminate(state->mlx);
 	state->mlx = 0;
 	free_zero(&state->output_path.buff);
+	ft_eprintf("Finished exiting...\n");
 }
