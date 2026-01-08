@@ -109,16 +109,17 @@ t_state	state_default(void)
 	state = (t_state){
 		.screen_width = 800,
 		.screen_height = 600,
-		.samples_x = 5,
-		.samples_y = 5,
+		.samples_x = 1,
+		.samples_y = 1,
 		.cam = {
 		.fov = 90,
 		.screen_dist = 1,
+		.cam = {.pos = {.y = -20, .z = 5}},
 	},
 		.sky_light_idx = -1,
 		.rndr = {
 		.num_threads = 8,
-		.chunk_size = 1000,
+		.chunk_size = 10000,
 		.max_reflections = 4,
 		.render_once = false,
 		.exit_after_render = false,
