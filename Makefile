@@ -217,7 +217,7 @@ ifeq ($(UNAME_S),Darwin)
 endif
 
 ifeq ($(PROFILE),opt)
-	CFLAGS += -O3 -flto
+	CFLAGS += -O3 -flto -march=native
 endif
 
 ifeq ($(PROFILE),debug)
@@ -295,5 +295,5 @@ fclean: clean
 re::fclean
 re::all
 
-.PHONY: clean fclean re all bonus
+.PHONY: clean fclean re all bonus FORCE
 -include $(SOURCES:%.c=$(BUILD_DIR)/$(BUILD_NAME)/%.d)

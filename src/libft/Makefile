@@ -154,7 +154,7 @@ PROFILES := opt debug debug_mem debug_mem_sanitize debug_mem_sanitize_mem
 CFLAGS := -MMD -fPIE -Wall -Wextra -Werror --std=c99 -pedantic -g3 -fno-builtin $(FLAGS)
 
 ifeq ($(PROFILE),opt)
-	CFLAGS += -O3
+	CFLAGS += -O3 -march=native
 endif
 
 ifeq ($(PROFILE),debug)
